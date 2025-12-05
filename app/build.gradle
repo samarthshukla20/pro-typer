@@ -25,8 +25,8 @@ android {
         applicationId "com.samarthshukla.protyper"
         minSdk 24
         targetSdk 36
-        versionCode 15
-        versionName "1.9.2"
+        versionCode 16
+        versionName "1.9.3"
 
         vectorDrawables {
             useSupportLibrary true
@@ -69,7 +69,6 @@ dependencies {
     implementation 'com.google.android.play:app-update:2.1.0'
     implementation 'com.airbnb.android:lottie:6.6.6'
 
-
     // Exclude problematic dependencies for SDK 33
     implementation('androidx.credentials:credentials:1.5.0') {
         exclude group: 'androidx.credentials', module: 'credentials'
@@ -78,4 +77,18 @@ dependencies {
         exclude group: 'androidx.credentials', module: 'credentials-play-services-auth'
     }
     implementation 'androidx.activity:activity:1.10.1'
+
+    // Import the Firebase BoM (Bill of Materials)
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+
+    // Firebase Authentication for anonymous sign-in
+    implementation 'com.google.firebase:firebase-auth'
+
+    // Firebase Realtime Database for matchmaking and game state
+    implementation 'com.google.firebase:firebase-database'
+
+    // (Optional but highly recommended) Firebase Analytics
+    // You already have this, but make sure it's here
+    implementation 'com.google.firebase:firebase-analytics'
+
 }

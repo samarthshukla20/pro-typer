@@ -16,9 +16,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TypingMaster">
         <activity
-            android:name=".SettingsActivity"
+            android:name=".MultiplayerGameActivity"
             android:exported="false" />
-        <!-- Updated theme to Material3 -->
+        <activity
+            android:name=".MultiplayerLobbyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" /> <!-- Updated theme to Material3 -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-6807409350203174~6255625039" /> <!-- SplashActivity (Launch Activity) -->

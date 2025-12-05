@@ -285,18 +285,7 @@ public class MediumModeActivity extends AppCompatActivity {
     }
 
     private void showAdThenGameOver() {
-        if (interstitialAd != null) {
-            interstitialAd.show(this);
-            interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                @Override
-                public void onAdDismissedFullScreenContent() {
-                    showGameOverCard(score);
-                    loadInterstitialAd();
-                }
-            });
-        } else {
-            showGameOverCard(score);
-        }
+        showGameOverCard(score);
     }
 
     private void showGameOverCard(int score) {

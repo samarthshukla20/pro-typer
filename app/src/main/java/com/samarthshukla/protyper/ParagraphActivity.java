@@ -477,18 +477,7 @@ public class ParagraphActivity extends AppCompatActivity {
     }
 
     private void showAdThenGameOver() {
-        if (interstitialAd != null) {
-            interstitialAd.show(this);
-            interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                @Override
-                public void onAdDismissedFullScreenContent() {
-                    showGameOverCard(accuracy);
-                    loadInterstitialAd();
-                }
-            });
-        } else {
-            showGameOverCard(accuracy);
-        }
+        showGameOverCard(accuracy);
     }
 
     private void loadInterstitialAd() {

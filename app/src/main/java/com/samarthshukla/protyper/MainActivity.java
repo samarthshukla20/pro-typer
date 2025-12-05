@@ -87,6 +87,8 @@ public class MainActivity extends AppCompatActivity {
         btnSingleWordMode.setText("SINGLE WORD MODE");
         MaterialButton btnParagraphMode = findViewById(R.id.btnParagraphMode);
         btnParagraphMode.setText("PARAGRAPH MODE");
+        MaterialButton btnMultiplayerMode = findViewById(R.id.btnMultiplayerMode);
+        btnMultiplayerMode.setText("MULTIPLAYER MODE");
         MaterialButton btnHistory = findViewById(R.id.btnHistory);
         btnHistory.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoryActivity.class)));
         MaterialButton btnExit = findViewById(R.id.btnExit);
@@ -103,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
         // Button Click Listeners
         btnSingleWordMode.setOnClickListener(v -> showAdThenStart(DifficultyActivity.class));
         btnParagraphMode.setOnClickListener(v -> showAdThenStart(ParagraphActivity.class));
+        btnMultiplayerMode.setOnClickListener(v -> showAdThenStart(MultiplayerLobbyActivity.class));
         btnExit.setOnClickListener(v -> showConfirmExitDialog());
 
         // Firebase Messaging: Retrieve the FCM token
@@ -227,12 +230,26 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onAdLoaded(InterstitialAd ad) {
                         interstitialAd = ad;
+                        interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                            @Override
+                            public void onAdDismissedFullScreenContent() {
+                                interstitialAd = null;
+                                loadInterstitialAd(); // Preload for next time
+                            }
+
+                            @Override
+                            public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
+                                interstitialAd = null;
+                                loadInterstitialAd(); // Preload again if it fails
+                            }
+                        });
                     }
 
                     @Override
                     public void onAdFailedToLoad(LoadAdError adError) {
                         interstitialAd = null;
-                        loadInterstitialAd();
+                        // Optional: try again after delay instead of instantly looping
+                        new Handler().postDelayed(MainActivity.this::loadInterstitialAd, 30000);
                     }
                 });
     }
@@ -250,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
                 if (bannerAdView != null) {
                     bannerAdView.loadAd(new AdRequest.Builder().build());
                 }
-                bannerRefreshHandler.postDelayed(this, 30000);
+                bannerRefreshHandler.postDelayed(this, 45000);
             }
         };
         bannerRefreshHandler.post(bannerRefreshRunnable);
@@ -258,29 +275,46 @@ public class MainActivity extends AppCompatActivity {
 
     private void showAdThenStart(Class<?> activity) {
         if (interstitialAd != null) {
-            interstitialAd.show(MainActivity.this);
-            interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+            InterstitialAd adToShow = interstitialAd;
+            interstitialAd = null;
+            adToShow.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
                 public void onAdDismissedFullScreenContent() {
                     loadInterstitialAd();
                     startActivity(new Intent(MainActivity.this, activity));
                 }
+
+                @Override
+                public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
+                    loadInterstitialAd();
+                    startActivity(new Intent(MainActivity.this, activity));
+                }
             });
+            adToShow.show(MainActivity.this);
         } else {
             startActivity(new Intent(MainActivity.this, activity));
         }
     }
 
+
     private void showAdThenFinish() {
         if (interstitialAd != null) {
-            interstitialAd.show(MainActivity.this);
-            interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+            InterstitialAd adToShow = interstitialAd;
+            interstitialAd = null; // Prevent reuse
+            adToShow.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
                 public void onAdDismissedFullScreenContent() {
                     loadInterstitialAd();
                     finish();
                 }
+
+                @Override
+                public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
+                    loadInterstitialAd();
+                    finish();
+                }
             });
+            adToShow.show(MainActivity.this);
         } else {
             finish();
         }
