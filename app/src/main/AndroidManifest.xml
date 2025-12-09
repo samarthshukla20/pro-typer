@@ -16,6 +16,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TypingMaster">
         <activity
+            android:name=".ResultActivity"
+            android:exported="false" />
+        <activity
             android:name=".MultiplayerGameActivity"
             android:exported="false" />
         <activity

@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -24,6 +25,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -60,6 +62,8 @@ public class ParagraphActivity extends AppCompatActivity {
 
     private TextView wordDisplay, timerText, scoreText, tvDateTime;
     private EditText inputField;
+    private ScrollView paragraphScrollView;   // NEW: scroll container for paragraph
+
     private List<String> words = new ArrayList<>();
     private List<String> paragraphs = new ArrayList<>();
     private Random random = new Random();
@@ -107,7 +111,8 @@ public class ParagraphActivity extends AppCompatActivity {
         timerText = findViewById(R.id.timerText);
         scoreText = findViewById(R.id.scoreText);
         inputField = findViewById(R.id.inputField);
-        tvDateTime = findViewById(R.id.tvDateTime);
+        tvDateTime = findViewById(R.id.tvDateTime); // if you have this in layout
+        paragraphScrollView = findViewById(R.id.paragraphScrollView); // NEW
 
         startTime = System.currentTimeMillis();
         getCurrentDateTime();
@@ -169,7 +174,6 @@ public class ParagraphActivity extends AppCompatActivity {
 
         soundIdParaComplete = soundPool.load(this, R.raw.para_complete_sound, 1);
         soundIdGameOver = soundPool.load(this, R.raw.game_over_sound, 1);
-
     }
 
     private int dpToPx(int dp) {
@@ -209,7 +213,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private void startNewGame() {
         isGameOver = false;
         accuracy = 0;
-        scoreText.setText("Accuracy: " + calculateAccuracy());
+        scoreText.setText("Accuracy: " + calculateAccuracy() + "%");
         inputField.setText("");
         inputField.setEnabled(true);
         usedWords = new ArrayList<>();
@@ -218,6 +222,12 @@ public class ParagraphActivity extends AppCompatActivity {
         startTimer();
         hasShownRewardDialog = false;
         historySaved = false;
+        isParagraphFullyTyped = false;
+
+        // Reset paragraph scroll to top
+        if (paragraphScrollView != null) {
+            paragraphScrollView.scrollTo(0, 0);
+        }
     }
 
     private void generateNewWord() {
@@ -228,6 +238,11 @@ public class ParagraphActivity extends AppCompatActivity {
         usedWords.add(newWord);
         wordDisplay.setText(newWord);
         currentParagraph = newWord;
+
+        // ensure at top when new paragraph is loaded
+        if (paragraphScrollView != null) {
+            paragraphScrollView.post(() -> paragraphScrollView.scrollTo(0, 0));
+        }
     }
 
     private void startTimer() {
@@ -269,13 +284,46 @@ public class ParagraphActivity extends AppCompatActivity {
         }
         wordDisplay.setText(spannable);
 
+        // 🔄 Auto-scroll the paragraph to keep current position visible
+        autoScrollParagraph(typedText.length());
+
         // If paragraph is completed in time, trigger confetti and congrats card flow
         if (typedText.length() == paragraphText.length() && isParagraphFullyTyped) {
             inputField.setEnabled(false);
             if (timer != null) timer.cancel();
             accuracy = 100;
             showConfettiThenGameOver(accuracy); // now handles route to congrats or game over
+        } else {
+            // update live accuracy display even while typing
+            scoreText.setText("Accuracy: " + calculateAccuracy() + "%");
         }
+    }
+
+    /**
+     * Auto-scroll so that the line corresponding to the current typed position
+     * stays visible inside the ScrollView.
+     */
+    private void autoScrollParagraph(int typedLength) {
+        if (paragraphScrollView == null) return;
+        if (wordDisplay == null) return;
+
+        wordDisplay.post(() -> {
+            Layout layout = wordDisplay.getLayout();
+            if (layout == null) return;
+
+            int textLength = wordDisplay.getText().length();
+            if (textLength == 0) return;
+
+            // Clamp offset to valid range
+            int offset = Math.max(0, Math.min(typedLength, textLength - 1));
+            int line = layout.getLineForOffset(offset);
+            int lineTop = layout.getLineTop(line);
+
+            int targetScrollY = lineTop - dpToPx(24); // little padding above
+            if (targetScrollY < 0) targetScrollY = 0;
+
+            paragraphScrollView.smoothScrollTo(0, targetScrollY);
+        });
     }
 
     // MODIFIED: Handles both routes after confetti: congrats (success) or game over (timeout)
@@ -387,6 +435,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private int calculateAccuracy() {
         String typedText = inputField.getText().toString().trim();
         String paragraphText = currentParagraph.trim();
+        if (paragraphText.isEmpty()) return 0;
         if (typedText.equals(paragraphText)) {
             return 100;
         }
@@ -399,7 +448,6 @@ public class ParagraphActivity extends AppCompatActivity {
                 correctWords++;
             }
         }
-        if (originalWords.length == 0) return 0;
         return (int) ((correctWords / (float) originalWords.length) * 100);
     }
 
@@ -509,7 +557,7 @@ public class ParagraphActivity extends AppCompatActivity {
 
         pauseStartTime = System.currentTimeMillis();
 
-        dialog.getWindow().setDimAmount(0.9f); // 0 = no dim, 1 = full black
+        dialog.getWindow().setDimAmount(0.9f);
         dialog.show();
 
         final int[] secondsLeft = {500000000};
@@ -625,5 +673,4 @@ public class ParagraphActivity extends AppCompatActivity {
             soundPool = null;
         }
     }
-
 }

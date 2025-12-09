@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:background="?attr/colorSurface"
-    tools:context=".EasyModeActivity">
+    tools:context=".ParagraphActivity">
 
     <TextView
         android:id="@+id/title"
@@ -26,7 +26,7 @@
         android:id="@+id/timerCard"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         app:cardBackgroundColor="?attr/colorSurfaceVariant"
@@ -64,7 +64,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="invisible"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         app:cardBackgroundColor="?attr/colorSurfaceVariant"
@@ -88,7 +88,7 @@
                 android:id="@+id/scoreText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Score: 0"
+                android:text="Accuracy: 0%"
                 android:textSize="14sp"
                 android:textColor="?attr/colorOnSurface"
                 android:layout_marginStart="8dp" />
@@ -97,11 +97,12 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Paragraph Card with Scrollable Text -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/wordCard"
-        android:layout_width="350dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="32dp"
         app:cardBackgroundColor="?attr/colorPrimaryContainer"
         app:cardCornerRadius="24dp"
         app:strokeColor="?attr/colorOnPrimaryContainer"
@@ -109,36 +110,47 @@
         app:layout_constraintTop_toBottomOf="@id/timerCard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/textInputLayout">
+        app:layout_constraintBottom_toTopOf="@id/textInputLayout"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="center_horizontal"
             android:padding="12dp">
 
             <TextView
                 android:id="@+id/instructionText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Type the following word"
+                android:text="Type the following paragraph"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/difficulty"
                 android:textColor="?attr/colorOnPrimaryContainer"
                 android:gravity="center" />
 
-            <TextView
-                android:id="@+id/wordDisplay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="wapped"
-                android:textSize="14sp"
-                android:fontFamily="@font/difficulty"
-                android:textColor="?attr/colorOnPrimaryContainer"
-                android:gravity="center"
-                android:layout_marginTop="8dp" />
+            <!-- Scrollable paragraph area -->
+            <ScrollView
+                android:id="@+id/paragraphScrollView"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="8dp"
+                android:fillViewport="true">
+
+                <TextView
+                    android:id="@+id/wordDisplay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="wapped"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/difficulty"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    android:lineSpacingExtra="4dp" />
+
+            </ScrollView>
 
         </LinearLayout>
 
@@ -148,7 +160,7 @@
         android:id="@+id/textInputLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:layout_marginBottom="80dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
@@ -179,7 +191,7 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- ✅ Background Dimmer under the confetti animation -->
+    <!-- Background dimmer (for confetti / overlays) -->
     <View
         android:id="@+id/animationDimBg"
         android:layout_width="match_parent"
@@ -193,7 +205,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- ✅ Confetti Lottie Animation on top -->
+    <!-- Confetti Lottie Animation -->
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/confettiAnimation"
         android:layout_width="match_parent"

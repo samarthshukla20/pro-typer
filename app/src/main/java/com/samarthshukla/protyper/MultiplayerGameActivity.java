@@ -1,18 +1,24 @@
 package com.samarthshukla.protyper;
 
-import android.content.DialogInterface;
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +32,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent;
+
 public class MultiplayerGameActivity extends AppCompatActivity {
 
     private static final String TAG = "MultiplayerGameActivity";
@@ -33,12 +41,15 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private TextView wordDisplay, timerText;
     private EditText inputField;
     private ProgressBar myProgressBar, opponentProgressBar;
+    private ScrollView paragraphScrollView; // for auto-scroll
+    private View paragraphCard;            // NEW: for keyboard shifting
+    private View inputCard;                // NEW: for keyboard shifting
     private DatabaseReference gameRef;
     private String gameSessionId, userId, opponentId;
     private String currentParagraph = "";
 
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 120000; // 120 seconds
+    private static final int TIME_LIMIT = 120000;
     private long gameStartTime;
     private boolean isGameOver = false;
     private boolean isGameStarted = false;
@@ -47,7 +58,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private ValueEventListener finalScoreListener;
     private ValueEventListener playersListener;
     private ValueEventListener opponentPresenceListener;
-    private ValueEventListener gameResultListener;   // NEW: listens for winnerId / reason
+    private ValueEventListener gameResultListener;   // listens for winnerId / reason
 
     // New fields for debounce / reconnect window
     private Handler disconnectHandler = new Handler(Looper.getMainLooper());
@@ -58,6 +69,10 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // ✅ Make layout resize when keyboard appears
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
         setContentView(R.layout.activity_multiplayer_game);
 
         gameSessionId = getIntent().getStringExtra("gameSessionId");
@@ -74,10 +89,64 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         inputField = findViewById(R.id.multiplayerInputField);
         myProgressBar = findViewById(R.id.myProgressBar);
         opponentProgressBar = findViewById(R.id.opponentProgressBar);
+        paragraphScrollView = findViewById(R.id.paragraphScrollView);
+        paragraphCard = findViewById(R.id.paragraphCard); // root card for paragraph
+        inputCard = findViewById(R.id.inputCard);         // input card
+
+        // ✅ Keyboard handling like ParagraphActivity, but for multiplayer views
+        setupKeyboardShiftBehavior();
 
         gameRef = FirebaseDatabase.getInstance().getReference("game_sessions").child(gameSessionId);
 
         fetchOpponentIdAndParagraph();
+    }
+
+    private void setupKeyboardShiftBehavior() {
+        KeyboardVisibilityEvent.setEventListener(this, isOpen -> {
+            View rootView = findViewById(android.R.id.content);
+            if (rootView == null || inputCard == null || paragraphCard == null) return;
+
+            Rect r = new Rect();
+            rootView.getWindowVisibleDisplayFrame(r);
+            int screenHeight = rootView.getRootView().getHeight();
+            int keypadHeight = screenHeight - r.bottom;
+
+            if (isOpen && keypadHeight > screenHeight * 0.15f) {
+                // Height available above the keyboard
+                int availableHeight = screenHeight - keypadHeight;
+
+                int[] inputLocation = new int[2];
+                inputCard.getLocationOnScreen(inputLocation);
+                int inputBottom = inputLocation[1] + inputCard.getHeight();
+
+                int overlap = inputBottom - availableHeight;
+                if (overlap < 0) overlap = 0;
+
+                // Shift input card fully above keyboard
+                inputCard.animate().translationY(-overlap).setDuration(120).start();
+
+                // Slightly move paragraph card up so gap between paragraph and input stays nice
+                int[] paragraphLocation = new int[2];
+                paragraphCard.getLocationOnScreen(paragraphLocation);
+                int paragraphBottom = paragraphLocation[1] + paragraphCard.getHeight();
+                int currentGap = inputLocation[1] - paragraphBottom;
+                int minGap = dpToPx(8);
+                int extraGapReduction = currentGap - minGap;
+                if (extraGapReduction < 0) extraGapReduction = 0;
+                int paragraphTranslation = -Math.min(overlap, extraGapReduction);
+
+                paragraphCard.animate().translationY(paragraphTranslation).setDuration(120).start();
+            } else {
+                // Keyboard hidden → reset positions
+                inputCard.animate().translationY(0).setDuration(120).start();
+                paragraphCard.animate().translationY(0).setDuration(120).start();
+            }
+        });
+    }
+
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 
     /**
@@ -120,7 +189,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 } else if (!snapshot.exists()) {
                     Log.e(TAG, "Game session not found. Finishing.");
                     // When room node disappears, treat it as room closed by other side / host left.
-                    Toast.makeText(MultiplayerGameActivity.this, "Room closed.", Toast.LENGTH_SHORT).show();
                     safeRemoveAllListeners();
                     finish();
                 }
@@ -154,7 +222,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         startTimer();
         setupTypingListener();
         setupOpponentListener();
-        setupGameResultListener();   // NEW: listen for winnerId / reason
+        setupGameResultListener();   // listen for winnerId / reason
 
         // Setup the opponent disconnect listener (relies on opponentId being set)
         if (opponentId != null) {
@@ -218,6 +286,19 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             spannable.append(currentParagraph.substring(typedText.length()));
         }
         wordDisplay.setText(spannable);
+
+        // auto-scroll to keep current typing line visible
+        if (paragraphScrollView != null) {
+            final int cursorOffset = Math.min(typedText.length(), currentParagraph.length());
+            paragraphScrollView.post(() -> {
+                Layout layout = wordDisplay.getLayout();
+                if (layout != null && cursorOffset >= 0 && cursorOffset <= layout.getText().length()) {
+                    int line = layout.getLineForOffset(cursorOffset);
+                    int y = layout.getLineTop(line);
+                    paragraphScrollView.smoothScrollTo(0, y);
+                }
+            });
+        }
     }
 
     private void updateProgressBar(int charsTyped) {
@@ -254,8 +335,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     }
 
     /**
-     * NEW: Listen for explicit game result so the losing side sees proper lose message
+     * Listen for explicit game result so the losing side sees proper lose message
      * instead of the opponent-disconnected dialog.
+     *
+     * We compute my WPM & accuracy locally from inputField/currentParagraph,
+     * so the losing side no longer sees 0/0.
      */
     private void setupGameResultListener() {
         if (gameResultListener != null) {
@@ -283,25 +367,29 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 inputField.setEnabled(false);
                 cancelOpponentDisconnectTimer();
 
-                boolean iWon = winnerId.equals(userId);
-                String msg;
-                if (iWon) {
-                    if ("completed_paragraph".equals(reason)) {
-                        msg = "You completed the paragraph. You win! 🏆";
-                    } else {
-                        msg = "You win! 🏆";
-                    }
+                // Decide my result type
+                String resultType;
+                if ("draw".equals(winnerId)) {
+                    resultType = "draw";
+                } else if (winnerId.equals(userId)) {
+                    resultType = "win";
                 } else {
-                    if ("completed_paragraph".equals(reason)) {
-                        msg = "Opponent completed the paragraph. You lost. 😔";
-                    } else {
-                        msg = "You lost. 😔";
-                    }
+                    resultType = "lose";
                 }
 
-                Toast.makeText(MultiplayerGameActivity.this, msg, Toast.LENGTH_LONG).show();
+                // Compute my stats locally
+                String typed = inputField.getText().toString();
+                int myWpm = calculateWPM(typed);
+                int myAcc = calculateAccuracy(typed, currentParagraph);
+
+                // Opponent stats: not used on UI anymore, pass 0,0
+                launchResultScreen(resultType,
+                        reason,
+                        myWpm, myAcc,
+                        0, 0,
+                        winnerId);
+
                 safeRemoveAllListeners();
-                new Handler(Looper.getMainLooper()).postDelayed(() -> finish(), 2000);
             }
 
             @Override
@@ -312,19 +400,16 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     }
 
     private void setupOpponentDisconnectListener() {
-        // 🛡️ Guard added in startMultiplayerGame, safe to assume opponentId is valid here.
         DatabaseReference opponentPresenceRef = gameRef.child("players_progress").child(opponentId).child("is_present");
         opponentPresenceListener = opponentPresenceRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Boolean isPresent = snapshot.getValue(Boolean.class);
 
-                // If isPresent is true, the opponent is online — cancel any pending disconnect timer.
                 if (isPresent != null && isPresent) {
                     Log.d(TAG, "Opponent presence: ONLINE -> cancel disconnect timer if any.");
                     cancelOpponentDisconnectTimer();
                 } else {
-                    // Opponent is missing OR marked offline. Start the graceful reconnection flow.
                     Log.d(TAG, "Opponent presence: OFFLINE or NULL -> starting reconnection flow.");
                     onPossibleOpponentDisconnect();
                 }
@@ -336,20 +421,14 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Called when we detect a possible opponent disconnect. This starts a countdown (OPPONENT_RECONNECT_TIMEOUT_MS)
-     * giving the opponent a chance to reconnect. If they reconnect, cancelOpponentDisconnectTimer() must be called.
-     */
     private void onPossibleOpponentDisconnect() {
         if (isGameOver) return; // already finished
 
-        // If a timer is already running, do nothing.
         if (disconnectRunnable != null) {
             Log.d(TAG, "Disconnect timer already running — ignoring additional trigger.");
             return;
         }
 
-        // Build a non-cancellable dialog with a negative button to claim victory immediately.
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Opponent disconnected");
         builder.setMessage("Waiting 30s for opponent to reconnect...");
@@ -369,7 +448,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 long elapsed = System.currentTimeMillis() - startTime;
                 long remaining = OPPONENT_RECONNECT_TIMEOUT_MS - elapsed;
                 if (remaining <= 0) {
-                    // Timeout expired: opponent didn't reconnect -> finalize as left.
                     Log.d(TAG, "Opponent did not reconnect within timeout. Confirming left.");
                     cancelOpponentDisconnectTimer();
                     if (disconnectDialog != null && disconnectDialog.isShowing()) {
@@ -377,23 +455,17 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                     }
                     onOpponentConfirmedLeft();
                 } else {
-                    // update dialog message with remaining seconds
                     if (disconnectDialog != null && disconnectDialog.isShowing()) {
                         disconnectDialog.setMessage("Waiting " + (remaining / 1000) + "s for opponent to reconnect...");
                     }
-                    // schedule next tick after 1s
                     disconnectHandler.postDelayed(this, 1000);
                 }
             }
         };
 
-        // Start countdown
         disconnectHandler.post(disconnectRunnable);
     }
 
-    /**
-     * Cancel the pending opponent disconnect countdown (called when opponent reconnects).
-     */
     private void cancelOpponentDisconnectTimer() {
         if (disconnectRunnable != null) {
             disconnectHandler.removeCallbacks(disconnectRunnable);
@@ -406,15 +478,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Called when we have confirmed that the opponent truly left (timeout expired or user claimed victory).
-     */
     private void onOpponentConfirmedLeft() {
         if (isGameOver) {
-            // If already ended via other means, still ensure cleanup
             Log.d(TAG, "onOpponentConfirmedLeft called but game was already over.");
         } else {
-            isGameOver = true; // now finalize the game as over
+            isGameOver = true;
         }
 
         if (timer != null) {
@@ -423,7 +491,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
         inputField.setEnabled(false);
 
-        // Cancel my own onDisconnect cleanup so my exit doesn't trigger a cascade.
         DatabaseReference myPresenceRef = gameRef.child("players_progress").child(userId).child("is_present");
         try {
             myPresenceRef.onDisconnect().cancel();
@@ -431,43 +498,36 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             Log.w(TAG, "Failed to cancel onDisconnect: " + e.getMessage());
         }
 
-        // Show persistent feedback and end after a short delay.
-        Toast.makeText(this, "Opponent did not reconnect. You win by default.", Toast.LENGTH_LONG).show();
+        int myWpm = calculateWPM(inputField.getText().toString());
+        int myAcc = calculateAccuracy(inputField.getText().toString(), currentParagraph);
 
-        // Perform any existing cleanup logic (similar to your previous code)
+        launchResultScreen("win", "opponent_disconnected", myWpm, myAcc, 0, 0, userId);
+
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                gameRef.removeValue();
+            } catch (Exception ignored) {}
             safeRemoveAllListeners();
-            finish();
-        }, 3000);
+        }, 1200);
     }
 
-    /**
-     * When the player completes the paragraph before the timer, they win immediately.
-     * This writes the player's final score and writes the result (winnerId/reason).
-     * The opponent will see this via setupGameResultListener().
-     */
     private void handlePlayerCompletedEarly() {
         if (isGameOver) return;
         isGameOver = true;
 
-        // Stop timer and input
         if (timer != null) timer.cancel();
         inputField.setEnabled(false);
 
-        // Compute final stats
         int myWpm = calculateWPM(inputField.getText().toString());
         int myAccuracy = calculateAccuracy(inputField.getText().toString(), currentParagraph);
 
-        // Write final score for this player
         DatabaseReference finalScoreRef = gameRef.child("final_scores").child(userId);
         finalScoreRef.child("wpm").setValue(myWpm);
         finalScoreRef.child("accuracy").setValue(myAccuracy);
 
-        // Write result so the opponent's client knows what happened
         gameRef.child("result").child("winnerId").setValue(userId);
         gameRef.child("result").child("reason").setValue("completed_paragraph");
 
-        // Remove our onDisconnect because we're purposely ending game now
         DatabaseReference myPresenceRef = gameRef.child("players_progress").child(userId).child("is_present");
         try {
             myPresenceRef.onDisconnect().cancel();
@@ -475,10 +535,12 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             Log.w(TAG, "Failed to cancel onDisconnect: " + e.getMessage());
         }
 
-        // Show victory locally and close activity
-        Toast.makeText(this, "You completed the paragraph. You win! 🏆", Toast.LENGTH_LONG).show();
-        safeRemoveAllListeners();
-        new Handler(Looper.getMainLooper()).postDelayed(() -> finish(), 1500);
+        launchResultScreen("win", "completed_paragraph", myWpm, myAccuracy, 0, 0, userId);
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            try { gameRef.removeValue(); } catch (Exception ignored) {}
+            safeRemoveAllListeners();
+        }, 1500);
     }
 
     private void safeRemoveAllListeners() {
@@ -498,7 +560,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 if (playersListener != null) {
                     gameRef.removeEventListener(playersListener);
                 }
-                if (gameResultListener != null) {   // NEW
+                if (gameResultListener != null) {
                     gameRef.child("result").removeEventListener(gameResultListener);
                 }
             }
@@ -507,10 +569,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Timer end / normal finish handler.
-     * This writes our final score and then waits for opponent's score (existing flow).
-     */
     private void gameOver() {
         if (isGameOver) return;
         isGameOver = true;
@@ -520,7 +578,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         }
         inputField.setEnabled(false);
 
-        // Cancel our onDisconnect because game concluded normally - server-side cleanup not needed.
         DatabaseReference myPresenceRef = gameRef.child("players_progress").child(userId).child("is_present");
         try {
             myPresenceRef.onDisconnect().cancel();
@@ -532,11 +589,9 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         finalScoreRef.child("wpm").setValue(calculateWPM(inputField.getText().toString()));
         finalScoreRef.child("accuracy").setValue(calculateAccuracy(inputField.getText().toString(), currentParagraph));
 
-        // When timer finishes, we wait for both final_scores children (existing logic).
         finalScoreListener = gameRef.child("final_scores").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // If both players have submitted final_scores (2 children), declare winner based on values
                 if (snapshot.getChildrenCount() == 2) {
                     declareWinner(snapshot);
                     gameRef.child("final_scores").removeEventListener(finalScoreListener);
@@ -589,48 +644,49 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             }
         }
 
-        String result;
-        // Decide based on accuracy when timer ended as per your requirement.
+        String resultType;
         if (myAccuracy > opponentAccuracy) {
-            result = "You won! 🏆";
+            resultType = "win";
         } else if (opponentAccuracy > myAccuracy) {
-            result = "You lost! 😔";
+            resultType = "lose";
         } else {
-            // If accuracy tied, fallback to WPM
             if (myWpm > opponentWpm) {
-                result = "You won! 🏆";
+                resultType = "win";
             } else if (opponentWpm > myWpm) {
-                result = "You lost! 😔";
+                resultType = "lose";
             } else {
-                result = "It's a draw! 🤝";
+                resultType = "draw";
             }
         }
 
-        Toast.makeText(this, result + "\nYour WPM: " + myWpm + " Accuracy: " + myAccuracy +
-                "\nOpponent's WPM: " + opponentWpm + " Accuracy: " + opponentAccuracy, Toast.LENGTH_LONG).show();
-
-        // Optionally, remove the room after declaring winner
         try {
-            gameRef.removeValue();
+            if ("win".equals(resultType)) {
+                gameRef.child("result").child("winnerId").setValue(userId);
+            } else if ("lose".equals(resultType)) {
+                gameRef.child("result").child("winnerId").setValue(opponentId);
+            } else {
+                gameRef.child("result").child("winnerId").setValue("draw");
+            }
+            gameRef.child("result").child("reason").setValue("timer_accuracy");
         } catch (Exception e) {
-            Log.w(TAG, "Failed to remove room after declaring winner: " + e.getMessage());
+            Log.w(TAG, "Failed to write result node: " + e.getMessage());
         }
 
-        // End the activity after showing results
+        launchResultScreen(resultType, "timer_accuracy", myWpm, myAccuracy, opponentWpm, opponentAccuracy,
+                "win".equals(resultType) ? userId : ("lose".equals(resultType) ? opponentId : null));
+
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            try { gameRef.removeValue(); } catch (Exception ignored) {}
             safeRemoveAllListeners();
-            finish();
-        }, 4000);
+        }, 1500);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        // Cancel any pending disconnect timer to avoid leaking UI handlers while in background
         cancelOpponentDisconnectTimer();
 
         if (gameRef != null) {
-            // Remove all specific listeners
             if (opponentId != null) {
                 if (opponentListener != null) {
                     gameRef.child("players_progress").child(opponentId).removeEventListener(opponentListener);
@@ -643,7 +699,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 gameRef.child("final_scores").removeEventListener(finalScoreListener);
             }
             if (playersListener != null) {
-                // This listener should only exist if the game hasn't started yet.
                 gameRef.removeEventListener(playersListener);
             }
             if (gameResultListener != null) {
@@ -655,45 +710,26 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        // Ensure we cancel the disconnect timer and dialog
         cancelOpponentDisconnectTimer();
-
-        // IMPORTANT: Do NOT cancel myPresenceRef.onDisconnect() here.
-        // Keeping the onDisconnect handler registered ensures that if the process is killed (force-quit),
-        // Firebase will run the server-side onDisconnect action and set my 'is_present' to false,
-        // so the remaining player(s) will be notified and the disconnect flow will run.
-        //
-        // We only cancel onDisconnect when the game ends normally (in gameOver() or onOpponentConfirmedLeft()).
+        // Do NOT cancel onDisconnect here
     }
 
     @Override
     public void onBackPressed() {
-        // If the game is already over, allow default behavior
         if (isGameOver) {
             super.onBackPressed();
             return;
         }
 
-        // Show confirmation dialog to leave the room (intentional leave)
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Leave Room");
         builder.setMessage("Are you sure you want to leave the room? This will close the room for the match and the opponent will be declared winner.");
         builder.setCancelable(true);
-        builder.setPositiveButton("Leave Room", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                handlePlayerLeftIntentional();
-            }
-        });
+        builder.setPositiveButton("Leave Room", (dialog, which) -> handlePlayerLeftIntentional());
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
 
-    /**
-     * Called when the local user intentionally leaves via the back-confirm dialog.
-     * We'll set presence=false, remove the room, and finish.
-     */
     private void handlePlayerLeftIntentional() {
         if (isGameOver) {
             safeRemoveAllListeners();
@@ -705,7 +741,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         if (timer != null) timer.cancel();
         inputField.setEnabled(false);
 
-        // Mark us absent (so opponent sees immediate presence=false)
         DatabaseReference myPresenceRef = gameRef.child("players_progress").child(userId).child("is_present");
         try {
             myPresenceRef.setValue(false);
@@ -713,11 +748,45 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             Log.w(TAG, "Failed to set presence=false on intentional leave: " + e.getMessage());
         }
 
-        // Delete the whole room so opponent is notified / closed
+        try {
+            if (opponentId != null && !opponentId.isEmpty()) {
+                gameRef.child("result").child("winnerId").setValue(opponentId);
+                gameRef.child("result").child("reason").setValue("left_room");
+            }
+        } catch (Exception ignored) {}
+
         gameRef.removeValue().addOnCompleteListener(task -> {
             safeRemoveAllListeners();
-            Toast.makeText(MultiplayerGameActivity.this, "You left the room.", Toast.LENGTH_SHORT).show();
             finish();
         });
+    }
+
+    private void launchResultScreen(String resultType, String reason,
+                                    int myWpm, int myAcc, int oppWpm, int oppAcc,
+                                    String winnerId) {
+        try {
+            Intent intent = new Intent(this, ResultActivity.class);
+            intent.putExtra(ResultActivity.EXTRA_RESULT_TYPE, resultType);
+            intent.putExtra(ResultActivity.EXTRA_MY_WPM, myWpm);
+            intent.putExtra(ResultActivity.EXTRA_MY_ACC, myAcc);
+            intent.putExtra(ResultActivity.EXTRA_OPP_WPM, oppWpm);
+            intent.putExtra(ResultActivity.EXTRA_OPP_ACC, oppAcc);
+            intent.putExtra(ResultActivity.EXTRA_WINNER_ID, winnerId);
+            intent.putExtra(ResultActivity.EXTRA_YOUR_ID, userId);
+
+            startActivityForResult(intent, 1000);
+        } catch (Exception e) {
+            Toast.makeText(this, (resultType.equals("win") ? "You won!" : "You lost!"), Toast.LENGTH_LONG).show();
+            new Handler(Looper.getMainLooper()).postDelayed(this::finish, 1200);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1000) {
+            safeRemoveAllListeners();
+            finish();
+        }
     }
 }

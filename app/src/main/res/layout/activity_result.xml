@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="?attr/colorSurface"
+    android:clickable="false"
+    android:focusable="false"
+    android:id="@+id/gameOverContainer">
+
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:gravity="center_horizontal"
+        android:padding="20dp"
+        android:orientation="vertical"
+        android:layout_gravity="center">
+
+        <!-- Title: You Win / You Lost / Draw -->
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textSize="40sp"
+            android:fontFamily="@font/font"
+            android:textColor="?attr/colorOnBackground"
+            android:id="@+id/gameOverTitle"
+            android:text="GAME OVER"
+            android:textStyle="bold" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_height="wrap_content"
+            android:layout_width="320dp"
+            android:layout_marginBottom="40dp"
+            app:strokeColor="?attr/colorOnPrimaryContainer"
+            app:cardBackgroundColor="?attr/colorPrimaryContainer"
+            style="@style/Widget.MaterialComponents.CardView"
+            android:layout_marginTop="24dp"
+            app:cardCornerRadius="24dp"
+            android:id="@+id/mainGameOverCard">
+
+            <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp">
+
+                <!-- Subtitle / message -->
+                <TextView
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:textSize="20sp"
+                    android:fontFamily="@font/difficulty"
+                    android:textColor="?attr/colorOnSurface"
+                    android:id="@+id/gameOverMessageInside"
+                    android:text="Result"
+                    android:textStyle="bold" />
+
+                <!-- YOUR ACCURACY -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="6dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/accuracy"
+                        android:contentDescription="accuracy icon" />
+
+                    <TextView
+                        android:id="@+id/scoreTextInsideCard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Accuracy: 0%"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/difficulty"
+                        android:textColor="?attr/colorOnPrimaryContainer"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- YOUR WPM -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="12dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/wpm"
+                        android:contentDescription="wpm icon" />
+
+                    <TextView
+                        android:id="@+id/wpmTextView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="WPM: 0"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/difficulty"
+                        android:textColor="?attr/colorOnPrimaryContainer"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- Buttons -->
+                <LinearLayout
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:layout_height="wrap_content"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="12dp"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/difficulty"
+                        app:cornerRadius="50dp"
+                        app:elevation="8dp"
+                        android:textColor="?attr/colorSurface"
+                        style="@style/Widget.Material3.Button"
+                        android:id="@+id/menuButton"
+                        android:text="Menu" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:layout_height="wrap_content"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:textSize="16sp"
+                        android:fontFamily="@font/difficulty"
+                        app:cornerRadius="50dp"
+                        app:elevation="8dp"
+                        android:textColor="?attr/colorSurface"
+                        style="@style/Widget.Material3.Button"
+                        android:id="@+id/retryButton"
+                        android:text="Retry" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+</FrameLayout>
