@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,10 +45,17 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     private String userId;
     private ValueEventListener gameStartListener;
     private TextView statusTextView;
+
+    // UI Elements
     private MaterialButton findMatchButton;
     private MaterialButton rulesButton;
+    private MaterialButton createRoomButton;
+    private MaterialButton joinRoomButton;
+    private EditText roomCodeInput;
+
     private boolean findingMatch = false;
     private String finalGameSessionIdForHost = null;
+
     // Animated "..." on status text
     private Handler statusHandler = new Handler();
     private Runnable statusDotsRunnable;
@@ -61,9 +69,15 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
+        // Bind existing views
         statusTextView = findViewById(R.id.statusTextView);
         findMatchButton = findViewById(R.id.findMatchButton);
         rulesButton = findViewById(R.id.rulesButton);
+
+        // Bind new Private Room views
+        createRoomButton = findViewById(R.id.createRoomButton);
+        joinRoomButton = findViewById(R.id.joinRoomButton);
+        roomCodeInput = findViewById(R.id.roomCodeInput);
 
         statusTextView.setText("Signing in...");
 
@@ -79,9 +93,16 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     userId = mAuth.getCurrentUser().getUid();
                     statusTextView.setText("Ready to find a match");
+
+                    // Enable Matchmaking
                     findMatchButton.setVisibility(View.VISIBLE);
                     findMatchButton.setEnabled(true);
                     findMatchButton.setOnClickListener(v -> findMatch());
+
+                    // Enable Private Rooms
+                    createRoomButton.setOnClickListener(v -> createPrivateRoom());
+                    joinRoomButton.setOnClickListener(v -> joinPrivateRoom(roomCodeInput.getText().toString().trim().toUpperCase()));
+
                 } else {
                     Toast.makeText(MultiplayerLobbyActivity.this,
                             "Authentication failed.", Toast.LENGTH_SHORT).show();
@@ -91,13 +112,17 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         });
     }
 
+    // ==========================================
+    // RANDOM MATCHMAKING LOGIC
+    // ==========================================
+
     private void findMatch() {
         if (findingMatch) return;
         findingMatch = true;
 
-        findMatchButton.setEnabled(false);
+        disableAllButtons();
         statusTextView.setText("Finding a match");
-        startStatusDotsAnimation(); // animate "..." on status text
+        startStatusDotsAnimation();
 
         DatabaseReference matchmakingRef = mDatabase.child("matchmaking_queue");
         final String myUserId = userId;
@@ -153,14 +178,14 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                             "Matchmaking failed: " + error.getMessage(),
                             Toast.LENGTH_SHORT).show();
                     statusTextView.setText("Matchmaking failed. Try again.");
-                    findMatchButton.setEnabled(true);
+                    enableAllButtons();
                     return;
                 }
 
                 if (!committed || currentData == null) {
                     stopStatusDotsAnimation();
                     statusTextView.setText("Matchmaking failed. Try again.");
-                    findMatchButton.setEnabled(true);
+                    enableAllButtons();
                     return;
                 }
 
@@ -260,10 +285,136 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                 Toast.makeText(MultiplayerLobbyActivity.this,
                         "Error listening for match.", Toast.LENGTH_SHORT).show();
                 statusTextView.setText("Error finding match. Try again.");
-                findMatchButton.setEnabled(true);
+                enableAllButtons();
             }
         });
     }
+
+    // ==========================================
+    // PRIVATE ROOM LOGIC
+    // ==========================================
+
+    private void createPrivateRoom() {
+        disableAllButtons();
+
+        String roomCode = generateRoomCode();
+        statusTextView.setText("Room Code: " + roomCode + "\nWaiting for friend...");
+        startStatusDotsAnimation();
+
+        DatabaseReference roomRef = mDatabase.child("private_rooms").child(roomCode);
+
+        Map<String, Object> roomData = new HashMap<>();
+        roomData.put("hostId", userId);
+        roomData.put("status", "waiting");
+        roomRef.setValue(roomData);
+
+        roomRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.hasChild("guestId") && "joined".equals(snapshot.child("status").getValue(String.class))) {
+                    roomRef.removeEventListener(this); // Stop listening to room
+
+                    String guestId = snapshot.child("guestId").getValue(String.class);
+                    String gameSessionId = UUID.randomUUID().toString();
+
+                    // Setup the actual game session exactly like random matchmaking does
+                    String randomParagraph = getRandomParagraphFromAssets();
+                    Map<String, Object> gameData = new HashMap<>();
+                    gameData.put("status", "in_progress");
+                    gameData.put("paragraph_text", randomParagraph);
+
+                    Map<String, String> playersMap = new HashMap<>();
+                    playersMap.put(userId, "player1");
+                    playersMap.put(guestId, "player2");
+                    gameData.put("players", playersMap);
+
+                    mDatabase.child("game_sessions").child(gameSessionId)
+                            .setValue(gameData)
+                            .addOnCompleteListener(task -> {
+                                // Write the session ID back to the room so the guest can read it
+                                roomRef.child("gameSessionId").setValue(gameSessionId);
+                                stopStatusDotsAnimation();
+                                statusTextView.setText("Match found! Starting game...");
+                                startGameActivity(gameSessionId);
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                stopStatusDotsAnimation();
+                statusTextView.setText("Error creating room.");
+                enableAllButtons();
+            }
+        });
+    }
+
+    private void joinPrivateRoom(String roomCode) {
+        if (roomCode.isEmpty()) {
+            Toast.makeText(this, "Please enter a code", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        disableAllButtons();
+        statusTextView.setText("Joining room");
+        startStatusDotsAnimation();
+
+        DatabaseReference roomRef = mDatabase.child("private_rooms").child(roomCode);
+
+        roomRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists() && "waiting".equals(snapshot.child("status").getValue(String.class))) {
+
+                    // We found the room, join it
+                    roomRef.child("guestId").setValue(userId);
+                    roomRef.child("status").setValue("joined");
+
+                    // Now wait for the host to generate the gameSessionId
+                    roomRef.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snap) {
+                            String sessionId = snap.child("gameSessionId").getValue(String.class);
+                            if (sessionId != null) {
+                                roomRef.removeEventListener(this);
+                                stopStatusDotsAnimation();
+                                statusTextView.setText("Match found! Starting game...");
+                                startGameActivity(sessionId);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {}
+                    });
+                } else {
+                    stopStatusDotsAnimation();
+                    Toast.makeText(MultiplayerLobbyActivity.this, "Room not found or game already started.", Toast.LENGTH_SHORT).show();
+                    statusTextView.setText("Ready to find a match");
+                    enableAllButtons();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                stopStatusDotsAnimation();
+                enableAllButtons();
+            }
+        });
+    }
+
+    private String generateRoomCode() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder code = new StringBuilder();
+        Random rnd = new Random();
+        for (int i = 0; i < 6; i++) {
+            code.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return code.toString();
+    }
+
+    // ==========================================
+    // SHARED GAME LAUNCH & UTILS
+    // ==========================================
 
     private void startGameActivity(String gameSessionId) {
         if (gameSessionId == null || gameSessionId.isEmpty()) {
@@ -271,7 +422,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     "Error: Invalid game session ID. Please try again.",
                     Toast.LENGTH_SHORT).show();
             statusTextView.setText("Ready to find a match");
-            findMatchButton.setEnabled(true);
+            enableAllButtons();
             return;
         }
 
@@ -288,6 +439,18 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         intent.putExtra("userId", userId);
         startActivity(intent);
         finish();
+    }
+
+    private void disableAllButtons() {
+        findMatchButton.setEnabled(false);
+        createRoomButton.setEnabled(false);
+        joinRoomButton.setEnabled(false);
+    }
+
+    private void enableAllButtons() {
+        findMatchButton.setEnabled(true);
+        createRoomButton.setEnabled(true);
+        joinRoomButton.setEnabled(true);
     }
 
     private String getRandomParagraphFromAssets() {

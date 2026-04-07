@@ -38,9 +38,9 @@
     <!-- ca-app-pub-6807409350203174/7543821829 - real ban-->
     <!-- ca-app-pub-3940256099942544/1712485313 - test rew-->
     <!-- ca-app-pub-6807409350203174/9374454761 - real rew-->
-    <string name="Interstitial">ca-app-pub-3940256099942544/4411468910</string>
-    <string name="Banner">ca-app-pub-3940256099942544/9214589741</string>
-    <string name="Rewarded">ca-app-pub-3940256099942544/1712485313</string>
+    <string name="Interstitial">ca-app-pub-6807409350203174/4005808164</string>
+    <string name="Banner">ca-app-pub-6807409350203174/7543821829</string>
+    <string name="Rewarded">ca-app-pub-6807409350203174/9374454761</string>
 
 
 </resources>
