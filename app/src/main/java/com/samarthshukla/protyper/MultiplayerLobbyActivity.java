@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,18 +44,31 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private String userId;
-    private ValueEventListener gameStartListener;
-    private TextView statusTextView;
 
     // UI Elements
+    private TextView statusTextView;
+    private TextView roomCodeDisplayTextView;
+    private MaterialButton cancelMatchButton;
     private MaterialButton findMatchButton;
     private MaterialButton rulesButton;
     private MaterialButton createRoomButton;
     private MaterialButton joinRoomButton;
+    private MaterialButton playWithFriendButton;
     private EditText roomCodeInput;
 
+    private BottomSheetBehavior<View> bottomSheetBehavior;
+
+    // State trackers for cancellation & Matchmaking
     private boolean findingMatch = false;
     private String finalGameSessionIdForHost = null;
+    private String finalOpponentIdForHost = null; // GUARANTEES OPPONENT IS ADDED
+    private String currentOperation = "NONE";
+    private String activeRoomCode = null;
+
+    // Listeners so we can detach them if user cancels
+    private ValueEventListener gameStartListener;
+    private ValueEventListener hostRoomListener;
+    private ValueEventListener joinRoomListener;
 
     // Animated "..." on status text
     private Handler statusHandler = new Handler();
@@ -79,8 +93,28 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         joinRoomButton = findViewById(R.id.joinRoomButton);
         roomCodeInput = findViewById(R.id.roomCodeInput);
 
-        statusTextView.setText("Signing in...");
+        // Bind Cancellation & Display Views
+        roomCodeDisplayTextView = findViewById(R.id.roomCodeDisplayTextView);
+        cancelMatchButton = findViewById(R.id.cancelMatchButton);
 
+        // --- BOTTOM SHEET BINDINGS ---
+        playWithFriendButton = findViewById(R.id.playWithFriendButton);
+        View bottomSheet = findViewById(R.id.bottomSheet);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        playWithFriendButton.setOnClickListener(v -> {
+            if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            } else {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            }
+        });
+
+        // Setup Cancel Button
+        cancelMatchButton.setOnClickListener(v -> cancelOperation());
+
+        statusTextView.setText("Signing in...");
         rulesButton.setOnClickListener(v -> showRulesDialog());
 
         signInAnonymously();
@@ -92,7 +126,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     userId = mAuth.getCurrentUser().getUid();
-                    statusTextView.setText("Ready to find a match");
+                    statusTextView.setText("READY TO FIND A MATCH");
 
                     // Enable Matchmaking
                     findMatchButton.setVisibility(View.VISIBLE);
@@ -104,12 +138,52 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     joinRoomButton.setOnClickListener(v -> joinPrivateRoom(roomCodeInput.getText().toString().trim().toUpperCase()));
 
                 } else {
-                    Toast.makeText(MultiplayerLobbyActivity.this,
-                            "Authentication failed.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MultiplayerLobbyActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
                     statusTextView.setText("Authentication failed. Please restart.");
                 }
             }
         });
+    }
+
+    // ==========================================
+    // CANCELLATION LOGIC
+    // ==========================================
+
+    private void cancelOperation() {
+        stopStatusDotsAnimation();
+
+        if ("RANDOM".equals(currentOperation)) {
+            findingMatch = false;
+            if (userId != null) {
+                mDatabase.child("matchmaking_queue").child(userId).removeValue();
+                if (gameStartListener != null) {
+                    mDatabase.child("matchmaking_queue").child(userId).removeEventListener(gameStartListener);
+                }
+            }
+        }
+        else if ("HOST".equals(currentOperation)) {
+            if (activeRoomCode != null) {
+                if (hostRoomListener != null) {
+                    mDatabase.child("private_rooms").child(activeRoomCode).removeEventListener(hostRoomListener);
+                }
+                mDatabase.child("private_rooms").child(activeRoomCode).removeValue();
+            }
+        }
+        else if ("JOIN".equals(currentOperation)) {
+            if (activeRoomCode != null && joinRoomListener != null) {
+                mDatabase.child("private_rooms").child(activeRoomCode).removeEventListener(joinRoomListener);
+            }
+        }
+
+        // Reset UI State
+        currentOperation = "NONE";
+        activeRoomCode = null;
+        finalGameSessionIdForHost = null;
+        finalOpponentIdForHost = null;
+        roomCodeDisplayTextView.setVisibility(View.GONE);
+        cancelMatchButton.setVisibility(View.GONE);
+        statusTextView.setText("READY TO FIND A MATCH");
+        enableAllButtons();
     }
 
     // ==========================================
@@ -119,8 +193,10 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     private void findMatch() {
         if (findingMatch) return;
         findingMatch = true;
+        currentOperation = "RANDOM";
 
         disableAllButtons();
+        cancelMatchButton.setVisibility(View.VISIBLE);
         statusTextView.setText("Finding a match");
         startStatusDotsAnimation();
 
@@ -128,6 +204,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         final String myUserId = userId;
 
         finalGameSessionIdForHost = null;
+        finalOpponentIdForHost = null;
 
         matchmakingRef.runTransaction(new Transaction.Handler() {
             @NonNull
@@ -135,28 +212,23 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
             public Transaction.Result doTransaction(@NonNull MutableData currentData) {
                 String opponentId = null;
                 for (MutableData player : currentData.getChildren()) {
-                    if (!player.getKey().equals(userId)
-                            && player.child("gameSessionId").getValue() == null) {
+                    if (!player.getKey().equals(userId) && player.child("gameSessionId").getValue() == null) {
                         opponentId = player.getKey();
                         break;
                     }
                 }
 
                 if (opponentId != null) {
-                    // HOST PATH
                     String gameSessionId = UUID.randomUUID().toString();
-                    final String finalOpponentId = opponentId;
 
+                    // SAVE THESE SECURELY DURING THE TRANSACTION
                     finalGameSessionIdForHost = gameSessionId;
+                    finalOpponentIdForHost = opponentId;
 
-                    // Assign gameSessionId to opponent, remove host from queue
-                    currentData.child(finalOpponentId).child("gameSessionId")
-                            .setValue(gameSessionId);
+                    currentData.child(opponentId).child("gameSessionId").setValue(gameSessionId);
                     currentData.child(myUserId).setValue(null);
-
                     return Transaction.success(currentData);
                 } else {
-                    // No match -> join queue
                     Map<String, Object> playerEntry = new HashMap<>();
                     playerEntry.put("userId", userId);
                     playerEntry.put("timestamp", ServerValue.TIMESTAMP);
@@ -166,33 +238,23 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onComplete(@Nullable DatabaseError error,
-                                   boolean committed,
-                                   @Nullable DataSnapshot currentData) {
-
+            public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                if (!"RANDOM".equals(currentOperation)) return; // User canceled
                 findingMatch = false;
 
-                if (error != null) {
-                    stopStatusDotsAnimation();
-                    Toast.makeText(MultiplayerLobbyActivity.this,
-                            "Matchmaking failed: " + error.getMessage(),
-                            Toast.LENGTH_SHORT).show();
-                    statusTextView.setText("Matchmaking failed. Try again.");
-                    enableAllButtons();
+                if (error != null || !committed || currentData == null) {
+                    cancelOperation();
+                    Toast.makeText(MultiplayerLobbyActivity.this, "Matchmaking failed.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                if (!committed || currentData == null) {
-                    stopStatusDotsAnimation();
-                    statusTextView.setText("Matchmaking failed. Try again.");
-                    enableAllButtons();
-                    return;
-                }
-
-                // HOST: we have created a session id locally
-                if (finalGameSessionIdForHost != null) {
+                // If we found an opponent, upload the game data
+                if (finalGameSessionIdForHost != null && finalOpponentIdForHost != null) {
                     String gameSessionIdToCreate = finalGameSessionIdForHost;
+                    String opponentIdToInclude = finalOpponentIdForHost;
+
                     finalGameSessionIdForHost = null;
+                    finalOpponentIdForHost = null;
 
                     String randomParagraph = getRandomParagraphFromAssets();
 
@@ -200,24 +262,10 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     gameData.put("status", "in_progress");
                     gameData.put("paragraph_text", randomParagraph);
 
+                    // GUARANTEE BOTH PLAYERS ARE IN THE LIST SO NO ONE IS KICKED
                     Map<String, String> playersMap = new HashMap<>();
                     playersMap.put(myUserId, "player1");
-
-                    // Best-effort: find opponent from queue snapshot
-                    try {
-                        for (DataSnapshot child : currentData.getChildren()) {
-                            String key = child.getKey();
-                            if (key != null && !key.equals(myUserId)) {
-                                String assigned = child.child("gameSessionId")
-                                        .getValue(String.class);
-                                if (assigned != null
-                                        && assigned.equals(gameSessionIdToCreate)) {
-                                    playersMap.put(key, "player2");
-                                    break;
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) {}
+                    playersMap.put(opponentIdToInclude, "player2");
 
                     gameData.put("players", playersMap);
 
@@ -225,30 +273,28 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                             .setValue(gameData)
                             .addOnCompleteListener(task -> {
                                 stopStatusDotsAnimation();
-                                statusTextView.setText("Match found! Starting game...");
+                                cancelMatchButton.setVisibility(View.GONE);
+                                statusTextView.setText("Arena found! Starting...");
                                 startGameActivity(gameSessionIdToCreate);
                             });
-
                     return;
                 }
 
-                // JOINER / WAITER
+                // If we didn't find anyone, we wait in the queue.
                 DataSnapshot myDataSnapshot = currentData.child(userId);
-                String finalGameSessionId =
-                        myDataSnapshot.child("gameSessionId").getValue(String.class);
+                String finalGameSessionId = myDataSnapshot.child("gameSessionId").getValue(String.class);
 
                 if (finalGameSessionId != null && !finalGameSessionId.isEmpty()) {
                     stopStatusDotsAnimation();
-                    statusTextView.setText("Match found! Starting game...");
-                    startGameActivity(finalGameSessionId);
+                    cancelMatchButton.setVisibility(View.GONE);
+                    statusTextView.setText("Arena found! Preparing...");
+                    // 1.5 SECOND BUFFER: Let the other player finish uploading data before we read it
+                    new Handler().postDelayed(() -> startGameActivity(finalGameSessionId), 1500);
                 } else if (currentData.child(userId).exists()) {
                     statusTextView.setText("Waiting for opponent");
                     startStatusDotsAnimation();
                     listenForGameStart();
                 } else {
-                    // Entry removed but no session yet; just wait.
-                    statusTextView.setText("Waiting for match to start");
-                    startStatusDotsAnimation();
                     listenForGameStart();
                 }
             }
@@ -256,36 +302,29 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     }
 
     private void listenForGameStart() {
-        if (gameStartListener != null) {
-            mDatabase.child("matchmaking_queue")
-                    .child(userId)
-                    .removeEventListener(gameStartListener);
+        if (gameStartListener != null && userId != null) {
+            mDatabase.child("matchmaking_queue").child(userId).removeEventListener(gameStartListener);
         }
 
-        DatabaseReference myQueueRef =
-                mDatabase.child("matchmaking_queue").child(userId);
-
+        DatabaseReference myQueueRef = mDatabase.child("matchmaking_queue").child(userId);
         gameStartListener = myQueueRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String gameSessionId =
-                        snapshot.child("gameSessionId").getValue(String.class);
-
+                String gameSessionId = snapshot.child("gameSessionId").getValue(String.class);
                 if (gameSessionId != null && !gameSessionId.isEmpty()) {
                     myQueueRef.removeEventListener(this);
                     stopStatusDotsAnimation();
-                    statusTextView.setText("Match found! Starting game...");
-                    new Handler().postDelayed(() -> startGameActivity(gameSessionId), 400);
+                    cancelMatchButton.setVisibility(View.GONE);
+                    statusTextView.setText("Arena found! Preparing...");
+
+                    // 1.5 SECOND BUFFER: Let the other player finish uploading data before we read it
+                    new Handler().postDelayed(() -> startGameActivity(gameSessionId), 1500);
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                stopStatusDotsAnimation();
-                Toast.makeText(MultiplayerLobbyActivity.this,
-                        "Error listening for match.", Toast.LENGTH_SHORT).show();
-                statusTextView.setText("Error finding match. Try again.");
-                enableAllButtons();
+                if ("RANDOM".equals(currentOperation)) cancelOperation();
             }
         });
     }
@@ -295,29 +334,35 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     // ==========================================
 
     private void createPrivateRoom() {
+        currentOperation = "HOST";
         disableAllButtons();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-        String roomCode = generateRoomCode();
-        statusTextView.setText("Room Code: " + roomCode + "\nWaiting for friend...");
+        activeRoomCode = generateRoomCode();
+
+        roomCodeDisplayTextView.setText(activeRoomCode);
+        roomCodeDisplayTextView.setVisibility(View.VISIBLE);
+        cancelMatchButton.setVisibility(View.VISIBLE);
+
+        statusTextView.setText("Waiting for friend...");
         startStatusDotsAnimation();
 
-        DatabaseReference roomRef = mDatabase.child("private_rooms").child(roomCode);
+        DatabaseReference roomRef = mDatabase.child("private_rooms").child(activeRoomCode);
 
         Map<String, Object> roomData = new HashMap<>();
         roomData.put("hostId", userId);
         roomData.put("status", "waiting");
         roomRef.setValue(roomData);
 
-        roomRef.addValueEventListener(new ValueEventListener() {
+        hostRoomListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.hasChild("guestId") && "joined".equals(snapshot.child("status").getValue(String.class))) {
-                    roomRef.removeEventListener(this); // Stop listening to room
+                    roomRef.removeEventListener(this);
 
                     String guestId = snapshot.child("guestId").getValue(String.class);
                     String gameSessionId = UUID.randomUUID().toString();
 
-                    // Setup the actual game session exactly like random matchmaking does
                     String randomParagraph = getRandomParagraphFromAssets();
                     Map<String, Object> gameData = new HashMap<>();
                     gameData.put("status", "in_progress");
@@ -331,10 +376,10 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     mDatabase.child("game_sessions").child(gameSessionId)
                             .setValue(gameData)
                             .addOnCompleteListener(task -> {
-                                // Write the session ID back to the room so the guest can read it
                                 roomRef.child("gameSessionId").setValue(gameSessionId);
                                 stopStatusDotsAnimation();
-                                statusTextView.setText("Match found! Starting game...");
+                                cancelMatchButton.setVisibility(View.GONE);
+                                statusTextView.setText("Match found! Starting...");
                                 startGameActivity(gameSessionId);
                             });
                 }
@@ -342,11 +387,11 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                stopStatusDotsAnimation();
-                statusTextView.setText("Error creating room.");
-                enableAllButtons();
+                if ("HOST".equals(currentOperation)) cancelOperation();
             }
-        });
+        };
+
+        roomRef.addValueEventListener(hostRoomListener);
     }
 
     private void joinPrivateRoom(String roomCode) {
@@ -355,49 +400,55 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
             return;
         }
 
+        currentOperation = "JOIN";
+        activeRoomCode = roomCode;
+
         disableAllButtons();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        cancelMatchButton.setVisibility(View.VISIBLE);
+
         statusTextView.setText("Joining room");
         startStatusDotsAnimation();
 
-        DatabaseReference roomRef = mDatabase.child("private_rooms").child(roomCode);
+        DatabaseReference roomRef = mDatabase.child("private_rooms").child(activeRoomCode);
 
         roomRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists() && "waiting".equals(snapshot.child("status").getValue(String.class))) {
+                if (!"JOIN".equals(currentOperation)) return;
 
-                    // We found the room, join it
+                if (snapshot.exists() && "waiting".equals(snapshot.child("status").getValue(String.class))) {
                     roomRef.child("guestId").setValue(userId);
                     roomRef.child("status").setValue("joined");
 
-                    // Now wait for the host to generate the gameSessionId
-                    roomRef.addValueEventListener(new ValueEventListener() {
+                    joinRoomListener = new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snap) {
                             String sessionId = snap.child("gameSessionId").getValue(String.class);
                             if (sessionId != null) {
                                 roomRef.removeEventListener(this);
                                 stopStatusDotsAnimation();
-                                statusTextView.setText("Match found! Starting game...");
-                                startGameActivity(sessionId);
+                                cancelMatchButton.setVisibility(View.GONE);
+                                statusTextView.setText("Arena found! Preparing...");
+
+                                // 1.5s Buffer for Private Rooms too!
+                                new Handler().postDelayed(() -> startGameActivity(sessionId), 1500);
                             }
                         }
-
                         @Override
                         public void onCancelled(@NonNull DatabaseError error) {}
-                    });
+                    };
+                    roomRef.addValueEventListener(joinRoomListener);
+
                 } else {
-                    stopStatusDotsAnimation();
-                    Toast.makeText(MultiplayerLobbyActivity.this, "Room not found or game already started.", Toast.LENGTH_SHORT).show();
-                    statusTextView.setText("Ready to find a match");
-                    enableAllButtons();
+                    Toast.makeText(MultiplayerLobbyActivity.this, "Room not found or full.", Toast.LENGTH_SHORT).show();
+                    cancelOperation();
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                stopStatusDotsAnimation();
-                enableAllButtons();
+                if ("JOIN".equals(currentOperation)) cancelOperation();
             }
         });
     }
@@ -418,21 +469,14 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
 
     private void startGameActivity(String gameSessionId) {
         if (gameSessionId == null || gameSessionId.isEmpty()) {
-            Toast.makeText(this,
-                    "Error: Invalid game session ID. Please try again.",
-                    Toast.LENGTH_SHORT).show();
-            statusTextView.setText("Ready to find a match");
-            enableAllButtons();
+            Toast.makeText(this, "Error: Invalid ID. Try again.", Toast.LENGTH_SHORT).show();
+            cancelOperation();
             return;
         }
 
-        if (gameStartListener != null) {
-            mDatabase.child("matchmaking_queue").child(userId)
-                    .removeEventListener(gameStartListener);
+        if (userId != null) {
+            mDatabase.child("matchmaking_queue").child(userId).removeValue();
         }
-
-        // Remove this user from queue
-        mDatabase.child("matchmaking_queue").child(userId).removeValue();
 
         Intent intent = new Intent(this, MultiplayerGameActivity.class);
         intent.putExtra("gameSessionId", gameSessionId);
@@ -445,12 +489,14 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         findMatchButton.setEnabled(false);
         createRoomButton.setEnabled(false);
         joinRoomButton.setEnabled(false);
+        playWithFriendButton.setEnabled(false);
     }
 
     private void enableAllButtons() {
         findMatchButton.setEnabled(true);
         createRoomButton.setEnabled(true);
         joinRoomButton.setEnabled(true);
+        playWithFriendButton.setEnabled(true);
     }
 
     private String getRandomParagraphFromAssets() {
@@ -460,35 +506,24 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             StringBuilder builder = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) {
-                builder.append(line).append("\n");
-            }
+            while ((line = reader.readLine()) != null) builder.append(line).append("\n");
             reader.close();
-            String fullText = builder.toString();
-            String[] parts = fullText.split("(?m)^\\s*\\d+\\.\\s*");
+            String[] parts = builder.toString().split("(?m)^\\s*\\d+\\.\\s*");
             for (String part : parts) {
-                String trimmed = part.trim();
-                if (!trimmed.isEmpty()) {
-                    paragraphs.add(trimmed);
-                }
+                if (!part.trim().isEmpty()) paragraphs.add(part.trim());
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (!paragraphs.isEmpty()) {
-            Random random = new Random();
-            return paragraphs.get(random.nextInt(paragraphs.size()));
-        }
+        } catch (IOException ignored) {}
+
+        if (!paragraphs.isEmpty()) return paragraphs.get(new Random().nextInt(paragraphs.size()));
         return "The quick brown fox jumps over the lazy dog.";
     }
 
     private void showRulesDialog() {
-        String rulesText =
-                "• Both players type the same paragraph for 120 seconds.\n\n" +
-                        "• First to finish correctly wins immediately.\n\n" +
-                        "• If time runs out, higher accuracy wins. If tied, higher WPM wins.\n\n" +
-                        "• Leaving the room gives the win to the other player.\n\n" +
-                        "• If someone disconnects, the other player can wait or claim victory.";
+        String rulesText = "• Both players type the same paragraph for 120 seconds.\n\n" +
+                "• First to finish correctly wins immediately.\n\n" +
+                "• If time runs out, higher accuracy wins. If tied, higher WPM wins.\n\n" +
+                "• Leaving the room gives the win to the other player.\n\n" +
+                "• If someone disconnects, the other player can wait or claim victory.";
 
         new AlertDialog.Builder(this)
                 .setTitle("Match Rules")
@@ -497,26 +532,19 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Animate "Finding a match...", "Waiting for opponent..." etc.
     private void startStatusDotsAnimation() {
         animateStatusDots = true;
-        if (statusDotsRunnable != null) {
-            statusHandler.removeCallbacks(statusDotsRunnable);
-        }
+        if (statusDotsRunnable != null) statusHandler.removeCallbacks(statusDotsRunnable);
 
         statusDotsRunnable = new Runnable() {
             int dotCount = 0;
-            String baseText = statusTextView.getText().toString();
-
+            String baseText = statusTextView.getText().toString().replace("...", "");
             @Override
             public void run() {
                 if (!animateStatusDots) return;
-
-                String cleanBase = baseText.replace("...", "");
-                StringBuilder sb = new StringBuilder(cleanBase);
+                StringBuilder sb = new StringBuilder(baseText);
                 for (int i = 0; i < dotCount; i++) sb.append(".");
                 statusTextView.setText(sb.toString());
-
                 dotCount = (dotCount + 1) % 4;
                 statusHandler.postDelayed(this, 500);
             }
@@ -535,14 +563,6 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopStatusDotsAnimation();
-
-        if (gameStartListener != null && userId != null) {
-            mDatabase.child("matchmaking_queue").child(userId)
-                    .removeEventListener(gameStartListener);
-        }
-        if (userId != null) {
-            mDatabase.child("matchmaking_queue").child(userId).removeValue();
-        }
+        cancelOperation();
     }
 }

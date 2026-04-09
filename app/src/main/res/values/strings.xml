@@ -12,7 +12,7 @@
     <string name="timer_default">10s</string>
     <string name="type_hint">Type here…</string>
 
-    <string name="app_version">v1.9.4</string>
+    <string name="app_version">v1.9.5</string>
 
     <!-- Firebase OAuth Client ID -->
     <string name="default_web_client_id">AIzaSyCZ9D-cCTeCN4xHRtgCElRBq0X25ruiPp8</string>

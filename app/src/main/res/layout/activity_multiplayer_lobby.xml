@@ -1,125 +1,197 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface">
 
-    <TextView
-        android:id="@+id/lobbyTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Multiplayer Arena"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:fontFamily="@font/font"
-        android:textColor="?attr/colorOnSurface"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="36dp"/>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="24dp">
 
-    <LinearLayout
-        android:id="@+id/centerContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        app:layout_constraintTop_toBottomOf="@id/lobbyTitle"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <TextView
-            android:id="@+id/statusTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="Ready to find a match"
-            android:textSize="16sp"
-            android:fontFamily="@font/difficulty"
-            android:textColor="?attr/colorOnSurface"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/findMatchButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Find Match"
-            android:textSize="18sp"
-            android:fontFamily="@font/difficulty"
-            android:textColor="?attr/colorOnPrimary"
-            app:cornerRadius="999dp"
-            app:backgroundTint="?attr/colorPrimary"
-            android:paddingLeft="24dp"
-            android:paddingRight="24dp"
-            android:elevation="6dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="- OR -"
-            android:textSize="14sp"
-            android:fontFamily="@font/difficulty"
-            android:textColor="?attr/colorOnSurface"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/createRoomButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Create Private Room"
-            android:textSize="16sp"
-            android:fontFamily="@font/difficulty"
-            android:textColor="?attr/colorPrimary"
-            app:cornerRadius="999dp"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:paddingLeft="24dp"
-            android:paddingRight="24dp"/>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp"
-            android:gravity="center_vertical">
-
-            <EditText
-                android:id="@+id/roomCodeInput"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:hint="Enter Code"
-                android:gravity="center"
-                android:textAllCaps="true"
-                android:maxLength="6"
-                android:maxLines="1"
-                android:inputType="textCapCharacters"
-                android:fontFamily="@font/difficulty"
-                android:background="@drawable/input_field_background"
-                android:padding="12dp"
-                android:layout_marginEnd="8dp"/>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/joinRoomButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Join"
-                android:fontFamily="@font/difficulty"
-                app:cornerRadius="999dp"/>
-        </LinearLayout>
         <com.google.android.material.button.MaterialButton
             android:id="@+id/rulesButton"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Rules"
-            android:textAllCaps="false"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="14sp"
             android:fontFamily="@font/difficulty"
-            android:padding="4dp"
-            android:layout_marginTop="24dp"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/lobbyTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Multiplayer\nArena"
+            android:textAlignment="center"
+            android:textSize="32sp"
+            android:fontFamily="@font/font"
+            android:textColor="?attr/colorOnSurface"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="60dp"/>
+
+        <LinearLayout
+            android:id="@+id/statusContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toBottomOf="@id/lobbyTitle"
+            app:layout_constraintBottom_toTopOf="@id/findMatchButton">
+
+            <TextView
+                android:id="@+id/roomCodeDisplayTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="XXXXXX"
+                android:textSize="56sp"
+                android:fontFamily="monospace"
+                android:textStyle="bold"
+                android:letterSpacing="0.15"
+                android:textColor="?attr/colorPrimary"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/statusTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ready to find a match"
+                android:textSize="18sp"
+                android:fontFamily="@font/difficulty"
+                android:textColor="?attr/colorOnSurface"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelMatchButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                android:textColor="#EF4444"
+                android:textSize="16sp"
+                android:fontFamily="@font/difficulty"
+                android:visibility="gone"
+                android:layout_marginTop="8dp"/>
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/findMatchButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="Play Random"
+            android:textSize="18sp"
+            android:fontFamily="@font/difficulty"
+            android:textColor="?attr/colorOnPrimary"
+            app:backgroundTint="?attr/colorPrimary"
+            app:cornerRadius="16dp"
+            app:layout_constraintBottom_toTopOf="@id/playWithFriendButton"
+            android:layout_marginBottom="16dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/playWithFriendButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="Play With Friend"
+            android:textSize="18sp"
+            android:fontFamily="@font/difficulty"
+            android:textColor="?attr/colorPrimary"
+            app:strokeColor="?attr/colorPrimary"
+            app:strokeWidth="2dp"
+            app:cornerRadius="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="24dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomSheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="?attr/colorSurface"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        app:behavior_hideable="true"
+        app:behavior_peekHeight="0dp"
+        android:elevation="24dp"
+        android:padding="24dp">
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:background="#BDBDBD"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Private Room"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/font"
+            android:textColor="?attr/colorOnSurface"
+            android:layout_marginBottom="16dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/createRoomButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Create Room"
+            android:textSize="16sp"
+            android:fontFamily="@font/difficulty"
+            android:textColor="?attr/colorOnPrimary"
+            app:backgroundTint="?attr/colorPrimary"
+            app:cornerRadius="12dp"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="— OR ENTER CODE —"
+            android:textAlignment="center"
+            android:textSize="12sp"
+            android:textColor="?attr/colorOnSurface"
+            android:layout_marginBottom="16dp"/>
+
+        <EditText
+            android:id="@+id/roomCodeInput"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="@drawable/input_field_background"
+            android:hint="XXXXXX"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="#888888"
+            android:gravity="center"
+            android:textAllCaps="true"
+            android:maxLength="6"
+            android:maxLines="1"
+            android:inputType="textCapCharacters"
+            android:fontFamily="monospace"
+            android:letterSpacing="0.6"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/joinRoomButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Join Room"
+            android:textSize="16sp"
+            android:textColor="?attr/colorPrimary"
+            app:strokeColor="?attr/colorPrimary"
+            android:fontFamily="@font/difficulty"
+            app:cornerRadius="12dp"/>
 
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
