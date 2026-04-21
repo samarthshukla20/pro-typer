@@ -29,7 +29,7 @@
             android:exported="false" /> <!-- Updated theme to Material3 -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-6807409350203174~6255625039" /> <!-- SplashActivity (Launch Activity) -->
+            android:value="ca-app-pub-6788521747770576~9666327989" /> <!-- SplashActivity (Launch Activity) -->
         <activity
             android:name=".SplashActivity"
             android:exported="true"
