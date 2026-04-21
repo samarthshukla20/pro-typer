@@ -61,9 +61,14 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     // State trackers for cancellation & Matchmaking
     private boolean findingMatch = false;
     private String finalGameSessionIdForHost = null;
-    private String finalOpponentIdForHost = null; // GUARANTEES OPPONENT IS ADDED
+    private String finalOpponentIdForHost = null;
     private String currentOperation = "NONE";
     private String activeRoomCode = null;
+
+    // Bot Matchmaking Timers
+    private Handler botHandler = new Handler();
+    private Runnable botRunnable;
+    private final int BOT_TIMEOUT_MS = 8000; // 8 Seconds until Bot spawns
 
     // Listeners so we can detach them if user cancels
     private ValueEventListener gameStartListener;
@@ -151,6 +156,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
 
     private void cancelOperation() {
         stopStatusDotsAnimation();
+        stopBotTimer(); // Stop the bot countdown!
 
         if ("RANDOM".equals(currentOperation)) {
             findingMatch = false;
@@ -220,8 +226,6 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
 
                 if (opponentId != null) {
                     String gameSessionId = UUID.randomUUID().toString();
-
-                    // SAVE THESE SECURELY DURING THE TRANSACTION
                     finalGameSessionIdForHost = gameSessionId;
                     finalOpponentIdForHost = opponentId;
 
@@ -239,7 +243,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
 
             @Override
             public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
-                if (!"RANDOM".equals(currentOperation)) return; // User canceled
+                if (!"RANDOM".equals(currentOperation)) return;
                 findingMatch = false;
 
                 if (error != null || !committed || currentData == null) {
@@ -248,8 +252,10 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     return;
                 }
 
-                // If we found an opponent, upload the game data
                 if (finalGameSessionIdForHost != null && finalOpponentIdForHost != null) {
+                    // WE FOUND A REAL PLAYER IMMEDIATELY
+                    stopBotTimer();
+
                     String gameSessionIdToCreate = finalGameSessionIdForHost;
                     String opponentIdToInclude = finalOpponentIdForHost;
 
@@ -261,12 +267,11 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     Map<String, Object> gameData = new HashMap<>();
                     gameData.put("status", "in_progress");
                     gameData.put("paragraph_text", randomParagraph);
+                    gameData.put("isBotMatch", false); // Real player
 
-                    // GUARANTEE BOTH PLAYERS ARE IN THE LIST SO NO ONE IS KICKED
                     Map<String, String> playersMap = new HashMap<>();
                     playersMap.put(myUserId, "player1");
                     playersMap.put(opponentIdToInclude, "player2");
-
                     gameData.put("players", playersMap);
 
                     mDatabase.child("game_sessions").child(gameSessionIdToCreate)
@@ -280,17 +285,21 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     return;
                 }
 
-                // If we didn't find anyone, we wait in the queue.
+                // NOBODY FOUND YET -> JOIN QUEUE & START BOT TIMER
                 DataSnapshot myDataSnapshot = currentData.child(userId);
                 String finalGameSessionId = myDataSnapshot.child("gameSessionId").getValue(String.class);
 
                 if (finalGameSessionId != null && !finalGameSessionId.isEmpty()) {
+                    // Someone grabbed us while we were executing
+                    stopBotTimer();
                     stopStatusDotsAnimation();
                     cancelMatchButton.setVisibility(View.GONE);
                     statusTextView.setText("Arena found! Preparing...");
-                    // 1.5 SECOND BUFFER: Let the other player finish uploading data before we read it
                     new Handler().postDelayed(() -> startGameActivity(finalGameSessionId), 1500);
                 } else if (currentData.child(userId).exists()) {
+                    // Waiting in queue... start the bot countdown!
+                    startBotTimer();
+
                     statusTextView.setText("Waiting for opponent");
                     startStatusDotsAnimation();
                     listenForGameStart();
@@ -312,12 +321,12 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String gameSessionId = snapshot.child("gameSessionId").getValue(String.class);
                 if (gameSessionId != null && !gameSessionId.isEmpty()) {
+                    stopBotTimer(); // A real player found us! Cancel the bot!
+
                     myQueueRef.removeEventListener(this);
                     stopStatusDotsAnimation();
                     cancelMatchButton.setVisibility(View.GONE);
                     statusTextView.setText("Arena found! Preparing...");
-
-                    // 1.5 SECOND BUFFER: Let the other player finish uploading data before we read it
                     new Handler().postDelayed(() -> startGameActivity(gameSessionId), 1500);
                 }
             }
@@ -327,6 +336,66 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                 if ("RANDOM".equals(currentOperation)) cancelOperation();
             }
         });
+    }
+
+    // ==========================================
+    // SEAMLESS BOT MATCHMAKING
+    // ==========================================
+
+    private void startBotTimer() {
+        stopBotTimer(); // Clear any existing timers
+        botRunnable = () -> {
+            if (!"RANDOM".equals(currentOperation)) return;
+            triggerBotMatch();
+        };
+        botHandler.postDelayed(botRunnable, BOT_TIMEOUT_MS);
+    }
+
+    private void stopBotTimer() {
+        if (botRunnable != null) {
+            botHandler.removeCallbacks(botRunnable);
+            botRunnable = null;
+        }
+    }
+
+    private void triggerBotMatch() {
+        // 1. Remove from the real matchmaking queue
+        mDatabase.child("matchmaking_queue").child(userId).removeValue();
+        if (gameStartListener != null) {
+            mDatabase.child("matchmaking_queue").child(userId).removeEventListener(gameStartListener);
+        }
+
+        // 2. Create the Bot Session
+        String gameSessionId = UUID.randomUUID().toString();
+        String botId = "BOT_" + new Random().nextInt(99999);
+
+        String randomParagraph = getRandomParagraphFromAssets();
+        Map<String, Object> gameData = new HashMap<>();
+        gameData.put("status", "in_progress");
+        gameData.put("paragraph_text", randomParagraph);
+
+        // --- BOT SPECIFIC FLAGS ---
+        gameData.put("isBotMatch", true);
+        gameData.put("botName", "Guest_" + (1000 + new Random().nextInt(8999)));
+
+        // TODO: We will replace this random number with their historical average later!
+        int botTargetWpm = 30 + new Random().nextInt(30); // Randomly 30 - 60 WPM
+        gameData.put("botWpm", botTargetWpm);
+
+        Map<String, String> playersMap = new HashMap<>();
+        playersMap.put(userId, "player1");
+        playersMap.put(botId, "player2");
+        gameData.put("players", playersMap);
+
+        // 3. Launch
+        mDatabase.child("game_sessions").child(gameSessionId)
+                .setValue(gameData)
+                .addOnCompleteListener(task -> {
+                    stopStatusDotsAnimation();
+                    cancelMatchButton.setVisibility(View.GONE);
+                    statusTextView.setText("Arena found! Preparing...");
+                    new Handler().postDelayed(() -> startGameActivity(gameSessionId), 1500);
+                });
     }
 
     // ==========================================
@@ -367,6 +436,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     Map<String, Object> gameData = new HashMap<>();
                     gameData.put("status", "in_progress");
                     gameData.put("paragraph_text", randomParagraph);
+                    gameData.put("isBotMatch", false);
 
                     Map<String, String> playersMap = new HashMap<>();
                     playersMap.put(userId, "player1");
@@ -430,8 +500,6 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                                 stopStatusDotsAnimation();
                                 cancelMatchButton.setVisibility(View.GONE);
                                 statusTextView.setText("Arena found! Preparing...");
-
-                                // 1.5s Buffer for Private Rooms too!
                                 new Handler().postDelayed(() -> startGameActivity(sessionId), 1500);
                             }
                         }
