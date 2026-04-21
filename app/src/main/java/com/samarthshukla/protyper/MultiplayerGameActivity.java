@@ -222,7 +222,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         startTimer();
         setupTypingListener();
         setupOpponentListener();
-        setupGameResultListener();
+        setupGameResultListener();   // listen for winnerId / reason
 
         // Setup the opponent disconnect listener (relies on opponentId being set)
         if (opponentId != null) {
