@@ -51,8 +51,13 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private CountDownTimer timer;
     private static final int TIME_LIMIT = 120000;
     private long gameStartTime;
+    private long matchEndTime = 0; // NEW: Locks the exact finish time!
     private boolean isGameOver = false;
     private boolean isGameStarted = false;
+
+    // --- XP CACHE VARIABLES ---
+    private int cachedTotalXp = 0;
+    private int cachedLevel = 1;
 
     // --- AI BOT VARIABLES ---
     private boolean isBotMatch = false;
@@ -87,6 +92,24 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        // --- PRE-FETCH XP DATA (Zero UI Delay) ---
+        String fetchId = userId != null ? userId : XpManager.getGlobalUserId(this);
+        FirebaseDatabase.getInstance().getReference("users").child(fetchId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            if (snapshot.child("total_xp").getValue(Integer.class) != null)
+                                cachedTotalXp = snapshot.child("total_xp").getValue(Integer.class);
+                            if (snapshot.child("level").getValue(Integer.class) != null)
+                                cachedLevel = snapshot.child("level").getValue(Integer.class);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+        // -----------------------------------------
 
         wordDisplay = findViewById(R.id.multiplayerWordDisplay);
         timerText = findViewById(R.id.multiplayerTimerText);
@@ -154,12 +177,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                     DataSnapshot playersSnapshot = snapshot.child("players");
                     String paragraphText = snapshot.child("paragraph_text").getValue(String.class);
 
-                    // Check if this is a Bot Match
                     Boolean botFlag = snapshot.child("isBotMatch").getValue(Boolean.class);
                     if (botFlag != null && botFlag) {
                         isBotMatch = true;
                         Integer wpm = snapshot.child("botWpm").getValue(Integer.class);
-                        botWpm = (wpm != null) ? wpm : 40; // Default to 40 if missing
+                        botWpm = (wpm != null) ? wpm : 40;
                     }
 
                     String tempOpponentId = null;
@@ -200,6 +222,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         isGameStarted = true;
 
         isGameOver = false;
+        matchEndTime = 0;
         inputField.setEnabled(true);
         inputField.setText("");
         inputField.requestFocus();
@@ -214,7 +237,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         setupGameResultListener();
 
         if (isBotMatch) {
-            // Start local AI simulation instead of listening to Firebase
             startBotSimulation();
         } else if (opponentId != null) {
             setupOpponentListener();
@@ -222,9 +244,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         }
     }
 
-    // ==========================================
-    // CRITICAL: FIREBASE CLEANUP HELPER
-    // ==========================================
     private void cancelMyPresenceDisconnect() {
         try {
             DatabaseReference myPresenceRef = gameRef.child("players_progress").child(userId).child("is_present");
@@ -233,10 +252,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             Log.w(TAG, "Failed to cancel onDisconnect: " + e.getMessage());
         }
     }
-
-    // ==========================================
-    // AI BOT LOGIC
-    // ==========================================
 
     private void startBotSimulation() {
         final float charsPerMs = (botWpm * 5f) / 60000f;
@@ -256,7 +271,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 if (progress >= 100) {
                     progress = 100;
                     opponentProgressBar.setProgress(progress);
-                    handleBotCompletedEarly(); // Bot wins!
+                    handleBotCompletedEarly();
                     return;
                 }
 
@@ -277,8 +292,9 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private void handleBotCompletedEarly() {
         if (isGameOver) return;
         isGameOver = true;
+        if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
 
-        cancelMyPresenceDisconnect(); // Stop zombie nodes
+        cancelMyPresenceDisconnect();
         if (timer != null) timer.cancel();
         inputField.setEnabled(false);
 
@@ -305,10 +321,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         }, 1500);
     }
 
-    // ==========================================
-    // GAMEPLAY LOGIC
-    // ==========================================
-
     private void startTimer() {
         timer = new CountDownTimer(TIME_LIMIT, 1000) {
             public void onTick(long millisUntilFinished) {
@@ -334,6 +346,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 updateProgressOnFirebase(typedText.length());
 
                 if (typedText.length() == currentParagraph.length() && typedText.equals(currentParagraph)) {
+                    if (matchEndTime == 0) matchEndTime = System.currentTimeMillis(); // Locks the clock!
                     handlePlayerCompletedEarly();
                 }
             }
@@ -382,9 +395,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     }
 
     private void updateProgressOnFirebase(int charsTyped) {
-        // PREVENT ZOMBIE NODES: Do not write progress if game has officially ended
         if (isGameOver) return;
-
         DatabaseReference playerRef = gameRef.child("players_progress").child(userId);
         playerRef.child("chars_typed").setValue(charsTyped);
     }
@@ -424,7 +435,9 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 if (isGameOver) return;
 
                 isGameOver = true;
-                cancelMyPresenceDisconnect(); // Cancel disconnect immediately upon hearing result
+                if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
+
+                cancelMyPresenceDisconnect();
                 stopBotSimulation();
 
                 if (timer != null) timer.cancel();
@@ -446,7 +459,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 launchResultScreen(resultType, reason, myWpm, myAcc, 0, 0, winnerId);
                 safeRemoveAllListeners();
 
-                // BACKUP DELETE: Ensure the receiver of the result also tries to clean up the room
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     try { gameRef.removeValue(); } catch (Exception ignored) {}
                 }, 2000);
@@ -488,11 +500,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         disconnectDialog = builder.create();
         disconnectDialog.show();
 
-        final long startTime = System.currentTimeMillis();
+        final long startTimeDelay = System.currentTimeMillis();
         disconnectRunnable = new Runnable() {
             @Override
             public void run() {
-                long elapsed = System.currentTimeMillis() - startTime;
+                long elapsed = System.currentTimeMillis() - startTimeDelay;
                 long remaining = OPPONENT_RECONNECT_TIMEOUT_MS - elapsed;
                 if (remaining <= 0) {
                     cancelOpponentDisconnectTimer();
@@ -522,6 +534,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
     private void onOpponentConfirmedLeft() {
         if (!isGameOver) isGameOver = true;
+        if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
 
         cancelMyPresenceDisconnect();
         stopBotSimulation();
@@ -542,6 +555,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private void handlePlayerCompletedEarly() {
         if (isGameOver) return;
         isGameOver = true;
+        if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
 
         cancelMyPresenceDisconnect();
         stopBotSimulation();
@@ -578,6 +592,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private void gameOver() {
         if (isGameOver) return;
         isGameOver = true;
+        if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
 
         cancelMyPresenceDisconnect();
         stopBotSimulation();
@@ -608,21 +623,36 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         });
     }
 
+    // --- NEW: FLAWLESS WPM CALCULATION ---
     private int calculateWPM(String typedText) {
-        long durationMinutes = (System.currentTimeMillis() - gameStartTime) / 60000;
-        int wordCount = typedText.trim().isEmpty() ? 0 : typedText.split("\\s+").length;
-        if (durationMinutes <= 0) return wordCount;
-        return (int) (wordCount / durationMinutes);
+        String originalText = currentParagraph != null ? currentParagraph : "";
+        int correctChars = 0;
+        int minLen = Math.min(typedText.length(), originalText.length());
+        for (int i = 0; i < minLen; i++) {
+            if (typedText.charAt(i) == originalText.charAt(i)) correctChars++;
+        }
+
+        long finalEndTime = (matchEndTime > 0) ? matchEndTime : System.currentTimeMillis();
+        long activeMillis = finalEndTime - gameStartTime;
+        if (activeMillis <= 0) activeMillis = 1000;
+
+        double minutes = activeMillis / 60000.0;
+        double standardWords = correctChars / 5.0;
+
+        return (int) Math.round(standardWords / minutes);
     }
 
+    // --- NEW: PRO-LEVEL ACCURACY ---
     private int calculateAccuracy(String typedText, String originalText) {
+        if (typedText == null || originalText == null) return 0;
+        if (typedText.isEmpty()) return 0;
+
         int correctChars = 0;
         int minLength = Math.min(typedText.length(), originalText.length());
         for (int i = 0; i < minLength; i++) {
             if (typedText.charAt(i) == originalText.charAt(i)) correctChars++;
         }
-        if (originalText.length() == 0) return 0;
-        return (int) ((correctChars / (float) originalText.length()) * 100);
+        return (int) (((float) correctChars / typedText.length()) * 100);
     }
 
     private void declareWinner(DataSnapshot finalScoresSnapshot) {
@@ -760,6 +790,12 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             intent.putExtra(ResultActivity.EXTRA_OPP_ACC, oppAcc);
             intent.putExtra(ResultActivity.EXTRA_WINNER_ID, winnerId);
             intent.putExtra(ResultActivity.EXTRA_YOUR_ID, userId);
+
+            // --- NEW: Pass the fetched XP data to the Result Screen! ---
+            intent.putExtra("cachedTotalXp", cachedTotalXp);
+            intent.putExtra("cachedLevel", cachedLevel);
+            // -----------------------------------------------------------
+
             startActivityForResult(intent, 1000);
         } catch (Exception e) {
             Toast.makeText(this, (resultType.equals("win") ? "You won!" : "You lost!"), Toast.LENGTH_LONG).show();

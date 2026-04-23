@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class SplashActivity extends Activity {
 
@@ -22,6 +23,8 @@ public class SplashActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+
+        XpManager.getGlobalUserId(this);
 
         progressFill = findViewById(R.id.progress_fill);
         progressText = findViewById(R.id.progress_text);

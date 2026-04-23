@@ -18,10 +18,12 @@ import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
+
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
@@ -32,6 +34,7 @@ import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -41,26 +44,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+
 import androidx.appcompat.app.AlertDialog;
+
 import android.os.Handler;
 
 
 public class HardModeActivity extends AppCompatActivity {
     private TextView wordDisplay, timerText, scoreText, tvDateTime;
-    // Old inputField (if still used) can remain, but now our key views are:
-    // wordCard: the "word card" view
-    // textInputLayout: container for the input field
-    // (Make sure your XML IDs match these exactly.)
-    // For backward compatibility, we keep inputField for text watching.
     private EditText inputField;
     private List<String> words = new ArrayList<>();
     private Random random = new Random();
     private int score = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 5000; // 5 seconds per word
+    private static final int TIME_LIMIT = 4000; // 10 seconds per word
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
-    private long gameStartTime; // timestamp when game starts
+    private long gameStartTime;
     private boolean hasShownRewardDialog = false;
     private boolean isGameOver = false;
     private RewardedAd rewardedAd;
@@ -70,8 +70,12 @@ public class HardModeActivity extends AppCompatActivity {
     private int soundIdCorrect;
     private int soundIdGameOver;
 
+    // --- XP CACHE VARIABLES ---
+    private int cachedTotalXp = 0;
+    private int cachedLevel = 1;
 
-
+    // --- NEW: THE BONUS VAULT ---
+    private int currentSessionAdXp = 0;
 
     private String getCurrentDateTime() {
         String currentDateTime = new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault()).format(new Date());
@@ -86,13 +90,28 @@ public class HardModeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hard_mode);
 
-        // Initialize AdMob
         MobileAds.initialize(this, initializationStatus -> {});
         loadInterstitialAd();
         loadRewardedAd();
 
-        // Initialize UI elements (IDs as per your XML)
-        // wordDisplay is still used for showing the current word.
+        // --- PRE-FETCH XP DATA (Zero UI Delay) ---
+        String userId = XpManager.getGlobalUserId(this);
+        com.google.firebase.database.FirebaseDatabase.getInstance().getReference("users").child(userId)
+                .addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull com.google.firebase.database.DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            if (snapshot.child("total_xp").getValue(Integer.class) != null)
+                                cachedTotalXp = snapshot.child("total_xp").getValue(Integer.class);
+                            if (snapshot.child("level").getValue(Integer.class) != null)
+                                cachedLevel = snapshot.child("level").getValue(Integer.class);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) {}
+                });
+        // -----------------------------------------
+
         wordDisplay = findViewById(R.id.wordDisplay);
         timerText   = findViewById(R.id.timerText);
         scoreText   = findViewById(R.id.scoreText);
@@ -100,7 +119,6 @@ public class HardModeActivity extends AppCompatActivity {
         tvDateTime  = findViewById(R.id.tvDateTime);
         getCurrentDateTime();
 
-        // Apply custom font to wordDisplay
         wordDisplay.setTypeface(ResourcesCompat.getFont(this, R.font.difficulty));
 
         loadWordsFromAssets();
@@ -114,49 +132,37 @@ public class HardModeActivity extends AppCompatActivity {
             }
         });
 
-        // --- Android 15 (API 35+) patch ---
-        // When the keyboard appears, we want to minimize the gap between the word card and text input container.
         if (Build.VERSION.SDK_INT >= 35) {
-            // Let the window supply proper insets.
             getWindow().setDecorFitsSystemWindows(true);
             final View rootView = findViewById(android.R.id.content);
-            // Find your two key views by their IDs.
             final View wordCard = findViewById(R.id.wordCard);
             final View textInputLayout = findViewById(R.id.textInputLayout);
 
             rootView.setOnApplyWindowInsetsListener((v, insets) -> {
                 int imeHeight = insets.getInsets(WindowInsets.Type.ime()).bottom;
                 if (imeHeight > 0) {
-                    // Compute available height above keyboard.
                     int availableHeight = rootView.getHeight() - imeHeight;
-                    // Get the screen location of textInputLayout.
                     int[] inputLocation = new int[2];
                     textInputLayout.getLocationOnScreen(inputLocation);
                     int inputBottom = inputLocation[1] + textInputLayout.getHeight();
-                    // How much is textInputLayout overlapping the keyboard?
                     int overlap = inputBottom - availableHeight;
                     if (overlap < 0) overlap = 0;
 
-                    // Get current gap between wordCard and textInputLayout.
                     int[] wordLocation = new int[2];
                     wordCard.getLocationOnScreen(wordLocation);
                     int wordBottom = wordLocation[1] + wordCard.getHeight();
                     int currentGap = inputLocation[1] - wordBottom;
 
-                    // Define a minimum gap of 8dp.
                     int minGap = dpToPx(8);
                     int extraGapReduction = currentGap - minGap;
                     if (extraGapReduction < 0) extraGapReduction = 0;
 
-                    // We want textInputLayout to move up by the full overlap.
                     int translationForInput = -overlap;
-                    // For wordCard, move it up by as much as possible without reducing gap below minGap.
                     int translationForWord = -Math.min(overlap, extraGapReduction);
 
                     textInputLayout.animate().translationY(translationForInput).setDuration(100).start();
                     wordCard.animate().translationY(translationForWord).setDuration(100).start();
                 } else {
-                    // Reset translations when keyboard is hidden.
                     textInputLayout.animate().translationY(0).setDuration(100).start();
                     wordCard.animate().translationY(0).setDuration(100).start();
                 }
@@ -179,10 +185,8 @@ public class HardModeActivity extends AppCompatActivity {
 
         soundIdCorrect = soundPool.load(this, R.raw.correct_sound, 1);
         soundIdGameOver = soundPool.load(this, R.raw.game_over_sound, 1);
-
     }
 
-    // Helper: Convert dp to pixels.
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
@@ -206,6 +210,7 @@ public class HardModeActivity extends AppCompatActivity {
 
     private void startNewGame() {
         score = 0;
+        currentSessionAdXp = 0; // RESET THE BONUS VAULT FOR A NEW GAME
         scoreText.setText("Score: " + score);
         inputField.setText("");
         inputField.setEnabled(true);
@@ -258,13 +263,12 @@ public class HardModeActivity extends AppCompatActivity {
 
         if (!hasShownRewardDialog) {
             hasShownRewardDialog = true;
-            showRewardedAdDialog();  // Offer ad for +10 sec
+            showRewardedAdDialog();
         } else {
             saveGameHistory();
             showAdThenGameOver();
         }
     }
-
 
     private void showAdThenGameOver() {
         showGameOverCard(score);
@@ -274,19 +278,91 @@ public class HardModeActivity extends AppCompatActivity {
         LayoutInflater inflater = LayoutInflater.from(this);
         final View gameOverView = inflater.inflate(R.layout.game_over_card, null);
         TextView gameOverMessage = gameOverView.findViewById(R.id.gameOverMessageInside);
-        gameOverMessage.setText("Game Over!");
         TextView scoreInsideCard = gameOverView.findViewById(R.id.scoreTextInsideCard);
-        scoreInsideCard.setText("Score: " + score);
+
+        // Bind the new Detailed XP Views
+        TextView baseXpText = gameOverView.findViewById(R.id.baseXpText);
+        TextView adXpText = gameOverView.findViewById(R.id.adXpText);
+        TextView xpEarnedText = gameOverView.findViewById(R.id.xpEarnedText);
+        android.widget.ProgressBar xpProgressBar = gameOverView.findViewById(R.id.xpProgressBar);
+        TextView levelInfoText = gameOverView.findViewById(R.id.levelInfoText);
+
         MaterialButton retryButton = gameOverView.findViewById(R.id.retryButton);
         MaterialButton menuButton = gameOverView.findViewById(R.id.menuButton);
 
-        retryButton.setOnClickListener(v -> {
-            removeGameOverView(gameOverView);
-            isGameOver = false;  // 🔧 FIX: reset game over state!
-            hasShownRewardDialog = false; // Optional: allow ad again on second game
-            startNewGame();
+        // --- NEW: CALCULATE BREAKDOWN XP ---
+        int gameplayXp = XpManager.calculateSinglePlayerXp(3, score); // 1 = Easy, 2 = Medium, 3 = Hard
+        int adXp = currentSessionAdXp;
+        final int totalEarnedXp = gameplayXp + adXp;
+
+        gameOverMessage.setText("Time's Up!");
+        scoreInsideCard.setText("Score: " + score);
+
+        // --- NEW: POPULATE THE UI RECEIPT ---
+        if (baseXpText != null) {
+            baseXpText.setText("Base XP: +" + gameplayXp);
+        }
+        if (adXp > 0 && adXpText != null) {
+            adXpText.setText("Ad Vault: +" + adXp);
+            adXpText.setVisibility(View.VISIBLE); // Only unhide if they watched an ad!
+        }
+        if (xpEarnedText != null) {
+            xpEarnedText.setText("Total: +" + totalEarnedXp + " XP");
+        }
+
+        // Fetch the Guaranteed Global Player ID
+        String userId = XpManager.getGlobalUserId(this);
+
+        // INSTANT ANIMATION (No Network Wait!)
+        int previousLevelXp = (cachedLevel > 1) ? XpManager.getXpRequiredForNextLevel(cachedLevel - 1) : 0;
+        int nextLevelXp = XpManager.getXpRequiredForNextLevel(cachedLevel);
+
+        int currentXpInThisLevel = cachedTotalXp - previousLevelXp;
+
+        final int maxXpForThisLevel = nextLevelXp - previousLevelXp;
+        final int newXpInThisLevel = currentXpInThisLevel + totalEarnedXp;
+
+        xpProgressBar.setMax(maxXpForThisLevel);
+        levelInfoText.setText("Level " + cachedLevel + " (" + currentXpInThisLevel + " / " + maxXpForThisLevel + ")");
+
+        android.animation.ObjectAnimator animation = android.animation.ObjectAnimator.ofInt(xpProgressBar, "progress", currentXpInThisLevel, newXpInThisLevel);
+        animation.setDuration(1200);
+
+        animation.addUpdateListener(anim -> {
+            int animatedValue = (int) anim.getAnimatedValue();
+            if (animatedValue >= maxXpForThisLevel) {
+                levelInfoText.setText("Level UP!");
+                levelInfoText.setTextColor(android.graphics.Color.parseColor("#FFD700"));
+            } else {
+                levelInfoText.setText("Level " + cachedLevel + " (" + animatedValue + " / " + maxXpForThisLevel + ")");
+            }
         });
 
+        // Save to Firebase AND update local cache after animation finishes
+        animation.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                super.onAnimationEnd(animation);
+
+                // SAVE THE COMBINED XP TO FIREBASE
+                XpManager.saveXpToFirebase(userId, totalEarnedXp);
+
+                // Update local cache so if they click "Retry", the next match's math is correct
+                cachedTotalXp += totalEarnedXp;
+                while (cachedTotalXp >= XpManager.getXpRequiredForNextLevel(cachedLevel)) {
+                    cachedLevel++;
+                }
+            }
+        });
+
+        animation.start();
+
+        retryButton.setOnClickListener(v -> {
+            removeGameOverView(gameOverView);
+            isGameOver = false;
+            hasShownRewardDialog = false;
+            startNewGame();
+        });
 
         menuButton.setOnClickListener(v -> openMenu());
         ViewGroup rootView = findViewById(android.R.id.content);
@@ -301,8 +377,6 @@ public class HardModeActivity extends AppCompatActivity {
         String dateTime = getCurrentDateTime();
         HistoryManager.addHistory(this, new GameHistory("Hard", durationPlayed, score, dateTime, -1));
     }
-
-
 
     private void removeGameOverView(View gameOverView) {
         ViewGroup parent = (ViewGroup) gameOverView.getParent();
@@ -337,6 +411,7 @@ public class HardModeActivity extends AppCompatActivity {
             @Override
             public void onAdFailedToLoad(@NonNull LoadAdError adError) {
                 rewardedAd = null;
+                Log.e("AdMob", "Failed to load Ad: " + adError.getMessage());
             }
         });
     }
@@ -353,20 +428,18 @@ public class HardModeActivity extends AppCompatActivity {
         dialog = builder.create();
         dialog.setCancelable(false);
 
-        // ⏱️ Start tracking pause
         pauseStartTime = System.currentTimeMillis();
 
         final Handler handler = new Handler();
         final int[] secondsLeft = {500000000};
 
-        builder.setTitle("Continue Game? (" + secondsLeft[0] + "s)");
+        builder.setTitle("Continue Game?");
 
         final Runnable[] countdownRunnable = new Runnable[1];
         countdownRunnable[0] = new Runnable() {
             @Override
             public void run() {
                 secondsLeft[0]--;
-                dialog.setTitle("Continue Game? (" + secondsLeft[0] + "s)");
                 if (secondsLeft[0] > 0) {
                     handler.postDelayed(this, 1000);
                 } else {
@@ -382,7 +455,6 @@ public class HardModeActivity extends AppCompatActivity {
         watchAdButton.setOnClickListener(v -> {
             handler.removeCallbacks(countdownRunnable[0]);
             dialog.dismiss();
-            // pauseStartTime already set
             showRewardedAd();
         });
 
@@ -394,40 +466,42 @@ public class HardModeActivity extends AppCompatActivity {
             showAdThenGameOver();
         });
 
-        dialog.getWindow().setDimAmount(0.9f); // 0 = no dim, 1 = full black
+        dialog.getWindow().setDimAmount(0.9f);
         dialog.show();
     }
 
 
     private void showRewardedAd() {
         if (rewardedAd != null) {
-            pauseStartTime = System.currentTimeMillis(); // for accurate duration tracking
+            pauseStartTime = System.currentTimeMillis();
 
             rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
                 public void onAdDismissedFullScreenContent() {
-                    rewardedAd = null;  // Clear old ad reference
-                    loadRewardedAd();   // Preload next ad
-                    resumeGame();       // Resume game after full dismissal
+                    rewardedAd = null;
+                    loadRewardedAd();
+                    resumeGame();
                 }
 
                 @Override
                 public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
                     rewardedAd = null;
-                    showAdThenGameOver();  // fallback
+                    showAdThenGameOver();
                 }
             });
 
             rewardedAd.show(this, rewardItem -> {
-                // Reward is granted here, but we do nothing yet.
-                // Wait for onAdDismissedFullScreenContent() to continue
+                // --- NEW: STORE BONUS XP IN VAULT INSTEAD OF SAVING IMMEDIATELY ---
+                int adXp = XpManager.getAdBonusXp();
+                currentSessionAdXp += adXp;
+                Toast.makeText(HardModeActivity.this, "+" + adXp + " Bonus XP Locked In!", Toast.LENGTH_SHORT).show();
             });
 
         } else {
-            showAdThenGameOver();  // fallback
+            Toast.makeText(this, "Ad is still loading or unavailable. Check connection.", Toast.LENGTH_SHORT).show();
+            showAdThenGameOver();
         }
     }
-
 
     private void resumeGame() {
         totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
@@ -437,10 +511,8 @@ public class HardModeActivity extends AppCompatActivity {
         inputField.setText("");
         inputField.requestFocus();
 
-        startTimer(); // restart timer
+        startTimer();
     }
-
-
 
     @Override
     public void onBackPressed() {

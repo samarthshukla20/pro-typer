@@ -1,145 +1,210 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
-     xmlns:android="http://schemas.android.com/apk/res/android"
-     xmlns:app="http://schemas.android.com/apk/res-auto"
-     android:layout_height="match_parent"
-     android:layout_width="match_parent"
-     android:background="?attr/colorSurface"
-     android:clickable="false"
-     android:focusable="false"
-     android:id="@+id/gameOverContainer">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="?attr/colorSurface"
+    android:clickable="false"
+    android:focusable="false"
+    android:id="@+id/gameOverContainer">
 
     <LinearLayout
-         android:layout_height="wrap_content"
-         android:layout_width="match_parent"
-         android:gravity="center_horizontal"
-         android:padding="20dp"
-         android:orientation="vertical"
-         android:layout_gravity="center">
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:gravity="center_horizontal"
+        android:padding="20dp"
+        android:orientation="vertical"
+        android:layout_gravity="center">
 
         <TextView
-             android:layout_height="wrap_content"
-             android:layout_width="wrap_content"
-             android:layout_marginBottom="20dp"
-             android:textSize="40sp"
-             android:fontFamily="@font/font"
-             android:textColor="?attr/colorOnBackground"
-             android:id="@+id/gameOverTitle"
-             android:text="GAME OVER"
-             android:textStyle="bold" />
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textSize="40sp"
+            android:fontFamily="@font/font"
+            android:textColor="?attr/colorOnBackground"
+            android:id="@+id/gameOverTitle"
+            android:text="GAME OVER"
+            android:textStyle="bold" />
 
         <com.google.android.material.card.MaterialCardView
-             android:layout_height="280dp"
-             android:layout_width="280dp"
-             android:layout_marginBottom="40dp"
-             app:strokeColor="?attr/colorOnPrimaryContainer"
-             app:layout_constraintStart_toStartOf="parent"
-             app:cardBackgroundColor="?attr/colorPrimaryContainer"
-             app:layout_constraintEnd_toEndOf="parent"
-             style="@style/Widget.MaterialComponents.CardView"
-             android:layout_marginTop="60dp"
-             app:cardCornerRadius="24dp"
-             android:id="@+id/mainGameOverCard">
+            android:layout_height="wrap_content"
+            android:layout_width="300dp"
+            android:layout_marginBottom="40dp"
+            app:strokeColor="?attr/colorOnPrimaryContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:cardBackgroundColor="?attr/colorPrimaryContainer"
+            app:layout_constraintEnd_toEndOf="parent"
+            style="@style/Widget.MaterialComponents.CardView"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="24dp"
+            android:id="@+id/mainGameOverCard">
 
             <LinearLayout
-                 android:layout_height="wrap_content"
-                 android:layout_width="match_parent"
-                 android:gravity="center_horizontal"
-                 android:orientation="vertical">
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:gravity="center_horizontal"
+                android:paddingBottom="24dp"
+                android:orientation="vertical">
 
                 <TextView
-                     android:layout_height="wrap_content"
-                     android:layout_width="wrap_content"
-                     android:layout_marginBottom="16dp"
-                     android:textSize="22sp"
-                     android:fontFamily="@font/difficulty"
-                     android:textColor="?attr/colorOnSurface"
-                     android:layout_marginTop="20dp"
-                     android:id="@+id/gameOverMessageInside"
-                     android:text="Oh! Game over!"
-                     android:textStyle="bold" />
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:textSize="22sp"
+                    android:fontFamily="@font/difficulty"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="24dp"
+                    android:id="@+id/gameOverMessageInside"
+                    android:text="Game Over!"
+                    android:textStyle="bold" />
 
                 <com.google.android.material.card.MaterialCardView
-                     android:layout_height="wrap_content"
-                     android:layout_width="wrap_content"
-                     android:layout_marginEnd="16dp"
-                     app:strokeColor="?attr/colorOnSecondaryContainer"
-                     android:padding="14dp"
-                     app:cardElevation="6dp"
-                     app:cardBackgroundColor="?attr/colorPrimaryContainer"
-                     android:layout_marginTop="40dp"
-                     android:layout_marginStart="16dp"
-                     android:layout_marginBottom="16dp"
-                     style="@style/Widget.MaterialComponents.CardView"
-                     app:cardCornerRadius="16dp"
-                     android:id="@+id/scoreCard">
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    app:strokeColor="?attr/colorOnSecondaryContainer"
+                    android:padding="14dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="16dp"
+                    style="@style/Widget.MaterialComponents.CardView"
+                    app:cardCornerRadius="16dp"
+                    android:id="@+id/scoreCard">
 
                     <LinearLayout
-                         android:layout_height="wrap_content"
-                         android:layout_width="wrap_content"
-                         android:padding="12dp"
-                         android:orientation="horizontal">
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:padding="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <ImageView
-                             android:layout_height="20dp"
-                             android:layout_width="20dp"
-                             android:src="@drawable/score" />
+                            android:layout_height="24dp"
+                            android:layout_width="24dp"
+                            android:src="@drawable/score" />
 
                         <TextView
-                             android:layout_height="wrap_content"
-                             android:layout_width="wrap_content"
-                             android:textSize="20sp"
-                             android:fontFamily="@font/difficulty"
-                             android:textColor="?@attr/colorOnPrimaryContainer"
-                             android:layout_marginStart="8dp"
-                             android:id="@+id/scoreTextInsideCard"
-                             android:text="Score: 0"
-                             android:textStyle="bold" />
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:textSize="22sp"
+                            android:fontFamily="@font/difficulty"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:layout_marginStart="8dp"
+                            android:id="@+id/scoreTextInsideCard"
+                            android:text="Score: 0"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal"
+                    android:layout_marginBottom="24dp"
+                    android:paddingHorizontal="32dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/baseXpText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Base XP: +0"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/difficulty" />
+
+                        <TextView
+                            android:id="@+id/adXpText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ad Vault: +10"
+                            android:textColor="#FF9800"
+                            android:textSize="15sp"
+                            android:visibility="gone"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/difficulty" />
+
+                        <View
+                            android:layout_width="120dp"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="6dp"
+                            android:layout_marginBottom="6dp"
+                            android:background="?attr/colorOutlineVariant" />
+
+                        <TextView
+                            android:id="@+id/xpEarnedText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Total: + 0 XP"
+                            android:textColor="#4CAF50"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/difficulty" />
 
                     </LinearLayout>
 
-                </com.google.android.material.card.MaterialCardView>
+                    <ProgressBar
+                        android:id="@+id/xpProgressBar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="14dp"
+                        android:progressTint="#4CAF50"
+                        android:progress="0"
+                        android:max="100" />
 
+                    <TextView
+                        android:id="@+id/levelInfoText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Level 1 (0 / 500 XP)"
+                        android:textSize="14sp"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/difficulty"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
 
                 <LinearLayout
-                     android:layout_height="wrap_content"
-                     android:layout_width="match_parent"
-                     android:gravity="center"
-                     android:orientation="horizontal"
-                     android:layout_marginTop="12dp">
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:gravity="center"
+                    android:orientation="horizontal">
 
                     <com.google.android.material.button.MaterialButton
-                         android:layout_height="wrap_content"
-                         android:layout_width="wrap_content"
-                         android:layout_marginEnd="32dp"
-                         android:textSize="18sp"
-                         android:fontFamily="@font/difficulty"
-                         app:cornerRadius="50dp"
-                         app:elevation="8dp"
-                         android:textColor="?attr/colorSurface"
-                         style="@style/Widget.Material3.Button"
-                         android:id="@+id/menuButton"
-                         android:text="Menu" />
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/difficulty"
+                        app:cornerRadius="50dp"
+                        app:elevation="6dp"
+                        android:textColor="?attr/colorSurface"
+                        style="@style/Widget.Material3.Button"
+                        android:id="@+id/menuButton"
+                        android:text="Menu" />
 
                     <com.google.android.material.button.MaterialButton
-                         android:layout_height="wrap_content"
-                         android:layout_width="wrap_content"
-                         android:textSize="18sp"
-                         android:fontFamily="@font/difficulty"
-                         app:cornerRadius="50dp"
-                         app:elevation="8dp"
-                         android:textColor="?attr/colorSurface"
-                         style="@style/Widget.Material3.Button"
-                         android:layout_marginStart="32dp"
-                         android:id="@+id/retryButton"
-                         android:text="Retry" />
-
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/difficulty"
+                        app:cornerRadius="50dp"
+                        app:elevation="6dp"
+                        android:textColor="?attr/colorSurface"
+                        style="@style/Widget.Material3.Button"
+                        android:layout_marginStart="16dp"
+                        android:id="@+id/retryButton"
+                        android:text="Retry" />
                 </LinearLayout>
 
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
-
     </LinearLayout>
-
 </FrameLayout>

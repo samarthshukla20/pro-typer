@@ -17,7 +17,6 @@
         android:orientation="vertical"
         android:layout_gravity="center">
 
-        <!-- Title: You Win / You Lost / Draw -->
         <TextView
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
@@ -50,7 +49,6 @@
                 android:paddingLeft="18dp"
                 android:paddingRight="18dp">
 
-                <!-- Subtitle / message -->
                 <TextView
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
@@ -62,7 +60,6 @@
                     android:text="Result"
                     android:textStyle="bold" />
 
-                <!-- YOUR ACCURACY -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -90,7 +87,6 @@
 
                 </LinearLayout>
 
-                <!-- YOUR WPM -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -118,7 +114,90 @@
 
                 </LinearLayout>
 
-                <!-- Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal"
+                    android:layout_marginBottom="24dp"
+                    android:layout_marginTop="8dp"
+                    android:paddingHorizontal="16dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/baseXpText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Base XP: +0"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="15sp"
+                            android:fontFamily="@font/difficulty" />
+
+                        <TextView
+                            android:id="@+id/resultXpText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Match Result: +75"
+                            android:textColor="#4CAF50"
+                            android:textSize="15sp"
+                            android:visibility="gone"
+                            android:fontFamily="@font/difficulty" />
+
+                        <TextView
+                            android:id="@+id/milestoneXpText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Accuracy Milestone: +50"
+                            android:textColor="#4CAF50"
+                            android:textSize="15sp"
+                            android:visibility="gone"
+                            android:fontFamily="@font/difficulty" />
+
+                        <View
+                            android:layout_width="120dp"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="6dp"
+                            android:layout_marginBottom="6dp"
+                            android:background="?attr/colorOutlineVariant" />
+
+                        <TextView
+                            android:id="@+id/xpEarnedText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Total: + 0 XP"
+                            android:textColor="#4CAF50"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/difficulty" />
+
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/xpProgressBar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="14dp"
+                        android:progressTint="#4CAF50"
+                        android:progress="0"
+                        android:max="100" />
+
+                    <TextView
+                        android:id="@+id/levelInfoText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Level 1 (0 / 500 XP)"
+                        android:textSize="14sp"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/difficulty"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+
                 <LinearLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"

@@ -33,14 +33,16 @@
 
     <!-- Ad units -->
     <!-- ca-app-pub-3940256099942544/4411468910 - test int-->
+    <!-- ca-app-pub-3940256099942544/1033173712 - test int2-->
     <!-- ca-app-pub-6788521747770576/6859975900 - real int-->
     <!-- ca-app-pub-3940256099942544/9214589741 - test ban-->
     <!-- ca-app-pub-6788521747770576/8173057576 - real ban-->
     <!-- ca-app-pub-3940256099942544/1712485313 - test rew-->
+    <!-- ca-app-pub-3940256099942544/5224354917 - test rew2-->
     <!-- ca-app-pub-6788521747770576/6712649557 - real rew-->
-    <string name="Interstitial">ca-app-pub-67885217477705975900</string>
+    <string name="Interstitial">ca-app-pub-3940256099942544/3712</string>
     <string name="Banner">ca-app-pub-67885217477757576</string>
-    <string name="Rewarded">ca-app-pub-678852172649557</string>
+    <string name="Rewarded">ca-app-pub-3940256099942544/5224354917</string>
 
 
 </resources>

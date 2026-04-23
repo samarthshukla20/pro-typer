@@ -377,8 +377,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         // --- BOT SPECIFIC FLAGS ---
         gameData.put("isBotMatch", true);
         gameData.put("botName", "Guest_" + (1000 + new Random().nextInt(8999)));
-
-        // TODO: We will replace this random number with their historical average later!
+// adaptive bots to be made.
         int botTargetWpm = 30 + new Random().nextInt(30); // Randomly 30 - 60 WPM
         gameData.put("botWpm", botTargetWpm);
 

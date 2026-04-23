@@ -3,6 +3,9 @@ package com.samarthshukla.protyper;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Rect;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -10,8 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.graphics.Color;
-import android.graphics.Rect;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.Spannable;
@@ -19,6 +20,7 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +29,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -62,14 +65,14 @@ public class ParagraphActivity extends AppCompatActivity {
 
     private TextView wordDisplay, timerText, scoreText, tvDateTime;
     private EditText inputField;
-    private ScrollView paragraphScrollView;   // NEW: scroll container for paragraph
+    private ScrollView paragraphScrollView;
 
     private List<String> words = new ArrayList<>();
     private List<String> paragraphs = new ArrayList<>();
     private Random random = new Random();
     private int accuracy = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 120000;
+    private static final int TIME_LIMIT = 12000;
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private RewardedAd rewardedAd;
@@ -87,6 +90,12 @@ public class ParagraphActivity extends AppCompatActivity {
     private SoundPool soundPool;
     private int soundIdParaComplete;
     private int soundIdGameOver;
+
+    // --- XP CACHE VARIABLES ---
+    private int cachedTotalXp = 0;
+    private int cachedLevel = 1;
+    private int currentSessionAdXp = 0;
+    private long paragraphEndTime = 0;
 
     private String getCurrentDateTime() {
         String currentDateTime = new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault())
@@ -107,12 +116,30 @@ public class ParagraphActivity extends AppCompatActivity {
         loadInterstitialAd();
         loadRewardedAd();
 
+        // --- PRE-FETCH XP DATA (Zero UI Delay) ---
+        String userId = XpManager.getGlobalUserId(this);
+        com.google.firebase.database.FirebaseDatabase.getInstance().getReference("users").child(userId)
+                .addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull com.google.firebase.database.DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            if (snapshot.child("total_xp").getValue(Integer.class) != null)
+                                cachedTotalXp = snapshot.child("total_xp").getValue(Integer.class);
+                            if (snapshot.child("level").getValue(Integer.class) != null)
+                                cachedLevel = snapshot.child("level").getValue(Integer.class);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) {}
+                });
+        // -----------------------------------------
+
         wordDisplay = findViewById(R.id.wordDisplay);
         timerText = findViewById(R.id.timerText);
         scoreText = findViewById(R.id.scoreText);
         inputField = findViewById(R.id.inputField);
-        tvDateTime = findViewById(R.id.tvDateTime); // if you have this in layout
-        paragraphScrollView = findViewById(R.id.paragraphScrollView); // NEW
+        tvDateTime = findViewById(R.id.tvDateTime);
+        paragraphScrollView = findViewById(R.id.paragraphScrollView);
 
         startTime = System.currentTimeMillis();
         getCurrentDateTime();
@@ -213,18 +240,26 @@ public class ParagraphActivity extends AppCompatActivity {
     private void startNewGame() {
         isGameOver = false;
         accuracy = 0;
+        currentSessionAdXp = 0; // RESET VAULT
         scoreText.setText("Accuracy: " + calculateAccuracy() + "%");
         inputField.setText("");
         inputField.setEnabled(true);
         usedWords = new ArrayList<>();
         generateNewWord();
+
+        // --- NEW TIME RESETS ---
         gameStartTime = System.currentTimeMillis();
+        startTime = gameStartTime;
+        paragraphEndTime = 0;
+        totalPausedDuration = 0;
+        pauseStartTime = 0;
+        // -----------------------
+
         startTimer();
         hasShownRewardDialog = false;
         historySaved = false;
         isParagraphFullyTyped = false;
 
-        // Reset paragraph scroll to top
         if (paragraphScrollView != null) {
             paragraphScrollView.scrollTo(0, 0);
         }
@@ -239,7 +274,6 @@ public class ParagraphActivity extends AppCompatActivity {
         wordDisplay.setText(newWord);
         currentParagraph = newWord;
 
-        // ensure at top when new paragraph is loaded
         if (paragraphScrollView != null) {
             paragraphScrollView.post(() -> paragraphScrollView.scrollTo(0, 0));
         }
@@ -284,52 +318,37 @@ public class ParagraphActivity extends AppCompatActivity {
         }
         wordDisplay.setText(spannable);
 
-        // 🔄 Auto-scroll the paragraph to keep current position visible
         autoScrollParagraph(typedText.length());
 
-        // If paragraph is completed in time, trigger confetti and congrats card flow
         if (typedText.length() == paragraphText.length() && isParagraphFullyTyped) {
+            paragraphEndTime = System.currentTimeMillis(); // <-- INSTANTLY LOCKS THE CLOCK!
             inputField.setEnabled(false);
             if (timer != null) timer.cancel();
             accuracy = 100;
-            showConfettiThenGameOver(accuracy); // now handles route to congrats or game over
+            showConfettiThenGameOver(accuracy);
         } else {
-            // update live accuracy display even while typing
             scoreText.setText("Accuracy: " + calculateAccuracy() + "%");
         }
     }
 
-    /**
-     * Auto-scroll so that the line corresponding to the current typed position
-     * stays visible inside the ScrollView.
-     */
     private void autoScrollParagraph(int typedLength) {
-        if (paragraphScrollView == null) return;
-        if (wordDisplay == null) return;
-
+        if (paragraphScrollView == null || wordDisplay == null) return;
         wordDisplay.post(() -> {
             Layout layout = wordDisplay.getLayout();
             if (layout == null) return;
-
             int textLength = wordDisplay.getText().length();
             if (textLength == 0) return;
-
-            // Clamp offset to valid range
             int offset = Math.max(0, Math.min(typedLength, textLength - 1));
             int line = layout.getLineForOffset(offset);
             int lineTop = layout.getLineTop(line);
-
-            int targetScrollY = lineTop - dpToPx(24); // little padding above
+            int targetScrollY = lineTop - dpToPx(24);
             if (targetScrollY < 0) targetScrollY = 0;
-
             paragraphScrollView.smoothScrollTo(0, targetScrollY);
         });
     }
 
-    // MODIFIED: Handles both routes after confetti: congrats (success) or game over (timeout)
     private void showConfettiThenGameOver(final int accuracy) {
         final ViewGroup rootView = findViewById(android.R.id.content);
-
         final View dimBg = new View(this);
         dimBg.setBackgroundColor(0x00000000);
         dimBg.setLayoutParams(new ViewGroup.LayoutParams(
@@ -366,6 +385,136 @@ public class ParagraphActivity extends AppCompatActivity {
         });
     }
 
+    private int getCalculatedWpm() {
+        String typedText = inputField.getText().toString();
+        String paragraphText = currentParagraph;
+
+        if (paragraphText == null) paragraphText = "";
+
+        int correctChars = 0;
+        int minLen = Math.min(typedText.length(), paragraphText.length());
+        for (int i = 0; i < minLen; i++) {
+            if (typedText.charAt(i) == paragraphText.charAt(i)) {
+                correctChars++;
+            }
+        }
+
+        // --- NEW FLAWLESS TIME MATH ---
+        long finalEndTime = (paragraphEndTime > 0) ? paragraphEndTime : System.currentTimeMillis();
+        long activeMillis = (finalEndTime - gameStartTime) - totalPausedDuration;
+
+        if (activeMillis <= 0) activeMillis = 1000; // Safety fallback
+
+        double minutes = activeMillis / 60000.0;
+        double standardWords = correctChars / 5.0;
+
+        return (int) Math.round(standardWords / minutes);
+    }
+
+    // --- FIX 1: Character-Based Real-Time Accuracy ---
+    private int calculateAccuracy() {
+        String typedText = inputField.getText().toString(); // No trim() so spaces count!
+        String paragraphText = currentParagraph;
+
+        if (typedText.isEmpty()) return 0;
+
+        int correctChars = 0;
+        int minLen = Math.min(typedText.length(), paragraphText.length());
+
+        for (int i = 0; i < minLen; i++) {
+            if (typedText.charAt(i) == paragraphText.charAt(i)) {
+                correctChars++;
+            }
+        }
+        return (int) (((float) correctChars / typedText.length()) * 100);
+    }
+
+    // --- FIX 2: Detailed XP Receipt Animation Engine ---
+    private void animateXpAndSave(View cardView, int wpm, int finalAccuracy) {
+        TextView baseXpText = cardView.findViewById(R.id.baseXpText);
+        TextView completionXpText = cardView.findViewById(R.id.completionXpText);
+        TextView speedXpText = cardView.findViewById(R.id.speedXpText);
+        TextView adXpText = cardView.findViewById(R.id.adXpText);
+        TextView xpEarnedText = cardView.findViewById(R.id.xpEarnedText);
+        android.widget.ProgressBar xpProgressBar = cardView.findViewById(R.id.xpProgressBar);
+        TextView levelInfoText = cardView.findViewById(R.id.levelInfoText);
+
+        if (xpEarnedText == null || xpProgressBar == null) return;
+
+        int baseXp = (int) ((wpm * (float) finalAccuracy) / 100f);
+        int completionXp = isParagraphFullyTyped ? 20 : 0;
+        int speedXp = 0;
+
+        if (finalAccuracy > 80) {
+            if (wpm >= 91) speedXp = 50;
+            else if (wpm >= 61) speedXp = 45;
+            else if (wpm >= 31) speedXp = 30;
+            else speedXp = 15;
+        }
+
+        int adXp = currentSessionAdXp;
+        final int totalEarnedXp = baseXp + completionXp + speedXp + adXp;
+
+        if (baseXpText != null) {
+            baseXpText.setText("Base XP: +" + baseXp);
+        }
+        if (completionXp > 0 && completionXpText != null) {
+            completionXpText.setText("Completion: +" + completionXp);
+            completionXpText.setVisibility(View.VISIBLE);
+        }
+        if (speedXp > 0 && speedXpText != null) {
+            speedXpText.setText("Speed Bonus: +" + speedXp);
+            speedXpText.setVisibility(View.VISIBLE);
+        }
+        if (adXp > 0 && adXpText != null) {
+            adXpText.setText("Ad Vault: +" + adXp);
+            adXpText.setVisibility(View.VISIBLE);
+        }
+
+        xpEarnedText.setText("Total: +" + totalEarnedXp + " XP");
+
+        String userId = XpManager.getGlobalUserId(this);
+
+        int previousLevelXp = (cachedLevel > 1) ? XpManager.getXpRequiredForNextLevel(cachedLevel - 1) : 0;
+        int nextLevelXp = XpManager.getXpRequiredForNextLevel(cachedLevel);
+
+        int currentXpInThisLevel = cachedTotalXp - previousLevelXp;
+
+        final int maxXpForThisLevel = nextLevelXp - previousLevelXp;
+        final int newXpInThisLevel = currentXpInThisLevel + totalEarnedXp;
+
+        xpProgressBar.setMax(maxXpForThisLevel);
+        levelInfoText.setText("Level " + cachedLevel + " (" + currentXpInThisLevel + " / " + maxXpForThisLevel + ")");
+
+        android.animation.ObjectAnimator animation = android.animation.ObjectAnimator.ofInt(xpProgressBar, "progress", currentXpInThisLevel, newXpInThisLevel);
+        animation.setDuration(1200);
+
+        animation.addUpdateListener(anim -> {
+            int animatedValue = (int) anim.getAnimatedValue();
+            if (animatedValue >= maxXpForThisLevel) {
+                levelInfoText.setText("Level UP!");
+                levelInfoText.setTextColor(Color.parseColor("#FFD700"));
+            } else {
+                levelInfoText.setText("Level " + cachedLevel + " (" + animatedValue + " / " + maxXpForThisLevel + ")");
+            }
+        });
+
+        animation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                XpManager.saveXpToFirebase(userId, totalEarnedXp);
+
+                cachedTotalXp += totalEarnedXp;
+                while (cachedTotalXp >= XpManager.getXpRequiredForNextLevel(cachedLevel)) {
+                    cachedLevel++;
+                }
+            }
+        });
+
+        animation.start();
+    }
+
     private void showCongratsCard(int accuracy) {
         saveGameHistoryOnce();
 
@@ -381,12 +530,11 @@ public class ParagraphActivity extends AppCompatActivity {
         message.setText("You completed the paragraph!");
         accuracyView.setText("Accuracy: " + accuracy + "%");
 
-        String typedText = inputField.getText().toString().trim();
-        long endTime = System.currentTimeMillis();
-        double minutes = (endTime - startTime) / 60000.0;
-        int wordCount = typedText.isEmpty() ? 0 : typedText.split("\\s+").length;
-        int wpm = minutes > 0 ? (int) (wordCount / minutes) : 0;
+        int wpm = getCalculatedWpm();
         wpmTextView.setText("WPM: " + wpm);
+
+        // --- HOOKED UP: Animate XP Card ---
+        animateXpAndSave(gameOverCardView, wpm, accuracy);
 
         MaterialButton nextButton = gameOverCardView.findViewById(R.id.nextButton);
         MaterialButton menuButton = gameOverCardView.findViewById(R.id.menuButton);
@@ -395,6 +543,59 @@ public class ParagraphActivity extends AppCompatActivity {
             if (gameOverCardView != null && gameOverCardView.getParent() != null) {
                 ((ViewGroup) gameOverCardView.getParent()).removeView(gameOverCardView);
             }
+
+            inputField.setEnabled(true);
+            inputField.setText("");
+            inputField.requestFocus();
+            new Handler().postDelayed(() -> {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.showSoftInput(inputField, InputMethodManager.SHOW_IMPLICIT);
+                }
+            }, 300);
+
+            isGameOver = false;
+            hasShownRewardDialog = false;
+            historySaved = false;
+            startNewGame();
+        });
+
+        menuButton.setOnClickListener(v -> openMenu());
+
+        ViewGroup rootView = findViewById(android.R.id.content);
+        rootView.addView(gameOverCardView, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+
+    private void showGameOverCard(int accuracy) {
+        saveGameHistoryOnce();
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        gameOverCardView = inflater.inflate(R.layout.game_over_card_para, null);
+
+        TextView gameOverMessage = gameOverCardView.findViewById(R.id.gameOverMessageInside);
+        gameOverMessage.setText("Game Over!");
+
+        TextView accuracyInsideCard = gameOverCardView.findViewById(R.id.scoreTextInsideCard);
+        accuracyInsideCard.setText("Accuracy: " + accuracy + "%");
+
+        TextView wpmTextView = gameOverCardView.findViewById(R.id.wpmTextView);
+        int wpm = getCalculatedWpm();
+
+        if (wpmTextView != null) {
+            wpmTextView.setText("WPM: " + wpm);
+        }
+
+        // --- HOOKED UP: Animate XP Card ---
+        animateXpAndSave(gameOverCardView, wpm, accuracy);
+
+        MaterialButton retryButton = gameOverCardView.findViewById(R.id.retryButton);
+        MaterialButton menuButton = gameOverCardView.findViewById(R.id.menuButton);
+
+        retryButton.setOnClickListener(v -> {
+            if (gameOverCardView != null && gameOverCardView.getParent() != null)
+                ((ViewGroup) gameOverCardView.getParent()).removeView(gameOverCardView);
 
             inputField.setEnabled(true);
             inputField.setText("");
@@ -430,80 +631,6 @@ public class ParagraphActivity extends AppCompatActivity {
             HistoryManager.addHistory(this, new GameHistory("Paragraph Mode", durationPlayed, 0, dateTime, accuracy));
             historySaved = true;
         }
-    }
-
-    private int calculateAccuracy() {
-        String typedText = inputField.getText().toString().trim();
-        String paragraphText = currentParagraph.trim();
-        if (paragraphText.isEmpty()) return 0;
-        if (typedText.equals(paragraphText)) {
-            return 100;
-        }
-        String[] typedWords = typedText.split("\\s+");
-        String[] originalWords = paragraphText.split("\\s+");
-        int correctWords = 0;
-        int wordsToCompare = Math.min(typedWords.length, originalWords.length);
-        for (int i = 0; i < wordsToCompare; i++) {
-            if (typedWords[i].equals(originalWords[i])) {
-                correctWords++;
-            }
-        }
-        return (int) ((correctWords / (float) originalWords.length) * 100);
-    }
-
-    private void showGameOverCard(int accuracy) {
-        saveGameHistoryOnce();
-
-        LayoutInflater inflater = LayoutInflater.from(this);
-        gameOverCardView = inflater.inflate(R.layout.game_over_card_para, null);
-
-        TextView gameOverMessage = gameOverCardView.findViewById(R.id.gameOverMessageInside);
-        gameOverMessage.setText("Game Over!");
-
-        TextView accuracyInsideCard = gameOverCardView.findViewById(R.id.scoreTextInsideCard);
-        accuracyInsideCard.setText("Accuracy: " + accuracy + "%");
-
-        TextView wpmTextView = gameOverCardView.findViewById(R.id.wpmTextView);
-
-        String typedText = inputField.getText().toString().trim();
-        long endTime = System.currentTimeMillis();
-        double timeTakenMinutes = (endTime - startTime) / 60000.0;
-        int wordCount = !typedText.isEmpty() ? typedText.split("\\s+").length : 0;
-        int wpm = timeTakenMinutes > 0 ? (int) (wordCount / timeTakenMinutes) : 0;
-
-        if (wpmTextView != null) {
-            wpmTextView.setText("WPM: " + wpm);
-        }
-
-        MaterialButton retryButton = gameOverCardView.findViewById(R.id.retryButton);
-        MaterialButton menuButton = gameOverCardView.findViewById(R.id.menuButton);
-
-        retryButton.setOnClickListener(v -> {
-            if (gameOverCardView != null && gameOverCardView.getParent() != null)
-                ((ViewGroup) gameOverCardView.getParent()).removeView(gameOverCardView);
-
-            inputField.setEnabled(true);
-            inputField.setText("");
-            inputField.requestFocus();
-            new Handler().postDelayed(() -> {
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (imm != null) {
-                    imm.showSoftInput(inputField, InputMethodManager.SHOW_IMPLICIT);
-                }
-            }, 300);
-
-            isGameOver = false;
-            hasShownRewardDialog = false;
-            historySaved = false;
-            startNewGame();
-        });
-
-        menuButton.setOnClickListener(v -> openMenu());
-
-        ViewGroup rootView = findViewById(android.R.id.content);
-        rootView.addView(gameOverCardView, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
     private void openMenu() {
@@ -606,7 +733,11 @@ public class ParagraphActivity extends AppCompatActivity {
                 imm.showSoftInput(inputField, InputMethodManager.SHOW_IMPLICIT);
             }
         }, 300);
-        startTime = System.currentTimeMillis();
+
+        // CRITICAL FIX: Do NOT reset startTime here, otherwise WPM skyrockets to 400+ because
+        // the game thinks they typed the whole paragraph in 15 seconds!
+        // startTime = System.currentTimeMillis();
+
         if (timer != null) timer.cancel();
         timer = new CountDownTimer(15000, 1000) {
             public void onTick(long millisUntilFinished) {
@@ -648,10 +779,13 @@ public class ParagraphActivity extends AppCompatActivity {
                 }
             });
             rewardedAd.show(this, rewardItem -> {
-                // Reward granted logic if needed
+                // --- FIX 3: Ad Vault XP ---
+                int adXp = XpManager.getAdBonusXp();
+                currentSessionAdXp += adXp;
+                Toast.makeText(ParagraphActivity.this, "+15s & +" + adXp + " Bonus XP Locked In!", Toast.LENGTH_SHORT).show();
             });
         } else {
-            showAdThenGameOver();
+            Toast.makeText(this, "Ad is still loading or unavailable. Check connection.", Toast.LENGTH_SHORT).show();
         }
     }
 
