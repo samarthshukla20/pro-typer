@@ -1,0 +1,25 @@
+Single Player Mode:
+-Easy = +1xp/word
+-Medium = +3xp/word
+-Hard = +5xp/word
+
+Paragraph Mode
+- Base performance = (wpm*(acc./100))xp
+- Paragraph Completion = +20xp
+- Bonus = if (0-30)wpm = +15xp
+          if (31-60)wpm = +30xp
+          if (61-90)wpm = +45xp
+          if (91+)wpm = +50xp
+ONLY IF ACCURACY IS ABOVE 80%
+
+Multiplayer Mode
+- Base performance = (wpm*(acc./100))xp
+- Result = win = +75xp
+           draw = +30xp
+           lose = +0xp
+- Milestone = if accuracy is more than 80% and WIN = +50xp
+              if accuracy is more than 80% and DRAW = +30xp
+              if accuracy is more than 80% and LOSE = +10xp
+
+Other
+- Watch ad  = +10xp (applicable in all modes)
