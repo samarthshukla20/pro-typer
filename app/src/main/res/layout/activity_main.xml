@@ -5,126 +5,157 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:background="?attr/colorSurface"
     android:fitsSystemWindows="false"
     android:id="@+id/drawer_layout"
     tools:context=".MainActivity">
 
-    <LinearLayout
-        android:layout_height="0dp"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:layout_weight="1"
-        android:paddingTop="0dp">
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:id="@+id/bannerAdFrame"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true">
+            <com.google.android.gms.ads.AdView
+                android:id="@+id/bannerAdView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:adSize="BANNER"
+                app:adUnitId="@string/Banner" />
+        </FrameLayout>
 
         <TextView
+            android:id="@+id/tvMainTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
+            android:layout_below="@id/bannerAdFrame"
+            android:layout_marginTop="40dp"
+            android:lines="1"
             android:gravity="center"
-            android:textSize="40sp"
+            android:textSize="44sp"
             android:fontFamily="@font/font"
-            android:paddingBottom="68dp"
             android:textColor="?attr/colorOnSurface"
-            android:id="@+id/title"
             android:text="PRO TYPER" />
 
-        <com.google.android.material.button.MaterialButton
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:fontFamily="@font/difficulty"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:paddingHorizontal="24dp"
-            android:id="@+id/btnSingleWordMode"
-            android:text="SINGLE WORD MODE" />
-
-        <com.google.android.material.button.MaterialButton
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:fontFamily="@font/difficulty"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_marginTop="16dp"
-            android:paddingHorizontal="24dp"
-            android:id="@+id/btnParagraphMode"
-            android:text="PARAGRAPH MODE" />
-
-        <com.google.android.material.button.MaterialButton
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:fontFamily="@font/difficulty"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_marginTop="16dp"
-            android:paddingHorizontal="24dp"
-            android:id="@+id/btnMultiplayerMode"
-            android:text="MULTIPLAYER MODE" />
-
-        <com.google.android.material.button.MaterialButton
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:fontFamily="@font/difficulty"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_marginTop="16dp"
-            android:paddingHorizontal="24dp"
-            android:id="@+id/btnHistory"
-            android:text="HISTORY" />
-
-        <com.google.android.material.button.MaterialButton
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:fontFamily="@font/difficulty"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_marginTop="16dp"
-            android:paddingHorizontal="24dp"
-            android:id="@+id/btnExit"
-            android:text="EXIT" />
-
-        <LinearLayout
-            android:layout_height="wrap_content"
+        <FrameLayout
+            android:id="@+id/fragment_container"
             android:layout_width="match_parent"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
+            android:layout_height="match_parent"
+            android:layout_below="@id/tvMainTitle"
+            android:layout_above="@+id/bottomNavBar" />
 
-            <ImageButton
-                android:layout_height="48dp"
-                android:layout_width="48dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/htp"
-                android:contentDescription="Instructions to Play"
-                android:background="@drawable/circle_outline"
-                android:padding="8dp"
-                android:layout_margin="4dp"
-                android:tint="?attr/colorOnSurface"
-                android:id="@+id/btnHowToPlay" />
-
-            <ImageButton
-                android:layout_height="48dp"
-                android:layout_width="48dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/about"
-                android:contentDescription="About the Developer"
-                android:background="@drawable/circle_outline"
-                android:padding="8dp"
-                android:layout_margin="4dp"
-                android:tint="?attr/colorOnSurface"
-                android:id="@+id/btnAbout" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <FrameLayout
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:layout_marginTop="16dp">
-
-        <com.google.android.gms.ads.AdView
-            android:layout_height="wrap_content"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bottomNavBar"
             android:layout_width="match_parent"
-            app:adSize="BANNER"
-            app:adUnitId="@string/Banner"
-            android:id="@+id/bannerAdView" />
+            android:layout_height="72dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginBottom="24dp"
+            app:cardBackgroundColor="#E6020C1B"
+            app:cardCornerRadius="36dp"
+            app:cardElevation="16dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#3364B5F6">
 
-    </FrameLayout>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/navIndicator"
+                    android:layout_width="100dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginVertical="8dp"
+                    app:cardBackgroundColor="#448AFF"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:weightSum="3"
+                    android:elevation="2dp">
+
+                    <LinearLayout
+                        android:id="@+id/tabHistory"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+                        <ImageView
+                            android:id="@+id/iconHistory"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:src="@drawable/history"
+                            app:tint="#64B5F6"/>
+                        <TextView
+                            android:id="@+id/textHistory"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="History"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp"
+                            android:textColor="#64B5F6" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/tabHome"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+                        <ImageView
+                            android:id="@+id/iconHome"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:src="@drawable/ic_home"
+                            app:tint="#FFFFFF"/>
+                        <TextView
+                            android:id="@+id/textHome"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Play"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp"
+                            android:textColor="#FFFFFF" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/tabProfile"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:background="?attr/selectableItemBackgroundBorderless">
+                        <ImageView
+                            android:id="@+id/iconProfile"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:src="@drawable/ic_person"
+                            app:tint="#64B5F6"/>
+                        <TextView
+                            android:id="@+id/textProfile"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Profile"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp"
+                            android:textColor="#64B5F6" />
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </RelativeLayout>
 </androidx.drawerlayout.widget.DrawerLayout>

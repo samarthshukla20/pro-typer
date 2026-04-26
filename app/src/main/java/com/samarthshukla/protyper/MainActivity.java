@@ -1,31 +1,27 @@
 package com.samarthshukla.protyper;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.LoadAdError;
@@ -35,14 +31,8 @@ import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.messaging.FirebaseMessaging;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,83 +43,219 @@ public class MainActivity extends AppCompatActivity {
     private InterstitialAd interstitialAd;
     private com.google.android.gms.ads.AdView bannerAdView;
     private Handler bannerRefreshHandler = new Handler();
-    private DrawerLayout drawerLayout;
-    private NavigationView navigationView;
-    // Firebase Analytics instance and session start time variable
     private FirebaseAnalytics mFirebaseAnalytics;
     private long sessionStartTime;
-    private static final String PREFS_NAME = "AppPrefs";
-    private static final String KEY_SESSION_COUNT = "session_count";
 
+    private TextView tvMainTitle;
+    private Handler typeHandler = new Handler();
+    private String targetText = "PRO TYPER";
+    private int charIndex = 0;
+    private boolean isDeleting = false;
+    private boolean cursorVisible = true;
+    private int pauseTicks = 0;
+
+    // --- NEW: FRAGMENT ARCHITECTURE ---
+    private Fragment homeFragment = new HomeFragment();
+    private Fragment profileFragment = new ProfileFragment();
+    private Fragment activeFragment = homeFragment;
+    private FragmentManager fragmentManager = getSupportFragmentManager();
+
+    // Track active tab for the 'Back' button
+    private String currentTab = "HOME";
+    // ----------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);  // Use your main layout
+        setContentView(R.layout.activity_main);
 
-        // Initialize Firebase Analytics and log app open event
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN, null);
 
-        // (Optional) Initialize Navigation Drawer here
-
-        // Initialize AdMob
-        MobileAds.initialize(this, initializationStatus -> {
-        });
-
-        // Load Ads
+        MobileAds.initialize(this, initializationStatus -> {});
         loadInterstitialAd();
         loadBannerAd();
         startBannerAdRefresh();
 
-        // Initialize buttons
-        MaterialButton btnSingleWordMode = findViewById(R.id.btnSingleWordMode);
-        btnSingleWordMode.setText("SINGLE WORD MODE");
-        MaterialButton btnParagraphMode = findViewById(R.id.btnParagraphMode);
-        btnParagraphMode.setText("PARAGRAPH MODE");
-        MaterialButton btnMultiplayerMode = findViewById(R.id.btnMultiplayerMode);
-        btnMultiplayerMode.setText("MULTIPLAYER MODE");
-        MaterialButton btnHistory = findViewById(R.id.btnHistory);
-        btnHistory.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, HistoryActivity.class)));
-        MaterialButton btnExit = findViewById(R.id.btnExit);
+        tvMainTitle = findViewById(R.id.tvMainTitle);
 
-        // New ImageButtons for How To Play and About
-        ImageButton btnHowToPlay = findViewById(R.id.btnHowToPlay);
-        btnHowToPlay.setOnClickListener(v -> showHowToPlayPopup());
-        ImageButton btnAbout = findViewById(R.id.btnAbout);
-        btnAbout.setOnClickListener(v -> showAdThenStart(AboutActivity.class));
+        // --- NEW: SMART FRAGMENT INITIALIZATION ---
+        if (savedInstanceState == null) {
+            // App is opening for the very first time. Load fresh fragments!
+            fragmentManager.beginTransaction().add(R.id.fragment_container, profileFragment, "PROFILE").hide(profileFragment).commit();
+            fragmentManager.beginTransaction().add(R.id.fragment_container, homeFragment, "HOME").commit();
+            activeFragment = homeFragment;
+        } else {
+            // App was rebuilt from a Dark Mode toggle! Rescue the existing fragments.
+            homeFragment = fragmentManager.findFragmentByTag("HOME");
+            profileFragment = fragmentManager.findFragmentByTag("PROFILE");
 
-        // Check Internet Connection
-        checkInternetOnStart();
+            // Remember which tab we were on
+            currentTab = savedInstanceState.getString("CURRENT_TAB", "HOME");
+            if (currentTab.equals("PROFILE")) {
+                activeFragment = profileFragment;
+            } else {
+                activeFragment = homeFragment;
+            }
+        }
+        // ------------------------------------------
 
-        // Button Click Listeners
-        btnSingleWordMode.setOnClickListener(v -> showAdThenStart(DifficultyActivity.class));
-        btnParagraphMode.setOnClickListener(v -> showAdThenStart(ParagraphActivity.class));
-        btnMultiplayerMode.setOnClickListener(v -> showAdThenStart(MultiplayerLobbyActivity.class));
-        btnExit.setOnClickListener(v -> showConfirmExitDialog());
+        setupBottomNavigation();
+        setupThemeAndBackground();
+        startTypewriterAnimation();
 
-        // Firebase Messaging: Retrieve the FCM token
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        // Log failure if needed
-                        return;
-                    }
-                    String token = task.getResult();
-                    // Use the token as needed (e.g., log or send to your server)
-                    // Example: Log.d("FCM Token", token);
-                });
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) { String token = task.getResult(); }
+        });
+    }
+
+    private void setupBottomNavigation() {
+        View tabHistory = findViewById(R.id.tabHistory);
+        View tabHome = findViewById(R.id.tabHome);
+        View tabProfile = findViewById(R.id.tabProfile);
+        View navIndicator = findViewById(R.id.navIndicator);
+
+        android.widget.ImageView iconHistory = findViewById(R.id.iconHistory);
+        android.widget.ImageView iconHome = findViewById(R.id.iconHome);
+        android.widget.ImageView iconProfile = findViewById(R.id.iconProfile);
+        TextView textHistory = findViewById(R.id.textHistory);
+        TextView textHome = findViewById(R.id.textHome);
+        TextView textProfile = findViewById(R.id.textProfile);
+
+        int colorSelected = android.graphics.Color.parseColor("#FFFFFF");
+        int colorUnselected = android.graphics.Color.parseColor("#64B5F6");
+
+        // Snap to Home
+        tabHome.post(() -> {
+            android.view.ViewGroup.LayoutParams params = navIndicator.getLayoutParams();
+            params.width = tabHome.getWidth() - 32;
+            navIndicator.setLayoutParams(params);
+            navIndicator.setX(tabHome.getX() + 16);
+        });
+
+        tabHome.setOnClickListener(v -> {
+            if (activeFragment != homeFragment) {
+                fragmentManager.beginTransaction()
+                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                        .hide(activeFragment).show(homeFragment).commit();
+                activeFragment = homeFragment;
+                currentTab = "HOME";
+            }
+
+            // SHOW the title on Home
+            tvMainTitle.setVisibility(View.VISIBLE);
+
+            navIndicator.animate().cancel();
+            navIndicator.post(() -> {
+                navIndicator.animate().x(tabHome.getX() + 16).setDuration(300)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+            });
+
+            iconHome.setColorFilter(colorSelected); textHome.setTextColor(colorSelected);
+            iconProfile.setColorFilter(colorUnselected); textProfile.setTextColor(colorUnselected);
+        });
+
+        tabProfile.setOnClickListener(v -> {
+            if (activeFragment != profileFragment) {
+                fragmentManager.beginTransaction()
+                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                        .hide(activeFragment).show(profileFragment).commit();
+                activeFragment = profileFragment;
+                currentTab = "PROFILE";
+            }
+
+            // HIDE the title on Profile
+            tvMainTitle.setVisibility(View.GONE);
+
+            navIndicator.animate().cancel();
+            navIndicator.post(() -> {
+                navIndicator.animate().x(tabProfile.getX() + 16).setDuration(300)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+            });
+
+            iconProfile.setColorFilter(colorSelected); textProfile.setTextColor(colorSelected);
+            iconHome.setColorFilter(colorUnselected); textHome.setTextColor(colorUnselected);
+        });
+
+        tabHistory.setOnClickListener(v -> {
+            navIndicator.animate().cancel();
+            navIndicator.post(() -> {
+                navIndicator.animate().x(tabHistory.getX() + 16).setDuration(300)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+            });
+
+            iconHistory.setColorFilter(colorSelected); textHistory.setTextColor(colorSelected);
+
+            // SHOW the title when heading to History (so it's there when we get back)
+            tvMainTitle.setVisibility(View.VISIBLE);
+
+            new Handler().postDelayed(() -> {
+                startActivity(new Intent(MainActivity.this, HistoryActivity.class));
+            }, 200);
+        });
+    }
+
+    private void setupThemeAndBackground() {
+        int currentNightMode = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        boolean isDarkMode = (currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES);
+        String[] bgColors;
+
+        if (isDarkMode) {
+            bgColors = new String[]{"#020C1B", "#0A192F", "#112240", "#233554"};
+        } else {
+            bgColors = new String[]{"#E3F2FD", "#BBDEFB", "#90CAF9", "#64B5F6"};
+        }
+
+        View rootLayout = findViewById(R.id.drawer_layout);
+        startFullScreenGroovyWave(rootLayout, bgColors);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Start session tracking
         sessionStartTime = System.currentTimeMillis();
         mFirebaseAnalytics.logEvent("session_start", null);
         checkInternetOnStart();
 
-        // NEW: Check for notification permission (for Android 13+)
+        // WAKE UP & SYNC NAV BAR STATE
+        View navIndicator = findViewById(R.id.navIndicator);
+        View tabHome = findViewById(R.id.tabHome);
+        View tabProfile = findViewById(R.id.tabProfile);
+
+        android.widget.ImageView iconHistory = findViewById(R.id.iconHistory);
+        TextView textHistory = findViewById(R.id.textHistory);
+        android.widget.ImageView iconHome = findViewById(R.id.iconHome);
+        TextView textHome = findViewById(R.id.textHome);
+        android.widget.ImageView iconProfile = findViewById(R.id.iconProfile);
+        TextView textProfile = findViewById(R.id.textProfile);
+
+        int colorSelected = android.graphics.Color.parseColor("#FFFFFF");
+        int colorUnselected = android.graphics.Color.parseColor("#64B5F6");
+
+        if (navIndicator != null && tabHome != null && tabProfile != null) {
+            navIndicator.post(() -> {
+                iconHistory.setColorFilter(colorUnselected);
+                textHistory.setTextColor(colorUnselected);
+
+                if (currentTab.equals("PROFILE")) {
+                    // We are returning to Profile, keep title hidden!
+                    tvMainTitle.setVisibility(View.GONE);
+
+                    navIndicator.setX(tabProfile.getX() + 16);
+                    iconProfile.setColorFilter(colorSelected); textProfile.setTextColor(colorSelected);
+                    iconHome.setColorFilter(colorUnselected); textHome.setTextColor(colorUnselected);
+                } else {
+                    // We are returning to Home, ensure title is visible!
+                    tvMainTitle.setVisibility(View.VISIBLE);
+
+                    navIndicator.setX(tabHome.getX() + 16);
+                    iconHome.setColorFilter(colorSelected); textHome.setTextColor(colorSelected);
+                    iconProfile.setColorFilter(colorUnselected); textProfile.setTextColor(colorUnselected);
+                }
+            });
+        }
+
+        // Notification checks
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -146,134 +272,38 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Register network change receiver
         networkReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (!isInternetAvailable()) {
-                    showRetryInternetDialog();
-                }
+                if (!isInternetAvailable()) { showRetryInternetDialog(); }
             }
         };
         registerReceiver(networkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (networkReceiver != null) {
-            unregisterReceiver(networkReceiver);
-        }
-        // End session tracking and log session duration
-        long sessionDuration = System.currentTimeMillis() - sessionStartTime;
-        Bundle bundle = new Bundle();
-        bundle.putLong("session_duration_ms", sessionDuration);
-        mFirebaseAnalytics.logEvent("session_end", bundle);
-    }
 
-    @Override
-    public void onBackPressed() {
-        if (doubleBackToExitPressedOnce) {
-            showAdThenFinish();
-            return;
-        }
-        doubleBackToExitPressedOnce = true;
-        Toast.makeText(this, "Press back again to exit.", Toast.LENGTH_SHORT).show();
-        doubleBackHandler.postDelayed(() -> doubleBackToExitPressedOnce = false, 2000);
-    }
+    // ==========================================
+    // UTILITY METHODS DELEGATED TO FRAGMENTS
+    // ==========================================
 
-
-    private void checkInternetOnStart() {
-        if (!isInternetAvailable()) {
-            showRetryInternetDialog();
-        }
-    }
-
-    private void showRetryInternetDialog() {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Whoops!!")
-                .setMessage("It seems you're offline. Check your internet connection and try again!")
-                .setCancelable(false)
-                .setPositiveButton("Retry", (dialog, which) -> {
-                    if (isInternetAvailable()) {
-                        restartActivity();
-                    } else {
-                        showRetryInternetDialog();
-                    }
-                })
-                .show();
-    }
-
-    private void showConfirmExitDialog() {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Exit")
-                .setMessage("You're about to leave. Do you really want to exit?")
-                .setCancelable(false)
-                .setPositiveButton("Yes", (dialog, which) -> showAdThenFinish())
-                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
-                .show();
-    }
-
-    private boolean isInternetAvailable() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        if (cm != null) {
-            NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-            return networkInfo != null && networkInfo.isConnected();
-        }
-        return false;
-    }
-
-    private void loadInterstitialAd() {
-        AdRequest adRequest = new AdRequest.Builder().build();
-        InterstitialAd.load(this, getString(R.string.Interstitial), adRequest,
-                new InterstitialAdLoadCallback() {
-                    @Override
-                    public void onAdLoaded(InterstitialAd ad) {
-                        interstitialAd = ad;
-                        interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                            @Override
-                            public void onAdDismissedFullScreenContent() {
-                                interstitialAd = null;
-                                loadInterstitialAd(); // Preload for next time
-                            }
-
-                            @Override
-                            public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
-                                interstitialAd = null;
-                                loadInterstitialAd(); // Preload again if it fails
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(LoadAdError adError) {
-                        interstitialAd = null;
-                        // Optional: try again after delay instead of instantly looping
-                        new Handler().postDelayed(MainActivity.this::loadInterstitialAd, 30000);
-                    }
-                });
-    }
-
-    private void loadBannerAd() {
-        bannerAdView = findViewById(R.id.bannerAdView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        bannerAdView.loadAd(adRequest);
-    }
-
-    private void startBannerAdRefresh() {
-        Runnable bannerRefreshRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (bannerAdView != null) {
-                    bannerAdView.loadAd(new AdRequest.Builder().build());
-                }
-                bannerRefreshHandler.postDelayed(this, 45000);
+    @SuppressLint("ClickableViewAccessibility")
+    public void applySquishAnimation(View view) {
+        if (view == null) return;
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(100).start();
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+                    break;
             }
-        };
-        bannerRefreshHandler.post(bannerRefreshRunnable);
+            return false;
+        });
     }
 
-    private void showAdThenStart(Class<?> activity) {
+    public void showAdThenStart(Class<?> activity) {
         if (interstitialAd != null) {
             InterstitialAd adToShow = interstitialAd;
             interstitialAd = null;
@@ -283,7 +313,6 @@ public class MainActivity extends AppCompatActivity {
                     loadInterstitialAd();
                     startActivity(new Intent(MainActivity.this, activity));
                 }
-
                 @Override
                 public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
                     loadInterstitialAd();
@@ -296,40 +325,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    private void showAdThenFinish() {
-        if (interstitialAd != null) {
-            InterstitialAd adToShow = interstitialAd;
-            interstitialAd = null; // Prevent reuse
-            adToShow.setFullScreenContentCallback(new FullScreenContentCallback() {
-                @Override
-                public void onAdDismissedFullScreenContent() {
-                    loadInterstitialAd();
-                    finish();
-                }
-
-                @Override
-                public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
-                    loadInterstitialAd();
-                    finish();
-                }
-            });
-            adToShow.show(MainActivity.this);
-        } else {
-            finish();
-        }
-    }
-
-    private void restartActivity() {
-        Intent intent = new Intent(MainActivity.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-        finish();
-    }
-
-
-    private void showHowToPlayPopup() {
-        // Inflate the custom layout for the popup
+    public void showHowToPlayPopup() {
         View popupView = LayoutInflater.from(this).inflate(R.layout.layout_how_to_play_popup, null);
         final androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setView(popupView)
@@ -342,34 +338,207 @@ public class MainActivity extends AppCompatActivity {
         MaterialButton btnSingleWord = popupView.findViewById(R.id.btnSingleWordPopup);
         MaterialButton btnParagraph = popupView.findViewById(R.id.btnParagraphPopup);
 
-        // Set heading
         tvHeading.setText("How To Play");
 
-        // Set instructions for single word mode
         btnSingleWord.setOnClickListener(view -> {
-            String instruction = "SINGLE WORD MODE INSTRUCTIONS:\n\n" +
-                    "1. Choose your difficulty: Easy, Medium, or Hard.\n" +
-                    "2. Type the displayed word correctly to earn points.\n" +
-                    "3. For each correct word, 1 point is given.\n" +
-                    "4. Accumulate points before the timer runs out.\n" +
-                    "5. Beat your high score!\n\n" +
-                    "Good luck!";
+            String instruction = "SINGLE WORD MODE INSTRUCTIONS:\n\n1. Choose your difficulty.\n2. Type the displayed word correctly.\n3. 1 point is given per word.\n4. Beat your high score!";
             tvInstruction.setText(instruction);
             buttonContainer.setVisibility(View.GONE);
         });
 
-        // Set instructions for paragraph mode
         btnParagraph.setOnClickListener(view -> {
-            String instruction = "PARAGRAPH MODE INSTRUCTIONS:\n\n" +
-                    "1. A paragraph will be displayed.\n" +
-                    "2. Type the entire paragraph exactly as shown before the timer runs out.\n" +
-                    "3. Once the whole paragraph is typed or the timer ends, the game will get over.\n" +
-                    "4. Your Accuracy and Words Per Minute (WPM) will be shown to you.\n\n" +
-                    "Good luck!";
+            String instruction = "PARAGRAPH MODE INSTRUCTIONS:\n\n1. A paragraph will be displayed.\n2. Type the entire paragraph exactly.\n3. Your Accuracy and Words Per Minute (WPM) will be shown.";
             tvInstruction.setText(instruction);
             buttonContainer.setVisibility(View.GONE);
         });
 
         dialog.show();
+    }
+
+
+    // ==========================================
+    // ANIMATION ENGINES
+    // ==========================================
+
+    private void startTypewriterAnimation() {
+        if (tvMainTitle == null) return;
+        typeHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                int delay = 150;
+                if (!isDeleting) {
+                    if (charIndex < targetText.length()) {
+                        charIndex++; cursorVisible = true; delay = 150;
+                    } else {
+                        if (pauseTicks < 6) {
+                            pauseTicks++; cursorVisible = !cursorVisible; delay = 500;
+                        } else {
+                            pauseTicks = 0; isDeleting = true; cursorVisible = true; delay = 150;
+                        }
+                    }
+                } else {
+                    if (charIndex > 0) {
+                        charIndex--; cursorVisible = true; delay = 50;
+                    } else {
+                        if (pauseTicks < 2) {
+                            pauseTicks++; cursorVisible = !cursorVisible; delay = 500;
+                        } else {
+                            pauseTicks = 0; isDeleting = false; cursorVisible = true; delay = 150;
+                        }
+                    }
+                }
+
+                String displayText = targetText.substring(0, charIndex);
+                if (cursorVisible) { displayText += "|"; }
+                else if (displayText.isEmpty()) { displayText = " "; }
+
+                tvMainTitle.setText(displayText);
+                typeHandler.postDelayed(this, delay);
+            }
+        });
+    }
+
+    private void startFullScreenGroovyWave(View backgroundView, String[] hexColors) {
+        if (backgroundView == null || hexColors.length < 3) return;
+
+        class GroovyBackgroundDrawable extends android.graphics.drawable.Drawable {
+            private android.graphics.Paint[] paints;
+            private android.graphics.Path path = new android.graphics.Path();
+            private float timeOffset = 0f;
+
+            public GroovyBackgroundDrawable() {
+                paints = new android.graphics.Paint[hexColors.length];
+                for (int i = 0; i < hexColors.length; i++) {
+                    paints[i] = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                    paints[i].setColor(android.graphics.Color.parseColor(hexColors[i]));
+                    paints[i].setStyle(android.graphics.Paint.Style.FILL);
+                }
+            }
+
+            @Override
+            public void draw(@NonNull android.graphics.Canvas canvas) {
+                android.graphics.Rect bounds = getBounds();
+                float width = bounds.width(); float height = bounds.height();
+                canvas.drawRect(bounds, paints[0]);
+
+                for (int i = 1; i < paints.length; i++) {
+                    path.reset(); path.moveTo(0, height); path.lineTo(0, height * 0.1f);
+                    float amplitude = height * 0.12f;
+                    float frequency = (float) (Math.PI / width) * 1.2f;
+                    float speedModifier = i * 0.7f; float phaseShift = timeOffset * speedModifier;
+                    float verticalOffset = (height * 0.22f) * i;
+
+                    for (float x = 0; x <= width + 30; x += 30) {
+                        float y = (float) Math.sin((x * frequency) + phaseShift) * amplitude + verticalOffset;
+                        path.lineTo(x, y);
+                    }
+                    path.lineTo(width, height); path.close();
+                    canvas.drawPath(path, paints[i]);
+                }
+            }
+            @Override public void setAlpha(int alpha) {}
+            @Override public void setColorFilter(android.graphics.ColorFilter colorFilter) {}
+            @Override public int getOpacity() { return android.graphics.PixelFormat.OPAQUE; }
+            public void updateTime(float time) { this.timeOffset = time; invalidateSelf(); }
+        }
+
+        GroovyBackgroundDrawable waveDrawable = new GroovyBackgroundDrawable();
+        backgroundView.setBackground(waveDrawable);
+        backgroundView.post(() -> {
+            android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofFloat(0f, (float) (Math.PI * 100));
+            animator.setDuration(200000); animator.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            animator.addUpdateListener(anim -> waveDrawable.updateTime((float) anim.getAnimatedValue()));
+            animator.start();
+        });
+    }
+
+    // ==========================================
+    // LIFECYCLE & BACKGROUND MAINTENANCE
+    // ==========================================
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (typeHandler != null) { typeHandler.removeCallbacksAndMessages(null); }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (networkReceiver != null) { unregisterReceiver(networkReceiver); }
+        long sessionDuration = System.currentTimeMillis() - sessionStartTime;
+        Bundle bundle = new Bundle(); bundle.putLong("session_duration_ms", sessionDuration);
+        mFirebaseAnalytics.logEvent("session_end", bundle);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (doubleBackToExitPressedOnce) { showAdThenFinish(); return; }
+        doubleBackToExitPressedOnce = true;
+        Toast.makeText(this, "Press back again to exit.", Toast.LENGTH_SHORT).show();
+        doubleBackHandler.postDelayed(() -> doubleBackToExitPressedOnce = false, 2000);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Save which tab we are currently looking at before a theme change
+        outState.putString("CURRENT_TAB", currentTab);
+    }
+
+    private void checkInternetOnStart() { if (!isInternetAvailable()) { showRetryInternetDialog(); } }
+    private boolean isInternetAvailable() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (cm != null) { NetworkInfo netInfo = cm.getActiveNetworkInfo(); return netInfo != null && netInfo.isConnected(); }
+        return false;
+    }
+    private void showRetryInternetDialog() {
+        new MaterialAlertDialogBuilder(this).setTitle("Whoops!!").setMessage("It seems you're offline. Check your internet connection and try again!")
+                .setCancelable(false).setPositiveButton("Retry", (dialog, which) -> {
+                    if (isInternetAvailable()) { restartActivity(); } else { showRetryInternetDialog(); }
+                }).show();
+    }
+    private void showConfirmExitDialog() {
+        new MaterialAlertDialogBuilder(this).setTitle("Exit").setMessage("You're about to leave. Do you really want to exit?")
+                .setCancelable(false).setPositiveButton("Yes", (dialog, which) -> showAdThenFinish()).setNegativeButton("No", (dialog, which) -> dialog.dismiss()).show();
+    }
+
+    private void loadInterstitialAd() {
+        InterstitialAd.load(this, getString(R.string.Interstitial), new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {
+            @Override public void onAdLoaded(InterstitialAd ad) { interstitialAd = ad; }
+            @Override public void onAdFailedToLoad(LoadAdError adError) { interstitialAd = null; new Handler().postDelayed(MainActivity.this::loadInterstitialAd, 30000); }
+        });
+    }
+
+    private void loadBannerAd() {
+        bannerAdView = findViewById(R.id.bannerAdView);
+        bannerAdView.loadAd(new AdRequest.Builder().build());
+    }
+
+    private void startBannerAdRefresh() {
+        Runnable bannerRefreshRunnable = new Runnable() {
+            @Override public void run() {
+                if (bannerAdView != null) { bannerAdView.loadAd(new AdRequest.Builder().build()); }
+                bannerRefreshHandler.postDelayed(this, 45000);
+            }
+        };
+        bannerRefreshHandler.post(bannerRefreshRunnable);
+    }
+
+    private void showAdThenFinish() {
+        if (interstitialAd != null) {
+            InterstitialAd adToShow = interstitialAd; interstitialAd = null;
+            adToShow.setFullScreenContentCallback(new FullScreenContentCallback() {
+                @Override public void onAdDismissedFullScreenContent() { finish(); }
+                @Override public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) { finish(); }
+            });
+            adToShow.show(MainActivity.this);
+        } else { finish(); }
+    }
+
+    private void restartActivity() {
+        Intent intent = new Intent(MainActivity.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent); finish();
     }
 }
