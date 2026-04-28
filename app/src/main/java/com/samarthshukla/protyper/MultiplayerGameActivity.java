@@ -51,7 +51,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private CountDownTimer timer;
     private static final int TIME_LIMIT = 120000;
     private long gameStartTime;
-    private long matchEndTime = 0; // NEW: Locks the exact finish time!
+    private long matchEndTime = 0;
     private boolean isGameOver = false;
     private boolean isGameStarted = false;
 
@@ -59,12 +59,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private int cachedTotalXp = 0;
     private int cachedLevel = 1;
 
-    // --- AI BOT VARIABLES ---
+    // --- ADVANCED AI BOT VARIABLES ---
     private boolean isBotMatch = false;
     private int botWpm = 0;
-    private Handler botProgressHandler = new Handler(Looper.getMainLooper());
-    private Runnable botProgressRunnable;
-    private float currentBotCharsTyped = 0f;
+    private TypingBot myBot; // Our new AI Engine!
+    private int botCharsTypedSoFar = 0; // Tracks bot progress for final scoring
 
     private ValueEventListener opponentListener;
     private ValueEventListener finalScoreListener;
@@ -253,39 +252,43 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         }
     }
 
+    // ==========================================
+    // NEW: ADVANCED BOT INTEGRATION
+    // ==========================================
     private void startBotSimulation() {
-        final float charsPerMs = (botWpm * 5f) / 60000f;
-        final int updateIntervalMs = 100;
-        final float charsPerTick = charsPerMs * updateIntervalMs;
+        botCharsTypedSoFar = 0;
 
-        currentBotCharsTyped = 0f;
+        // Assign Persona based on target WPM
+        TypingBot.Persona persona;
+        if (botWpm >= 80) persona = TypingBot.Persona.PRO;
+        else if (botWpm >= 50) persona = TypingBot.Persona.NINJA;
+        else persona = TypingBot.Persona.NOOB;
 
-        botProgressRunnable = new Runnable() {
+        myBot = new TypingBot(persona, currentParagraph, new TypingBot.BotListener() {
             @Override
-            public void run() {
+            public void onBotProgressUpdate(int charsTyped, String currentText) {
                 if (isGameOver) return;
-
-                currentBotCharsTyped += charsPerTick;
-                int progress = (int) ((currentBotCharsTyped / currentParagraph.length()) * 100);
-
-                if (progress >= 100) {
-                    progress = 100;
-                    opponentProgressBar.setProgress(progress);
-                    handleBotCompletedEarly();
-                    return;
-                }
-
+                botCharsTypedSoFar = charsTyped;
+                int progress = (int) (((float) charsTyped / currentParagraph.length()) * 100);
                 opponentProgressBar.setProgress(progress);
-                botProgressHandler.postDelayed(this, updateIntervalMs);
             }
-        };
-        botProgressHandler.postDelayed(botProgressRunnable, updateIntervalMs);
+
+            @Override
+            public void onBotFinished() {
+                if (isGameOver) return;
+                botCharsTypedSoFar = currentParagraph.length();
+                opponentProgressBar.setProgress(100);
+                handleBotCompletedEarly();
+            }
+        });
+
+        // Unleash the bot!
+        myBot.start();
     }
 
     private void stopBotSimulation() {
-        if (botProgressRunnable != null) {
-            botProgressHandler.removeCallbacks(botProgressRunnable);
-            botProgressRunnable = null;
+        if (myBot != null) {
+            myBot.stop();
         }
     }
 
@@ -300,7 +303,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
         int myWpm = calculateWPM(inputField.getText().toString());
         int myAccuracy = calculateAccuracy(inputField.getText().toString(), currentParagraph);
-        int botAccuracy = 96;
+        int botAccuracy = 96; // Bots are pretty accurate
 
         DatabaseReference finalScoreRef = gameRef.child("final_scores").child(userId);
         finalScoreRef.child("wpm").setValue(myWpm);
@@ -320,6 +323,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             safeRemoveAllListeners();
         }, 1500);
     }
+    // ==========================================
 
     private void startTimer() {
         timer = new CountDownTimer(TIME_LIMIT, 1000) {
@@ -345,8 +349,14 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 highlightText(typedText);
                 updateProgressOnFirebase(typedText.length());
 
+                // --- NEW: TELL THE BOT OUR PROGRESS FOR RUBBER-BANDING ---
+                if (isBotMatch && myBot != null) {
+                    myBot.updatePlayerProgress(typedText.length());
+                }
+                // ---------------------------------------------------------
+
                 if (typedText.length() == currentParagraph.length() && typedText.equals(currentParagraph)) {
-                    if (matchEndTime == 0) matchEndTime = System.currentTimeMillis(); // Locks the clock!
+                    if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
                     handlePlayerCompletedEarly();
                 }
             }
@@ -570,7 +580,8 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         finalScoreRef.child("accuracy").setValue(myAccuracy);
 
         if (isBotMatch) {
-            int effectiveBotWpm = (int) ((currentBotCharsTyped / 5f) / ((System.currentTimeMillis() - gameStartTime) / 60000f));
+            // Calculate effective bot WPM based on where it was when the player finished
+            int effectiveBotWpm = (int) ((botCharsTypedSoFar / 5f) / ((System.currentTimeMillis() - gameStartTime) / 60000f));
             if (effectiveBotWpm > botWpm) effectiveBotWpm = botWpm;
 
             DatabaseReference botScoreRef = gameRef.child("final_scores").child(opponentId);
@@ -604,7 +615,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         finalScoreRef.child("accuracy").setValue(calculateAccuracy(inputField.getText().toString(), currentParagraph));
 
         if (isBotMatch) {
-            int effectiveBotWpm = (int) ((currentBotCharsTyped / 5f) / 2f);
+            int effectiveBotWpm = (int) ((botCharsTypedSoFar / 5f) / 2f);
             DatabaseReference botScoreRef = gameRef.child("final_scores").child(opponentId);
             botScoreRef.child("wpm").setValue(effectiveBotWpm);
             botScoreRef.child("accuracy").setValue(96);
@@ -623,7 +634,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         });
     }
 
-    // --- NEW: FLAWLESS WPM CALCULATION ---
     private int calculateWPM(String typedText) {
         String originalText = currentParagraph != null ? currentParagraph : "";
         int correctChars = 0;
@@ -642,7 +652,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         return (int) Math.round(standardWords / minutes);
     }
 
-    // --- NEW: PRO-LEVEL ACCURACY ---
     private int calculateAccuracy(String typedText, String originalText) {
         if (typedText == null || originalText == null) return 0;
         if (typedText.isEmpty()) return 0;
@@ -791,10 +800,8 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             intent.putExtra(ResultActivity.EXTRA_WINNER_ID, winnerId);
             intent.putExtra(ResultActivity.EXTRA_YOUR_ID, userId);
 
-            // --- NEW: Pass the fetched XP data to the Result Screen! ---
             intent.putExtra("cachedTotalXp", cachedTotalXp);
             intent.putExtra("cachedLevel", cachedLevel);
-            // -----------------------------------------------------------
 
             startActivityForResult(intent, 1000);
         } catch (Exception e) {
