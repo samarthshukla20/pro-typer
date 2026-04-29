@@ -18,8 +18,12 @@ import com.google.firebase.database.ValueEventListener;
 
 public class ProfileFragment extends Fragment {
 
-    private TextView tvPlayerTitle, tvPlayerLevel, tvPlayerXp;
+    private TextView tvPlayerTitle, tvRankUpHint, tvXpEarned, tvNextRank, tvXpRemaining;
+    private TextView tvRangeNovice, tvRangeApprentice, tvRangeExpert, tvRangeMaster;
     private ProgressBar xpProgressBar;
+    private com.google.android.material.card.MaterialCardView
+            cardTierNovice, cardTierApprentice, cardTierExpert, cardTierMaster;
+
     private DatabaseReference userRef;
     private ValueEventListener userXpListener;
 
@@ -30,9 +34,22 @@ public class ProfileFragment extends Fragment {
 
         // Bind ID Card Elements
         tvPlayerTitle = view.findViewById(R.id.tvPlayerTitle);
-        tvPlayerLevel = view.findViewById(R.id.tvPlayerLevel);
-        tvPlayerXp = view.findViewById(R.id.tvPlayerXp);
+        tvRankUpHint   = view.findViewById(R.id.tvRankUpHint);
+        tvXpEarned     = view.findViewById(R.id.tvXpEarned);
+        tvNextRank     = view.findViewById(R.id.tvNextRank);
+        tvXpRemaining  = view.findViewById(R.id.tvXpRemaining);
         xpProgressBar = view.findViewById(R.id.xpProgressBar);
+
+        tvRangeNovice     = view.findViewById(R.id.tvRangeNovice);
+        tvRangeApprentice = view.findViewById(R.id.tvRangeApprentice);
+        tvRangeExpert     = view.findViewById(R.id.tvRangeExpert);
+        tvRangeMaster     = view.findViewById(R.id.tvRangeMaster);
+
+        // Bind Rank Tier Cards
+        cardTierNovice     = view.findViewById(R.id.cardTierNovice);
+        cardTierApprentice = view.findViewById(R.id.cardTierApprentice);
+        cardTierExpert     = view.findViewById(R.id.cardTierExpert);
+        cardTierMaster     = view.findViewById(R.id.cardTierMaster);
 
         // Bind Circular Utility Buttons
         android.widget.ImageButton btnHowToPlay = view.findViewById(R.id.btnHowToPlay);
@@ -81,8 +98,16 @@ public class ProfileFragment extends Fragment {
                 String title = XpManager.getTitleForLevel(currentLevel);
 
                 tvPlayerTitle.setText(title);
-                tvPlayerLevel.setText("Level " + currentLevel);
-                tvPlayerXp.setText(xpInThisLevel + " / " + xpRequiredForNext + " XP");
+                highlightActiveTier(title, totalXp);
+
+                if (tvRankUpHint == null) return;
+                String nextRankName = XpManager.getTitleForLevel(currentLevel + 1);
+                int xpToGo = nextLevelXp - totalXp;
+
+                tvRankUpHint.setText("Level " + currentLevel + " · Rank up at " + nextLevelXp + " XP");
+                tvXpEarned.setText(totalXp + " XP earned");
+                tvNextRank.setText(nextLevelXp + " XP · " + nextRankName);
+                tvXpRemaining.setText(xpToGo + " XP to go");
 
                 xpProgressBar.setMax(xpRequiredForNext);
 
@@ -95,6 +120,83 @@ public class ProfileFragment extends Fragment {
             public void onCancelled(@NonNull DatabaseError error) {}
         };
         userRef.addValueEventListener(userXpListener);
+    }
+
+    private void highlightActiveTier(String title, int totalXp) {
+
+        // Define active and inactive styles
+        int activeBackground   = 0xFF6C63FF;
+        int inactiveBackground = 0xFF0A192F;
+        int activeStroke       = 0xFFFFFFFF;
+        int inactiveStroke     = 0xFF1E3A5F;
+
+        // Reset all 4 cards to inactive first
+        com.google.android.material.card.MaterialCardView[] allCards = {
+                cardTierNovice, cardTierApprentice, cardTierExpert, cardTierMaster
+        };
+        for (com.google.android.material.card.MaterialCardView card : allCards) {
+            card.setCardBackgroundColor(inactiveBackground);
+            card.setStrokeColor(inactiveStroke);
+            card.setStrokeWidth(2);
+        }
+
+        // Highlight the matching card based on title string
+        // (title comes from XpManager.getTitleForLevel())
+        com.google.android.material.card.MaterialCardView activeCard;
+        if (title.equalsIgnoreCase("Apprentice"))     activeCard = cardTierApprentice;
+        else if (title.equalsIgnoreCase("Expert"))    activeCard = cardTierExpert;
+        else if (title.equalsIgnoreCase("Master"))    activeCard = cardTierMaster;
+        else                                          activeCard = cardTierNovice;
+
+        activeCard.setCardBackgroundColor(activeBackground);
+        activeCard.setStrokeColor(activeStroke);
+        activeCard.setStrokeWidth(4);
+
+        // Tier XP boundaries (must match XpManager definitions)
+        int noviceMax     = 500;
+        int apprenticeMax = 1500;
+        int expertMax     = 4000;
+
+        // Determine how much XP the player has within each tier
+        int noviceStart     = 0;
+        int apprenticeStart = 0;
+        int expertStart     = 0;
+        int masterStart     = 0;
+
+        // IF player is in Novice tier
+        if (title.equalsIgnoreCase("Novice")) {
+            noviceStart     = totalXp;       // current progress shown
+            apprenticeStart = 0;             // not yet entered
+            expertStart     = 0;
+            masterStart     = 0;
+        }
+        // IF player is in Apprentice tier
+        else if (title.equalsIgnoreCase("Apprentice")) {
+            noviceStart     = noviceMax;     // fully completed
+            apprenticeStart = totalXp;       // current progress shown
+            expertStart     = 0;
+            masterStart     = 0;
+        }
+        // IF player is in Expert tier
+        else if (title.equalsIgnoreCase("Expert")) {
+            noviceStart     = noviceMax;
+            apprenticeStart = apprenticeMax;
+            expertStart     = totalXp;       // current progress shown
+            masterStart     = 0;
+        }
+        // IF player is in Master tier
+        else {
+            noviceStart     = noviceMax;
+            apprenticeStart = apprenticeMax;
+            expertStart     = expertMax;
+            masterStart     = totalXp;       // current progress shown
+        }
+
+        // Set the range text on each tier card
+        tvRangeNovice.setText(noviceStart + "–" + noviceMax);
+        tvRangeApprentice.setText(apprenticeStart + "–" + apprenticeMax);
+        tvRangeExpert.setText(expertStart + "–" + expertMax);
+        tvRangeMaster.setText(masterStart + "+");
     }
 
     @Override
