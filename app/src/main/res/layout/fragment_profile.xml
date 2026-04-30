@@ -25,81 +25,309 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="12dp"
-            app:cardBackgroundColor="#E60A192F"
-            app:strokeWidth="1dp"
-            app:strokeColor="#448AFF">
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#6C63FF"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="20dp"
-                android:gravity="center_vertical">
-
-                <FrameLayout
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:background="@drawable/circle_outline"
-                    android:backgroundTint="#112240">
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_person"
-                        app:tint="#448AFF"
-                        android:layout_gravity="center"/>
-                </FrameLayout>
+                android:orientation="vertical"
+                android:padding="20dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginStart="20dp">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:id="@+id/tvPlayerTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Unranked"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:fontFamily="@font/difficulty" />
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardBackgroundColor="#5A52E0"
+                        app:cardElevation="0dp">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_person"
+                            app:tint="#FF6B6B"
+                            android:layout_gravity="center"/>
+                    </com.google.android.material.card.MaterialCardView>
 
-                    <TextView
-                        android:id="@+id/tvPlayerLevel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Level 1"
-                        android:textSize="16sp"
-                        android:textColor="#4DD0E1"
-                        android:layout_marginTop="2dp"
-                        android:textStyle="bold" />
-
-                    <ProgressBar
-                        android:id="@+id/xpProgressBar"
-                        style="?android:attr/progressBarStyleHorizontal"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="12dp"
-                        android:progressTint="#448AFF"
-                        android:progressBackgroundTint="#112240"
-                        android:progress="0"
-                        android:max="100" />
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp">
+
+                        <TextView
+                            android:id="@+id/tvPlayerTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Unranked"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:fontFamily="@font/difficulty" />
+
+                        <TextView
+                            android:id="@+id/tvRankUpHint"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Level 1 · Rank up at 500 XP"
+                            android:textSize="13sp"
+                            android:textColor="#D0CCFF" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="16dp">
 
                     <TextView
-                        android:id="@+id/tvPlayerXp"
+                        android:id="@+id/tvXpEarned"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="0 XP earned"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvNextRank"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0 / 500 XP"
-                        android:textSize="12sp"
-                        android:layout_marginTop="6dp"
-                        android:textColor="#64B5F6"
-                        android:textStyle="bold" />
+                        android:text="500 XP · Apprentice"
+                        android:textColor="#D0CCFF"
+                        android:textSize="13sp"
+                        android:gravity="end" />
                 </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/xpProgressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="8dp"
+                    android:progressTint="#FFFFFF"
+                    android:progressBackgroundTint="#9B95E0"
+                    android:progress="0"
+                    android:max="100" />
+
+                <TextView
+                    android:id="@+id/tvXpRemaining"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 XP to go"
+                    android:textColor="#D0CCFF"
+                    android:textSize="12sp"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="4dp"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="RANK TIERS"
+            android:textColor="#64B5F6"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.2"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="4"
+            android:layout_marginBottom="12dp">
+
+            <!-- Novice - Active -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardTierNovice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#0A192F"
+                app:strokeWidth="1dp"
+                app:strokeColor="#1E3A5F">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:gravity="center">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        app:tint="#64B5F6" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Novice"
+                        android:textColor="#64B5F6"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="6dp" />
+                    <TextView
+                        android:id="@+id/tvRangeNovice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0–500"
+                        android:textColor="#4A6FA5"
+                        android:textSize="10sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Apprentice -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardTierApprentice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#0A192F"
+                app:strokeWidth="1dp"
+                app:strokeColor="#1E3A5F">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:gravity="center">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        app:tint="#64B5F6" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Apprentice"
+                        android:textColor="#64B5F6"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="6dp" />
+                    <TextView
+                        android:id="@+id/tvRangeApprentice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="500–1500"
+                        android:textColor="#4A6FA5"
+                        android:textSize="10sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Expert -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardTierExpert"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#0A192F"
+                app:strokeWidth="1dp"
+                app:strokeColor="#1E3A5F">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:gravity="center">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        app:tint="#FF7043" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Expert"
+                        android:textColor="#FF7043"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="6dp" />
+                    <TextView
+                        android:id="@+id/tvRangeExpert"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1500–4000"
+                        android:textColor="#7A3F30"
+                        android:textSize="10sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Master -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardTierMaster"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#0A192F"
+                app:strokeWidth="1dp"
+                app:strokeColor="#1E3A5F">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:gravity="center">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        app:tint="#FFD700" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Master"
+                        android:textColor="#FFD700"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="6dp" />
+                    <TextView
+                        android:id="@+id/tvRangeMaster"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="4000+"
+                        android:textColor="#7A6A00"
+                        android:textSize="10sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
