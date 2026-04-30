@@ -53,11 +53,11 @@
             android:layout_alignParentBottom="true"
             android:layout_marginHorizontal="24dp"
             android:layout_marginBottom="24dp"
-            app:cardBackgroundColor="#E6020C1B"
+            app:cardBackgroundColor="#212121"
             app:cardCornerRadius="36dp"
             app:cardElevation="16dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="#3364B5F6">
+            app:strokeWidth="0dp"
+            app:strokeColor="#1E293B">
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -65,11 +65,11 @@
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/navIndicator"
-                    android:layout_width="100dp"
+                    android:layout_width="80dp"
                     android:layout_height="match_parent"
-                    android:layout_marginVertical="8dp"
-                    app:cardBackgroundColor="#448AFF"
-                    app:cardCornerRadius="28dp"
+                    android:layout_marginVertical="10dp"
+                    app:cardBackgroundColor="#64B5F6"
+                    app:cardCornerRadius="26dp"
                     app:cardElevation="0dp"
                     app:strokeWidth="0dp" />
 
@@ -80,82 +80,59 @@
                     android:weightSum="3"
                     android:elevation="2dp">
 
-                    <LinearLayout
+                    <FrameLayout
                         android:id="@+id/tabHistory"
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="vertical"
+                        android:clickable="true"
+                        android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless">
                         <ImageView
                             android:id="@+id/iconHistory"
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/history"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_trophy"
                             app:tint="#64B5F6"/>
-                        <TextView
-                            android:id="@+id/textHistory"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="History"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#64B5F6" />
-                    </LinearLayout>
+                    </FrameLayout>
 
-                    <LinearLayout
+                    <FrameLayout
                         android:id="@+id/tabHome"
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="vertical"
+                        android:clickable="true"
+                        android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless">
                         <ImageView
                             android:id="@+id/iconHome"
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/ic_home"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_play"
                             app:tint="#FFFFFF"/>
-                        <TextView
-                            android:id="@+id/textHome"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Play"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#FFFFFF" />
-                    </LinearLayout>
+                    </FrameLayout>
 
-                    <LinearLayout
+                    <FrameLayout
                         android:id="@+id/tabProfile"
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="vertical"
+                        android:clickable="true"
+                        android:focusable="true"
                         android:background="?attr/selectableItemBackgroundBorderless">
                         <ImageView
                             android:id="@+id/iconProfile"
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/ic_person"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_shield"
                             app:tint="#64B5F6"/>
-                        <TextView
-                            android:id="@+id/textProfile"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Profile"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#64B5F6" />
-                    </LinearLayout>
+                    </FrameLayout>
                 </LinearLayout>
             </FrameLayout>
         </com.google.android.material.card.MaterialCardView>
+
     </RelativeLayout>
 </androidx.drawerlayout.widget.DrawerLayout>

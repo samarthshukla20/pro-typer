@@ -81,21 +81,21 @@ public class MainActivity extends AppCompatActivity {
 
         // --- NEW: SMART FRAGMENT INITIALIZATION ---
         if (savedInstanceState == null) {
-            // App is opening for the very first time. Load fresh fragments!
             fragmentManager.beginTransaction().add(R.id.fragment_container, profileFragment, "PROFILE").hide(profileFragment).commit();
             fragmentManager.beginTransaction().add(R.id.fragment_container, homeFragment, "HOME").commit();
             activeFragment = homeFragment;
+            currentTab = "HOME";
         } else {
-            // App was rebuilt from a Dark Mode toggle! Rescue the existing fragments.
             homeFragment = fragmentManager.findFragmentByTag("HOME");
             profileFragment = fragmentManager.findFragmentByTag("PROFILE");
 
-            // Remember which tab we were on
             currentTab = savedInstanceState.getString("CURRENT_TAB", "HOME");
             if (currentTab.equals("PROFILE")) {
                 activeFragment = profileFragment;
+                tvMainTitle.setVisibility(View.GONE); // Remember to keep title hidden!
             } else {
                 activeFragment = homeFragment;
+                tvMainTitle.setVisibility(View.VISIBLE); // Remember to show title!
             }
         }
         // ------------------------------------------
@@ -118,19 +118,35 @@ public class MainActivity extends AppCompatActivity {
         android.widget.ImageView iconHistory = findViewById(R.id.iconHistory);
         android.widget.ImageView iconHome = findViewById(R.id.iconHome);
         android.widget.ImageView iconProfile = findViewById(R.id.iconProfile);
-        TextView textHistory = findViewById(R.id.textHistory);
-        TextView textHome = findViewById(R.id.textHome);
-        TextView textProfile = findViewById(R.id.textProfile);
 
         int colorSelected = android.graphics.Color.parseColor("#FFFFFF");
         int colorUnselected = android.graphics.Color.parseColor("#64B5F6");
 
-        // Snap to Home
+        // Snap to the CORRECT tab on initial load/theme change
         tabHome.post(() -> {
+            // 1. Calculate the target width manually
+            int newPillWidth = tabHome.getWidth() - 48;
+
+            // 2. Set the layout params
             android.view.ViewGroup.LayoutParams params = navIndicator.getLayoutParams();
-            params.width = tabHome.getWidth() - 32;
+            params.width = newPillWidth;
             navIndicator.setLayoutParams(params);
-            navIndicator.setX(tabHome.getX() + 16);
+
+            // 3. Use our manual width for the centering math!
+            float centerOffset;
+            if (currentTab.equals("PROFILE")) {
+                centerOffset = tabProfile.getX() + (tabProfile.getWidth() / 2f) - (newPillWidth / 2f);
+                navIndicator.setX(centerOffset);
+                iconProfile.setColorFilter(colorSelected);
+                iconHome.setColorFilter(colorUnselected);
+                iconHistory.setColorFilter(colorUnselected);
+            } else {
+                centerOffset = tabHome.getX() + (tabHome.getWidth() / 2f) - (newPillWidth / 2f);
+                navIndicator.setX(centerOffset);
+                iconHome.setColorFilter(colorSelected);
+                iconProfile.setColorFilter(colorUnselected);
+                iconHistory.setColorFilter(colorUnselected);
+            }
         });
 
         tabHome.setOnClickListener(v -> {
@@ -141,18 +157,20 @@ public class MainActivity extends AppCompatActivity {
                 activeFragment = homeFragment;
                 currentTab = "HOME";
             }
-
-            // SHOW the title on Home
             tvMainTitle.setVisibility(View.VISIBLE);
 
+            float targetX = tabHome.getX() + (tabHome.getWidth() / 2f) - (navIndicator.getWidth() / 2f);
             navIndicator.animate().cancel();
-            navIndicator.post(() -> {
-                navIndicator.animate().x(tabHome.getX() + 16).setDuration(300)
-                        .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
-            });
+            navIndicator.animate().x(targetX).setDuration(300)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
 
-            iconHome.setColorFilter(colorSelected); textHome.setTextColor(colorSelected);
-            iconProfile.setColorFilter(colorUnselected); textProfile.setTextColor(colorUnselected);
+            iconHome.setColorFilter(colorSelected);
+            iconProfile.setColorFilter(colorUnselected);
+
+            // Subtle click bump
+            iconHome.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).withEndAction(() ->
+                    iconHome.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+            ).start();
         });
 
         tabProfile.setOnClickListener(v -> {
@@ -163,30 +181,35 @@ public class MainActivity extends AppCompatActivity {
                 activeFragment = profileFragment;
                 currentTab = "PROFILE";
             }
-
-            // HIDE the title on Profile
             tvMainTitle.setVisibility(View.GONE);
 
+            float targetX = tabProfile.getX() + (tabProfile.getWidth() / 2f) - (navIndicator.getWidth() / 2f);
             navIndicator.animate().cancel();
-            navIndicator.post(() -> {
-                navIndicator.animate().x(tabProfile.getX() + 16).setDuration(300)
-                        .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
-            });
+            navIndicator.animate().x(targetX).setDuration(300)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
 
-            iconProfile.setColorFilter(colorSelected); textProfile.setTextColor(colorSelected);
-            iconHome.setColorFilter(colorUnselected); textHome.setTextColor(colorUnselected);
+            iconProfile.setColorFilter(colorSelected);
+            iconHome.setColorFilter(colorUnselected);
+
+            // Subtle click bump
+            iconProfile.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).withEndAction(() ->
+                    iconProfile.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+            ).start();
         });
 
         tabHistory.setOnClickListener(v -> {
+            float targetX = tabHistory.getX() + (tabHistory.getWidth() / 2f) - (navIndicator.getWidth() / 2f);
             navIndicator.animate().cancel();
-            navIndicator.post(() -> {
-                navIndicator.animate().x(tabHistory.getX() + 16).setDuration(300)
-                        .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
-            });
+            navIndicator.animate().x(targetX).setDuration(300)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
 
-            iconHistory.setColorFilter(colorSelected); textHistory.setTextColor(colorSelected);
+            iconHistory.setColorFilter(colorSelected);
 
-            // SHOW the title when heading to History (so it's there when we get back)
+            // Subtle click bump
+            iconHistory.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).withEndAction(() ->
+                    iconHistory.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+            ).start();
+
             tvMainTitle.setVisibility(View.VISIBLE);
 
             new Handler().postDelayed(() -> {
@@ -217,43 +240,7 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAnalytics.logEvent("session_start", null);
         checkInternetOnStart();
 
-        // WAKE UP & SYNC NAV BAR STATE
-        View navIndicator = findViewById(R.id.navIndicator);
-        View tabHome = findViewById(R.id.tabHome);
-        View tabProfile = findViewById(R.id.tabProfile);
 
-        android.widget.ImageView iconHistory = findViewById(R.id.iconHistory);
-        TextView textHistory = findViewById(R.id.textHistory);
-        android.widget.ImageView iconHome = findViewById(R.id.iconHome);
-        TextView textHome = findViewById(R.id.textHome);
-        android.widget.ImageView iconProfile = findViewById(R.id.iconProfile);
-        TextView textProfile = findViewById(R.id.textProfile);
-
-        int colorSelected = android.graphics.Color.parseColor("#FFFFFF");
-        int colorUnselected = android.graphics.Color.parseColor("#64B5F6");
-
-        if (navIndicator != null && tabHome != null && tabProfile != null) {
-            navIndicator.post(() -> {
-                iconHistory.setColorFilter(colorUnselected);
-                textHistory.setTextColor(colorUnselected);
-
-                if (currentTab.equals("PROFILE")) {
-                    // We are returning to Profile, keep title hidden!
-                    tvMainTitle.setVisibility(View.GONE);
-
-                    navIndicator.setX(tabProfile.getX() + 16);
-                    iconProfile.setColorFilter(colorSelected); textProfile.setTextColor(colorSelected);
-                    iconHome.setColorFilter(colorUnselected); textHome.setTextColor(colorUnselected);
-                } else {
-                    // We are returning to Home, ensure title is visible!
-                    tvMainTitle.setVisibility(View.VISIBLE);
-
-                    navIndicator.setX(tabHome.getX() + 16);
-                    iconHome.setColorFilter(colorSelected); textHome.setTextColor(colorSelected);
-                    iconProfile.setColorFilter(colorUnselected); textProfile.setTextColor(colorUnselected);
-                }
-            });
-        }
 
         // Notification checks
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -279,6 +266,55 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         registerReceiver(networkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        // Only run this when the app actually regains focus and is fully drawn on the screen!
+        if (hasFocus) {
+            View navIndicator = findViewById(R.id.navIndicator);
+            View tabHome = findViewById(R.id.tabHome);
+            View tabProfile = findViewById(R.id.tabProfile);
+            View tabHistory = findViewById(R.id.tabHistory);
+
+            android.widget.ImageView iconHistory = findViewById(R.id.iconHistory);
+            android.widget.ImageView iconHome = findViewById(R.id.iconHome);
+            android.widget.ImageView iconProfile = findViewById(R.id.iconProfile);
+
+            int colorSelected = android.graphics.Color.parseColor("#FFFFFF");
+            int colorUnselected = android.graphics.Color.parseColor("#64B5F6"); // Make sure this matches your unselected icon color!
+
+            // Double check that the layout actually has a width before doing math
+            if (navIndicator != null && tabHome != null && tabHome.getWidth() > 0) {
+                int newPillWidth = tabHome.getWidth() - 48;
+
+                android.view.ViewGroup.LayoutParams params = navIndicator.getLayoutParams();
+                if (params.width != newPillWidth) {
+                    params.width = newPillWidth;
+                    navIndicator.setLayoutParams(params);
+                }
+
+                float centerOffset;
+                if ("PROFILE".equals(currentTab)) {
+                    centerOffset = tabProfile.getX() + (tabProfile.getWidth() / 2f) - (newPillWidth / 2f);
+                    iconProfile.setColorFilter(colorSelected);
+                    iconHome.setColorFilter(colorUnselected);
+                    iconHistory.setColorFilter(colorUnselected);
+                } else {
+                    centerOffset = tabHome.getX() + (tabHome.getWidth() / 2f) - (newPillWidth / 2f);
+                    iconHome.setColorFilter(colorSelected);
+                    iconProfile.setColorFilter(colorUnselected);
+                    iconHistory.setColorFilter(colorUnselected);
+                }
+
+                // Cancel any lingering animations and lock the pill exactly in place
+                navIndicator.animate().cancel();
+                navIndicator.setX(centerOffset);
+            }
+        }
     }
 
 
