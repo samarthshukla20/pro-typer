@@ -32,15 +32,13 @@
     <string name="navigation_drawer_close">Close Navigation Drawer</string>
 
     <!-- Ad units -->
-    <!-- ca-app-pub-3940256099942544/4411468910 - test int-->
-    <!-- ca-app-pub-3940256099942544/1033173712 - test int2-->
-    <!-- ca-app-pub-6788521747770576/6859975900 - real int-->
-    <!-- ca-app-pub-3940256099942544/9214589741 - test ban-->
-    <!-- ca-app-pub-6788521747770576/8173057576 - real ban-->
-    <!-- ca-app-pub-3940256099942544/1712485313 - test rew-->
-    <!-- ca-app-pub-3940256099942544/5224354917 - test rew2-->
-    <!-- ca-app-pub-6788521747770576/6712649557 - real rew-->
-    <string name="Interstitial">ca-app-pub-3940256099942544/3712</string>
+    <!-- ca-app-pub-3940256099942544/1033173712 - test int-->
+    <!-- ca-app-pub-6788521747770576/6690973990 - real int-->
+    <!-- ca-app-pub-3940256099942544/6300978111 - test ban-->
+    <!-- ca-app-pub-6788521747770576/9041805167 - real ban-->
+    <!-- ca-app-pub-3940256099942544/5224354917 - test rew-->
+    <!-- ca-app-pub-6788521747770576/5809137167 - real rew-->
+    <string name="Interstitial">ca-app-pub-3940256099942544/1033173712</string>
     <string name="Banner">ca-app-pub-3940256099942544/6300978111</string>
     <string name="Rewarded">ca-app-pub-3940256099942544/5224354917</string>
 

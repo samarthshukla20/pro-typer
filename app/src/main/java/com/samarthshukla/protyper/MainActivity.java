@@ -72,9 +72,7 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN, null);
 
-        MobileAds.initialize(this, initializationStatus -> {});
         loadInterstitialAd();
-        loadBannerAd();
         startBannerAdRefresh();
 
         tvMainTitle = findViewById(R.id.tvMainTitle);
@@ -135,12 +133,14 @@ public class MainActivity extends AppCompatActivity {
             // 3. Use our manual width for the centering math!
             float centerOffset;
             if (currentTab.equals("PROFILE")) {
+                tvMainTitle.setVisibility(View.GONE);
                 centerOffset = tabProfile.getX() + (tabProfile.getWidth() / 2f) - (newPillWidth / 2f);
                 navIndicator.setX(centerOffset);
                 iconProfile.setColorFilter(colorSelected);
                 iconHome.setColorFilter(colorUnselected);
                 iconHistory.setColorFilter(colorUnselected);
             } else {
+                tvMainTitle.setVisibility(View.VISIBLE);
                 centerOffset = tabHome.getX() + (tabHome.getWidth() / 2f) - (newPillWidth / 2f);
                 navIndicator.setX(centerOffset);
                 iconHome.setColorFilter(colorSelected);
@@ -544,11 +544,6 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onAdLoaded(InterstitialAd ad) { interstitialAd = ad; }
             @Override public void onAdFailedToLoad(LoadAdError adError) { interstitialAd = null; new Handler().postDelayed(MainActivity.this::loadInterstitialAd, 30000); }
         });
-    }
-
-    private void loadBannerAd() {
-        bannerAdView = findViewById(R.id.bannerAdView);
-        bannerAdView.loadAd(new AdRequest.Builder().build());
     }
 
     private void startBannerAdRefresh() {
