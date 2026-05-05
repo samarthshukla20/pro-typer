@@ -7,6 +7,36 @@
     android:padding="16dp"
     android:background="?attr/colorSurface">
 
+    <!-- TINTED OVERLAY BACKGROUND -->
+    <View
+        android:id="@+id/countdownDimBackground"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#B3000000"
+        android:elevation="9dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- CENTERED COUNTDOWN TEXT -->
+    <TextView
+        android:id="@+id/countdownText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:fontFamily="@font/difficulty"
+        android:textColor="#4A5568"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:elevation="10dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- TOP BAR: Timer + Title + Two Progress Bars -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/topBarCard"

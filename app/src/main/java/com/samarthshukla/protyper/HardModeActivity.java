@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -76,6 +77,8 @@ public class HardModeActivity extends AppCompatActivity {
 
     // --- NEW: THE BONUS VAULT ---
     private int currentSessionAdXp = 0;
+    private TextView countdownText;
+    private View countdownDimBackground;
 
     private String getCurrentDateTime() {
         String currentDateTime = new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault()).format(new Date());
@@ -119,10 +122,14 @@ public class HardModeActivity extends AppCompatActivity {
         tvDateTime  = findViewById(R.id.tvDateTime);
         getCurrentDateTime();
 
+        countdownText = findViewById(R.id.countdownText);
+        countdownDimBackground = findViewById(R.id.countdownDimBackground);
+
         wordDisplay.setTypeface(ResourcesCompat.getFont(this, R.font.difficulty));
 
-        loadWordsFromAssets();
-        startNewGame();
+        wordDisplay.setText("Loading...");
+        inputField.setEnabled(false);
+        loadWordsInstantly();
 
         inputField.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -187,25 +194,117 @@ public class HardModeActivity extends AppCompatActivity {
         soundIdGameOver = soundPool.load(this, R.raw.game_over_sound, 1);
     }
 
+    // ==========================================
+    // THE GHOST TYPING COUNTDOWN ENGINE
+    // ==========================================
+    private void startGhostCountdown() {
+        if (countdownDimBackground != null) countdownDimBackground.setVisibility(View.VISIBLE);
+        if (countdownText != null) {
+            countdownText.setVisibility(View.VISIBLE);
+            countdownText.setShadowLayer(20f, 0f, 0f, android.graphics.Color.TRANSPARENT);
+        }
+
+        final String[] wordsList = {"THREE", "TWO", "ONE", "GO!!!"};
+        final long[] typeSpeeds = {70, 90, 110, 40};
+        final long[] pauseAfter = {500, 500, 500, 800};
+
+        final int colorGhost = android.graphics.Color.parseColor("#4A5568");
+        final int colorLit = android.graphics.Color.WHITE;
+        final int colorGo = android.graphics.Color.parseColor("#39FF14");
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < wordsList.length; i++) {
+            sb.append(wordsList[i]);
+            if (i < wordsList.length - 1) sb.append("  ");
+        }
+        final String fullText = sb.toString();
+
+        countdownText.setText(fullText);
+        countdownText.setTextColor(colorGhost);
+
+        final android.text.SpannableString spannable = new android.text.SpannableString(fullText);
+        final Handler handler = new Handler(android.os.Looper.getMainLooper());
+
+        class GhostTyper implements Runnable {
+            int wordIdx = 0;
+            int charIdx = 0;
+            int globalIdx = 0;
+
+            @Override
+            public void run() {
+                if (wordIdx >= wordsList.length) {
+                    finishCountdown();
+                    return;
+                }
+
+                String currentWord = wordsList[wordIdx];
+                boolean isGoWord = currentWord.equals("GO!!!");
+
+                if (charIdx < currentWord.length()) {
+                    int color = isGoWord ? colorGo : colorLit;
+                    spannable.setSpan(new android.text.style.ForegroundColorSpan(color), globalIdx, globalIdx + 1, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    countdownText.setText(spannable);
+
+                    if (isGoWord) {
+                        countdownText.setShadowLayer(30f, 0f, 0f, colorGo);
+                    }
+
+                    // Optional: Play click sound here if you want!
+
+                    charIdx++;
+                    globalIdx++;
+                    handler.postDelayed(this, typeSpeeds[wordIdx]);
+                } else {
+                    globalIdx += 2;
+                    charIdx = 0;
+                    long delay = pauseAfter[wordIdx];
+                    wordIdx++;
+                    handler.postDelayed(this, delay);
+                }
+            }
+        }
+        handler.postDelayed(new GhostTyper(), 500);
+    }
+
+    private void finishCountdown() {
+        if (countdownText != null) countdownText.setVisibility(View.GONE);
+        if (countdownDimBackground != null) countdownDimBackground.setVisibility(View.GONE);
+
+        // 1. Unlock the keyboard
+        inputField.setEnabled(true);
+        inputField.requestFocus();
+        new Handler().postDelayed(() -> {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) imm.showSoftInput(inputField, InputMethodManager.SHOW_IMPLICIT);
+        }, 100);
+
+        // 2. NOW officially start the game timers!
+        gameStartTime = System.currentTimeMillis();
+        totalPausedDuration = 0;
+        pauseStartTime = 0;
+
+        startTimer();
+    }
+
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
     }
 
-    private void loadWordsFromAssets() {
-        try {
-            for (char letter = 'A'; letter <= 'Z'; letter++) {
-                String fileName = letter + " Words.txt";
-                BufferedReader reader = new BufferedReader(new InputStreamReader(getAssets().open(fileName)));
-                String word;
-                while ((word = reader.readLine()) != null) {
-                    words.add(word);
-                }
-                reader.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void loadWordsInstantly() {
+        words.clear();
+
+        // Grab the pre-loaded 26-file data from our vault! Takes < 1 millisecond.
+        if (DictionaryManager.getInstance().isLoaded && !DictionaryManager.getInstance().singleWords.isEmpty()) {
+            words.addAll(DictionaryManager.getInstance().singleWords);
+        } else {
+            // Failsafe just in case they clicked play in under 0.1 seconds of opening the app
+            words.add("PROTYPER");
+            words.add("CHAMPION");
+            words.add("KEYBOARD");
         }
+
+        startNewGame();
     }
 
     private void startNewGame() {
@@ -213,11 +312,11 @@ public class HardModeActivity extends AppCompatActivity {
         currentSessionAdXp = 0; // RESET THE BONUS VAULT FOR A NEW GAME
         scoreText.setText("Score: " + score);
         inputField.setText("");
-        inputField.setEnabled(true);
+        inputField.setEnabled(false);
         usedWords = new ArrayList<>();
         generateNewWord();
         gameStartTime = System.currentTimeMillis();
-        startTimer();
+        startGhostCountdown();
     }
 
     private void generateNewWord() {
@@ -259,7 +358,9 @@ public class HardModeActivity extends AppCompatActivity {
         isGameOver = true;
 
         inputField.setEnabled(false);
-        soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
+        if (soundPool != null) {
+            soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
+        }
 
         if (!hasShownRewardDialog) {
             hasShownRewardDialog = true;
@@ -312,6 +413,19 @@ public class HardModeActivity extends AppCompatActivity {
 
         // Fetch the Guaranteed Global Player ID
         String userId = XpManager.getGlobalUserId(this);
+
+        // --- NEW: CALCULATE WPM AND SAVE TO STATS MANAGER ---
+        long now = System.currentTimeMillis();
+        int durationPlayedInSeconds = (int) ((now - gameStartTime - totalPausedDuration) / 1000);
+        if (durationPlayedInSeconds <= 0) durationPlayedInSeconds = 1; // Prevent divide by zero crash
+
+        // Calculate WPM: (Total Words / Seconds Played) * 60 seconds
+        int finalWpm = (int) (((float) score / durationPlayedInSeconds) * 60);
+
+        // Fire it off to Firebase (Solo Mode protects Win Rate!)
+        StatsManager.saveSoloStats(userId, finalWpm);
+        // ----------------------------------------------------
+
 
         // INSTANT ANIMATION (No Network Wait!)
         int previousLevelXp = (cachedLevel > 1) ? XpManager.getXpRequiredForNextLevel(cachedLevel - 1) : 0;
@@ -538,6 +652,9 @@ public class HardModeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (timer != null) {
+            timer.cancel();
+        }
         if (soundPool != null) {
             soundPool.release();
             soundPool = null;

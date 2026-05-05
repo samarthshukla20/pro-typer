@@ -371,6 +371,7 @@
                             android:textColor="#64B5F6"
                             android:textSize="12sp"/>
                         <TextView
+                            android:id="@+id/tvProfileTopSpeed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="-- WPM"
@@ -396,13 +397,14 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Accuracy"
+                            android:text="Avg. Speed"
                             android:textColor="#64B5F6"
                             android:textSize="12sp"/>
                         <TextView
+                            android:id="@+id/tvProfileAvgSpeed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="-- %"
+                            android:text="--"
                             android:textColor="#FFFFFF"
                             android:textSize="24sp"
                             android:textStyle="bold"
@@ -436,6 +438,7 @@
                             android:textColor="#64B5F6"
                             android:textSize="12sp"/>
                         <TextView
+                            android:id="@+id/tvProfileMatches"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
@@ -465,6 +468,7 @@
                             android:textColor="#64B5F6"
                             android:textSize="12sp"/>
                         <TextView
+                            android:id="@+id/tvProfileWinRate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="-- %"

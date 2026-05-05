@@ -17,9 +17,9 @@ public class XpManager {
     // difficultyMode: 1 = Easy, 2 = Medium, 3 = Hard
     public static int calculateSinglePlayerXp(int difficultyMode, int correctWords) {
         int xpPerWord = 0;
-        if (difficultyMode == 1) xpPerWord = 10;
-        else if (difficultyMode == 2) xpPerWord = 10;
-        else if (difficultyMode == 3) xpPerWord = 10;
+        if (difficultyMode == 1) xpPerWord = 1;
+        else if (difficultyMode == 2) xpPerWord = 3;
+        else if (difficultyMode == 3) xpPerWord = 5;
 
         return correctWords * xpPerWord;
     }

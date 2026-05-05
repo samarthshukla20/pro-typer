@@ -20,12 +20,16 @@ public class ProfileFragment extends Fragment {
 
     private TextView tvPlayerTitle, tvRankUpHint, tvXpEarned, tvNextRank, tvXpRemaining;
     private TextView tvRangeNovice, tvRangeApprentice, tvRangeExpert, tvRangeMaster;
+
+    // --- NEW: STATS TEXTVIEWS ---
+    private TextView tvProfileTopSpeed, tvProfileAvgSpeed, tvProfileMatches, tvProfileWinRate;
+
     private ProgressBar xpProgressBar;
     private com.google.android.material.card.MaterialCardView
             cardTierNovice, cardTierApprentice, cardTierExpert, cardTierMaster;
 
     private DatabaseReference userRef;
-    private ValueEventListener userXpListener;
+    private ValueEventListener userListener;
 
     @Nullable
     @Override
@@ -51,6 +55,12 @@ public class ProfileFragment extends Fragment {
         cardTierExpert     = view.findViewById(R.id.cardTierExpert);
         cardTierMaster     = view.findViewById(R.id.cardTierMaster);
 
+        // --- NEW: BIND STATS VIEWS ---
+        tvProfileTopSpeed = view.findViewById(R.id.tvProfileTopSpeed);
+        tvProfileAvgSpeed = view.findViewById(R.id.tvProfileAvgSpeed);
+        tvProfileMatches  = view.findViewById(R.id.tvProfileMatches);
+        tvProfileWinRate  = view.findViewById(R.id.tvProfileWinRate);
+
         // Bind Circular Utility Buttons
         android.widget.ImageButton btnHowToPlay = view.findViewById(R.id.btnHowToPlay);
         android.widget.ImageButton btnAbout = view.findViewById(R.id.btnAbout);
@@ -64,7 +74,7 @@ public class ProfileFragment extends Fragment {
         btnHowToPlay.setOnClickListener(v -> mainActivity.showHowToPlayPopup());
         btnAbout.setOnClickListener(v -> mainActivity.showAdThenStart(AboutActivity.class));
 
-        // Start listening to Firebase for XP data
+        // Start listening to Firebase for XP and Stats data
         loadPlayerDashboard();
 
         return view;
@@ -74,7 +84,7 @@ public class ProfileFragment extends Fragment {
         String userId = XpManager.getGlobalUserId(requireContext());
         userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
 
-        userXpListener = new ValueEventListener() {
+        userListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (tvPlayerTitle == null) return;
@@ -89,6 +99,7 @@ public class ProfileFragment extends Fragment {
                     if (dbLevel != null) currentLevel = dbLevel;
                 }
 
+                // 1. PROCESS XP & TIERS
                 int previousLevelXp = (currentLevel > 1) ? XpManager.getXpRequiredForNextLevel(currentLevel - 1) : 0;
                 int nextLevelXp = XpManager.getXpRequiredForNextLevel(currentLevel);
 
@@ -100,30 +111,62 @@ public class ProfileFragment extends Fragment {
                 tvPlayerTitle.setText(title);
                 highlightActiveTier(title, totalXp);
 
-                if (tvRankUpHint == null) return;
-                String nextRankName = XpManager.getTitleForLevel(currentLevel + 1);
-                int xpToGo = nextLevelXp - totalXp;
+                if (tvRankUpHint != null) {
+                    String nextRankName = XpManager.getTitleForLevel(currentLevel + 1);
+                    int xpToGo = nextLevelXp - totalXp;
 
-                tvRankUpHint.setText("Level " + currentLevel + " · Rank up at " + nextLevelXp + " XP");
-                tvXpEarned.setText(totalXp + " XP earned");
-                tvNextRank.setText(nextLevelXp + " XP · " + nextRankName);
-                tvXpRemaining.setText(xpToGo + " XP to go");
+                    tvRankUpHint.setText("Level " + currentLevel + " · Rank up at " + nextLevelXp + " XP");
+                    tvXpEarned.setText(totalXp + " XP earned");
+                    tvNextRank.setText(nextLevelXp + " XP · " + nextRankName);
+                    tvXpRemaining.setText(xpToGo + " XP to go");
 
-                xpProgressBar.setMax(xpRequiredForNext);
+                    xpProgressBar.setMax(xpRequiredForNext);
 
-                android.animation.ObjectAnimator.ofInt(xpProgressBar, "progress", xpProgressBar.getProgress(), xpInThisLevel)
-                        .setDuration(800)
-                        .start();
+                    android.animation.ObjectAnimator.ofInt(xpProgressBar, "progress", xpProgressBar.getProgress(), xpInThisLevel)
+                            .setDuration(800)
+                            .start();
+                }
+
+                // --- NEW: 2. PROCESS LIFETIME STATS ---
+                int highestWpm = 0;
+                int totalMatches = 0;
+                int totalWpmSum = 0;
+                int multiplayerMatches = 0;
+                int matchesWon = 0;
+
+                if (snapshot.hasChild("highest_wpm")) highestWpm = snapshot.child("highest_wpm").getValue(Integer.class);
+                if (snapshot.hasChild("total_matches")) totalMatches = snapshot.child("total_matches").getValue(Integer.class);
+                if (snapshot.hasChild("total_wpm_sum")) totalWpmSum = snapshot.child("total_wpm_sum").getValue(Integer.class);
+                if (snapshot.hasChild("multiplayer_matches")) multiplayerMatches = snapshot.child("multiplayer_matches").getValue(Integer.class);
+                if (snapshot.hasChild("matches_won")) matchesWon = snapshot.child("matches_won").getValue(Integer.class);
+
+                int avgWpm = (totalMatches > 0) ? (totalWpmSum / totalMatches) : 0;
+                int winRate = (multiplayerMatches > 0) ? (int) (((float) matchesWon / multiplayerMatches) * 100) : 0;
+
+                if (tvProfileTopSpeed != null) {
+                    tvProfileTopSpeed.setText(highestWpm + " WPM");
+                    tvProfileAvgSpeed.setText(avgWpm + " WPM");
+                    tvProfileMatches.setText(String.valueOf(totalMatches));
+                    tvProfileWinRate.setText(winRate + " %");
+
+                    // Color code the Win Rate for extra aesthetic
+                    if (winRate >= 50) {
+                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#39FF14")); // Neon Green for good
+                    } else if (winRate > 0) {
+                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#FF007A")); // Neon Pink for bad
+                    } else {
+                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#FFFFFF")); // White if 0
+                    }
+                }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         };
-        userRef.addValueEventListener(userXpListener);
+        userRef.addValueEventListener(userListener);
     }
 
     private void highlightActiveTier(String title, int totalXp) {
-
         // Define active and inactive styles
         int activeBackground   = 0xFF6C63FF;
         int inactiveBackground = 0xFF0A192F;
@@ -141,7 +184,6 @@ public class ProfileFragment extends Fragment {
         }
 
         // Highlight the matching card based on title string
-        // (title comes from XpManager.getTitleForLevel())
         com.google.android.material.card.MaterialCardView activeCard;
         if (title.equalsIgnoreCase("Apprentice"))     activeCard = cardTierApprentice;
         else if (title.equalsIgnoreCase("Expert"))    activeCard = cardTierExpert;
@@ -152,47 +194,32 @@ public class ProfileFragment extends Fragment {
         activeCard.setStrokeColor(activeStroke);
         activeCard.setStrokeWidth(4);
 
-        // Tier XP boundaries (must match XpManager definitions)
+        // Tier XP boundaries
         int noviceMax     = 500;
         int apprenticeMax = 1500;
         int expertMax     = 4000;
 
-        // Determine how much XP the player has within each tier
         int noviceStart     = 0;
         int apprenticeStart = 0;
         int expertStart     = 0;
         int masterStart     = 0;
 
-        // IF player is in Novice tier
         if (title.equalsIgnoreCase("Novice")) {
-            noviceStart     = totalXp;       // current progress shown
-            apprenticeStart = 0;             // not yet entered
-            expertStart     = 0;
-            masterStart     = 0;
-        }
-        // IF player is in Apprentice tier
-        else if (title.equalsIgnoreCase("Apprentice")) {
-            noviceStart     = noviceMax;     // fully completed
-            apprenticeStart = totalXp;       // current progress shown
-            expertStart     = 0;
-            masterStart     = 0;
-        }
-        // IF player is in Expert tier
-        else if (title.equalsIgnoreCase("Expert")) {
-            noviceStart     = noviceMax;
+            noviceStart = totalXp;
+        } else if (title.equalsIgnoreCase("Apprentice")) {
+            noviceStart = noviceMax;
+            apprenticeStart = totalXp;
+        } else if (title.equalsIgnoreCase("Expert")) {
+            noviceStart = noviceMax;
             apprenticeStart = apprenticeMax;
-            expertStart     = totalXp;       // current progress shown
-            masterStart     = 0;
-        }
-        // IF player is in Master tier
-        else {
-            noviceStart     = noviceMax;
+            expertStart = totalXp;
+        } else {
+            noviceStart = noviceMax;
             apprenticeStart = apprenticeMax;
-            expertStart     = expertMax;
-            masterStart     = totalXp;       // current progress shown
+            expertStart = expertMax;
+            masterStart = totalXp;
         }
 
-        // Set the range text on each tier card
         tvRangeNovice.setText(noviceStart + "–" + noviceMax);
         tvRangeApprentice.setText(apprenticeStart + "–" + apprenticeMax);
         tvRangeExpert.setText(expertStart + "–" + expertMax);
@@ -203,8 +230,8 @@ public class ProfileFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         // Prevent memory leaks when navigating away
-        if (userRef != null && userXpListener != null) {
-            userRef.removeEventListener(userXpListener);
+        if (userRef != null && userListener != null) {
+            userRef.removeEventListener(userListener);
         }
     }
 }

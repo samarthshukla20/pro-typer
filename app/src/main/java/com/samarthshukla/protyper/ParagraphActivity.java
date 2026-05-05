@@ -50,10 +50,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,11 +64,10 @@ public class ParagraphActivity extends AppCompatActivity {
     private ScrollView paragraphScrollView;
 
     private List<String> words = new ArrayList<>();
-    private List<String> paragraphs = new ArrayList<>();
     private Random random = new Random();
     private int accuracy = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 12000;
+    private static final int TIME_LIMIT = 120000; // 120s
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private RewardedAd rewardedAd;
@@ -81,7 +76,6 @@ public class ParagraphActivity extends AppCompatActivity {
     private String currentParagraph = "";
     private boolean isGameOver = false;
     private boolean isParagraphFullyTyped = false;
-    private boolean extraTimeGiven = false;
     private boolean hasShownRewardDialog = false;
     private boolean historySaved = false;
     private long totalPausedDuration = 0;
@@ -96,6 +90,9 @@ public class ParagraphActivity extends AppCompatActivity {
     private int cachedLevel = 1;
     private int currentSessionAdXp = 0;
     private long paragraphEndTime = 0;
+
+    private TextView countdownText;
+    private View countdownDimBackground;
 
     private String getCurrentDateTime() {
         String currentDateTime = new SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.getDefault())
@@ -140,13 +137,16 @@ public class ParagraphActivity extends AppCompatActivity {
         inputField = findViewById(R.id.inputField);
         tvDateTime = findViewById(R.id.tvDateTime);
         paragraphScrollView = findViewById(R.id.paragraphScrollView);
+        countdownText = findViewById(R.id.countdownText);
+        countdownDimBackground = findViewById(R.id.countdownDimBackground);
 
         startTime = System.currentTimeMillis();
         getCurrentDateTime();
 
         wordDisplay.setTypeface(ResourcesCompat.getFont(this, R.font.difficulty));
-        loadWordsFromAssets();
-        startNewGame();
+
+        // INSTANT LOAD - No fake loading screens, no disabled inputs!
+        loadWordsInstantly();
 
         inputField.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -203,38 +203,116 @@ public class ParagraphActivity extends AppCompatActivity {
         soundIdGameOver = soundPool.load(this, R.raw.game_over_sound, 1);
     }
 
+    // ==========================================
+    // THE GHOST TYPING COUNTDOWN ENGINE
+    // ==========================================
+    private void startGhostCountdown() {
+        if (countdownDimBackground != null) countdownDimBackground.setVisibility(View.VISIBLE);
+        if (countdownText != null) {
+            countdownText.setVisibility(View.VISIBLE);
+            countdownText.setShadowLayer(20f, 0f, 0f, Color.TRANSPARENT);
+        }
+
+        final String[] wordsList = {"THREE", "TWO", "ONE", "GO!!!"};
+        final long[] typeSpeeds = {70, 90, 110, 40};
+        final long[] pauseAfter = {500, 500, 500, 800};
+
+        final int colorGhost = Color.parseColor("#4A5568");
+        final int colorLit = Color.WHITE;
+        final int colorGo = Color.parseColor("#39FF14");
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < wordsList.length; i++) {
+            sb.append(wordsList[i]);
+            if (i < wordsList.length - 1) sb.append("  ");
+        }
+        final String fullText = sb.toString();
+
+        countdownText.setText(fullText);
+        countdownText.setTextColor(colorGhost);
+
+        final SpannableString spannable = new SpannableString(fullText);
+        final Handler handler = new Handler(android.os.Looper.getMainLooper());
+
+        class GhostTyper implements Runnable {
+            int wordIdx = 0;
+            int charIdx = 0;
+            int globalIdx = 0;
+
+            @Override
+            public void run() {
+                if (wordIdx >= wordsList.length) {
+                    finishCountdown();
+                    return;
+                }
+
+                String currentWord = wordsList[wordIdx];
+                boolean isGoWord = currentWord.equals("GO!!!");
+
+                if (charIdx < currentWord.length()) {
+                    int color = isGoWord ? colorGo : colorLit;
+                    spannable.setSpan(new ForegroundColorSpan(color), globalIdx, globalIdx + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    countdownText.setText(spannable);
+
+                    if (isGoWord) {
+                        countdownText.setShadowLayer(30f, 0f, 0f, colorGo);
+                    }
+
+                    charIdx++;
+                    globalIdx++;
+                    handler.postDelayed(this, typeSpeeds[wordIdx]);
+                } else {
+                    globalIdx += 2;
+                    charIdx = 0;
+                    long delay = pauseAfter[wordIdx];
+                    wordIdx++;
+                    handler.postDelayed(this, delay);
+                }
+            }
+        }
+        handler.postDelayed(new GhostTyper(), 500);
+    }
+
+    private void finishCountdown() {
+        if (countdownText != null) countdownText.setVisibility(View.GONE);
+        if (countdownDimBackground != null) countdownDimBackground.setVisibility(View.GONE);
+
+        // Unlock the keyboard
+        inputField.setEnabled(true);
+        inputField.requestFocus();
+        new Handler().postDelayed(() -> {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) imm.showSoftInput(inputField, InputMethodManager.SHOW_IMPLICIT);
+        }, 100);
+
+        // NOW officially start the game timers!
+        gameStartTime = System.currentTimeMillis();
+        startTime = gameStartTime;
+        if (this instanceof ParagraphActivity) {
+            paragraphEndTime = 0;
+            totalPausedDuration = 0;
+            pauseStartTime = 0;
+        }
+        startTimer();
+    }
+
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
     }
 
-    private void loadParagraphsFromAssets(String filename) {
-        try {
-            InputStream is = getAssets().open(filename);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            StringBuilder builder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                builder.append(line).append("\n");
-            }
-            reader.close();
-            String fullText = builder.toString();
-            String[] parts = fullText.split("(?m)^\\s*\\d+\\.\\s*");
-            for (String part : parts) {
-                String trimmed = part.trim();
-                if (!trimmed.isEmpty()) {
-                    paragraphs.add(trimmed);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadWordsFromAssets() {
-        loadParagraphsFromAssets("pg.txt");
+    private void loadWordsInstantly() {
         words.clear();
-        words.addAll(paragraphs);
+
+        // Grab the pre-loaded data from our vault!
+        if (DictionaryManager.getInstance().isLoaded && !DictionaryManager.getInstance().paragraphs.isEmpty()) {
+            words.addAll(DictionaryManager.getInstance().paragraphs);
+        } else {
+            // Failsafe: If they clicked so fast the background thread hasn't finished yet
+            words.add("The quick brown fox jumps over the lazy dog.");
+        }
+
+        startNewGame();
     }
 
     private void startNewGame() {
@@ -243,19 +321,17 @@ public class ParagraphActivity extends AppCompatActivity {
         currentSessionAdXp = 0; // RESET VAULT
         scoreText.setText("Accuracy: " + calculateAccuracy() + "%");
         inputField.setText("");
-        inputField.setEnabled(true);
+        inputField.setEnabled(false);
         usedWords = new ArrayList<>();
         generateNewWord();
 
-        // --- NEW TIME RESETS ---
-        gameStartTime = System.currentTimeMillis();
+        //gameStartTime = System.currentTimeMillis();
         startTime = gameStartTime;
         paragraphEndTime = 0;
         totalPausedDuration = 0;
         pauseStartTime = 0;
-        // -----------------------
 
-        startTimer();
+        //startTimer();
         hasShownRewardDialog = false;
         historySaved = false;
         isParagraphFullyTyped = false;
@@ -263,6 +339,9 @@ public class ParagraphActivity extends AppCompatActivity {
         if (paragraphScrollView != null) {
             paragraphScrollView.scrollTo(0, 0);
         }
+
+        startGhostCountdown();
+
     }
 
     private void generateNewWord() {
@@ -368,7 +447,10 @@ public class ParagraphActivity extends AppCompatActivity {
         confetti.setSpeed(1f);
         rootView.addView(confetti);
 
-        soundPool.play(soundIdParaComplete, 1, 1, 0, 0, 1);
+        if (soundPool != null) {
+            soundPool.play(soundIdParaComplete, 1, 1, 0, 0, 1);
+        }
+
         confetti.playAnimation();
         confetti.addAnimatorListener(new AnimatorListenerAdapter() {
             @Override
@@ -399,11 +481,10 @@ public class ParagraphActivity extends AppCompatActivity {
             }
         }
 
-        // --- NEW FLAWLESS TIME MATH ---
         long finalEndTime = (paragraphEndTime > 0) ? paragraphEndTime : System.currentTimeMillis();
         long activeMillis = (finalEndTime - gameStartTime) - totalPausedDuration;
 
-        if (activeMillis <= 0) activeMillis = 1000; // Safety fallback
+        if (activeMillis <= 0) activeMillis = 1000;
 
         double minutes = activeMillis / 60000.0;
         double standardWords = correctChars / 5.0;
@@ -411,9 +492,8 @@ public class ParagraphActivity extends AppCompatActivity {
         return (int) Math.round(standardWords / minutes);
     }
 
-    // --- FIX 1: Character-Based Real-Time Accuracy ---
     private int calculateAccuracy() {
-        String typedText = inputField.getText().toString(); // No trim() so spaces count!
+        String typedText = inputField.getText().toString();
         String paragraphText = currentParagraph;
 
         if (typedText.isEmpty()) return 0;
@@ -429,7 +509,6 @@ public class ParagraphActivity extends AppCompatActivity {
         return (int) (((float) correctChars / typedText.length()) * 100);
     }
 
-    // --- FIX 2: Detailed XP Receipt Animation Engine ---
     private void animateXpAndSave(View cardView, int wpm, int finalAccuracy) {
         TextView baseXpText = cardView.findViewById(R.id.baseXpText);
         TextView completionXpText = cardView.findViewById(R.id.completionXpText);
@@ -474,6 +553,8 @@ public class ParagraphActivity extends AppCompatActivity {
         xpEarnedText.setText("Total: +" + totalEarnedXp + " XP");
 
         String userId = XpManager.getGlobalUserId(this);
+
+        StatsManager.saveSoloStats(userId, wpm);
 
         int previousLevelXp = (cachedLevel > 1) ? XpManager.getXpRequiredForNextLevel(cachedLevel - 1) : 0;
         int nextLevelXp = XpManager.getXpRequiredForNextLevel(cachedLevel);
@@ -533,7 +614,6 @@ public class ParagraphActivity extends AppCompatActivity {
         int wpm = getCalculatedWpm();
         wpmTextView.setText("WPM: " + wpm);
 
-        // --- HOOKED UP: Animate XP Card ---
         animateXpAndSave(gameOverCardView, wpm, accuracy);
 
         MaterialButton nextButton = gameOverCardView.findViewById(R.id.nextButton);
@@ -587,7 +667,6 @@ public class ParagraphActivity extends AppCompatActivity {
             wpmTextView.setText("WPM: " + wpm);
         }
 
-        // --- HOOKED UP: Animate XP Card ---
         animateXpAndSave(gameOverCardView, wpm, accuracy);
 
         MaterialButton retryButton = gameOverCardView.findViewById(R.id.retryButton);
@@ -641,7 +720,9 @@ public class ParagraphActivity extends AppCompatActivity {
         if (isGameOver) return;
         isGameOver = true;
         inputField.setEnabled(false);
-        soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
+        if (soundPool != null) {
+            soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
+        }
         accuracy = calculateAccuracy();
         if (!isParagraphFullyTyped && !hasShownRewardDialog) {
             hasShownRewardDialog = true;
@@ -734,10 +815,6 @@ public class ParagraphActivity extends AppCompatActivity {
             }
         }, 300);
 
-        // CRITICAL FIX: Do NOT reset startTime here, otherwise WPM skyrockets to 400+ because
-        // the game thinks they typed the whole paragraph in 15 seconds!
-        // startTime = System.currentTimeMillis();
-
         if (timer != null) timer.cancel();
         timer = new CountDownTimer(15000, 1000) {
             public void onTick(long millisUntilFinished) {
@@ -779,7 +856,6 @@ public class ParagraphActivity extends AppCompatActivity {
                 }
             });
             rewardedAd.show(this, rewardItem -> {
-                // --- FIX 3: Ad Vault XP ---
                 int adXp = XpManager.getAdBonusXp();
                 currentSessionAdXp += adXp;
                 Toast.makeText(ParagraphActivity.this, "+15s & +" + adXp + " Bonus XP Locked In!", Toast.LENGTH_SHORT).show();
@@ -802,6 +878,9 @@ public class ParagraphActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (timer != null) {
+            timer.cancel();
+        }
         if (soundPool != null) {
             soundPool.release();
             soundPool = null;

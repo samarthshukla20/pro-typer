@@ -2,6 +2,7 @@ package com.samarthshukla.protyper;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -9,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.Layout;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
@@ -38,7 +40,8 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
     private static final String TAG = "MultiplayerGameActivity";
 
-    private TextView wordDisplay, timerText;
+    private TextView wordDisplay, timerText, countdownText;
+    private View countdownDimBackground;
     private EditText inputField;
     private ProgressBar myProgressBar, opponentProgressBar;
     private ScrollView paragraphScrollView;
@@ -54,6 +57,9 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private long matchEndTime = 0;
     private boolean isGameOver = false;
     private boolean isGameStarted = false;
+
+    // --- FRIEND MATCH EXPLOIT PREVENTION ---
+    private boolean isFriendMatch = false;
 
     // --- XP CACHE VARIABLES ---
     private int cachedTotalXp = 0;
@@ -85,6 +91,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
         gameSessionId = getIntent().getStringExtra("gameSessionId");
         userId = getIntent().getStringExtra("userId");
+        isFriendMatch = getIntent().getBooleanExtra("isFriendMatch", false);
 
         if (gameSessionId == null || userId == null) {
             Toast.makeText(this, "Failed to start game: Missing data.", Toast.LENGTH_SHORT).show();
@@ -118,6 +125,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         paragraphScrollView = findViewById(R.id.paragraphScrollView);
         paragraphCard = findViewById(R.id.paragraphCard);
         inputCard = findViewById(R.id.inputCard);
+
+        // Bind the new countdown UI
+        countdownText = findViewById(R.id.countdownText);
+
+        countdownDimBackground = findViewById(R.id.countdownDimBackground);
 
         setupKeyboardShiftBehavior();
 
@@ -219,19 +231,116 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private void startMultiplayerGame() {
         if (isGameStarted) return;
         isGameStarted = true;
-
         isGameOver = false;
         matchEndTime = 0;
-        inputField.setEnabled(true);
+
+        // CRITICAL: Lock the keyboard until the countdown finishes!
+        inputField.setEnabled(false);
         inputField.setText("");
-        inputField.requestFocus();
-        gameStartTime = System.currentTimeMillis();
 
         DatabaseReference myPresenceRef = gameRef.child("players_progress").child(userId).child("is_present");
         myPresenceRef.setValue(true);
         myPresenceRef.onDisconnect().setValue(false);
 
-        startTimer();
+        // Launch the 3-2-1-GO animation
+        startCountdown();
+    }
+
+    // ==========================================
+    // THE PRE-MATCH COUNTDOWN
+    // ==========================================
+    private void startCountdown() {
+        if (countdownDimBackground != null) countdownDimBackground.setVisibility(View.VISIBLE);
+        if (countdownText != null) {
+            countdownText.setVisibility(View.VISIBLE);
+            // Optional: Set a heavy shadow to make it glow when lit
+            countdownText.setShadowLayer(20f, 0f, 0f, Color.TRANSPARENT);
+        }
+
+        // The animation parameters
+        final String[] words = {"THREE", "TWO", "ONE", "GO!!!"};
+        final long[] typeSpeeds = {70, 90, 110, 40}; // milliseconds per character
+        final long[] pauseAfter = {500, 500, 500, 800}; // pause after word finishes
+
+        // Colors
+        final int colorGhost = Color.parseColor("#4A5568"); // Dull slate grey
+        final int colorLit = Color.WHITE;
+        final int colorGo = Color.parseColor("#39FF14"); // Neon green
+
+        // 1. Build the unlit "Ghost String"
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < words.length; i++) {
+            sb.append(words[i]);
+            if (i < words.length - 1) sb.append("  "); // Two spaces between words
+        }
+        final String fullText = sb.toString();
+
+        countdownText.setText(fullText);
+        countdownText.setTextColor(colorGhost);
+
+        // 2. Prepare the SpannableString to color individual characters
+        final SpannableString spannable = new SpannableString(fullText);
+        final Handler handler = new Handler(Looper.getMainLooper());
+
+        // 3. The Recursive Typing Runner
+        class GhostTyper implements Runnable {
+            int wordIdx = 0;
+            int charIdx = 0;
+            int globalIdx = 0;
+
+            @Override
+            public void run() {
+                if (wordIdx >= words.length) {
+                    finishCountdown(); // We are done! Start the match!
+                    return;
+                }
+
+                String currentWord = words[wordIdx];
+                boolean isGoWord = currentWord.equals("GO!!!");
+
+                if (charIdx < currentWord.length()) {
+                    // Light up the current character
+                    int color = isGoWord ? colorGo : colorLit;
+                    spannable.setSpan(new ForegroundColorSpan(color), globalIdx, globalIdx + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    countdownText.setText(spannable);
+
+                    if (isGoWord) {
+                        countdownText.setShadowLayer(30f, 0f, 0f, colorGo); // Add neon glow for GO!
+                    }
+
+                    // TODO: Play your Audio 'click' or 'thock' here!
+                    // if (soundPool != null) soundPool.play(typeSoundId, 1, 1, 0, 0, 1);
+
+                    charIdx++;
+                    globalIdx++;
+                    handler.postDelayed(this, typeSpeeds[wordIdx]); // Wait X ms before next character
+                } else {
+                    // Word is fully typed. Wait before starting the next word.
+                    globalIdx += 2; // Skip over the "  " spaces we added
+                    charIdx = 0;
+                    long delay = pauseAfter[wordIdx];
+                    wordIdx++;
+                    handler.postDelayed(this, delay);
+                }
+            }
+        }
+
+        // Start the sequence 500ms after the screen loads
+        handler.postDelayed(new GhostTyper(), 500);
+    }
+
+    private void finishCountdown() {
+        // Hide UI
+        if (countdownText != null) countdownText.setVisibility(View.GONE);
+        if (countdownDimBackground != null) countdownDimBackground.setVisibility(View.GONE);
+
+        // NOW the match officially begins!
+        inputField.setEnabled(true);
+        inputField.requestFocus();
+        gameStartTime = System.currentTimeMillis();
+
+        startTimer(); // The 120-second timer
         setupTypingListener();
         setupGameResultListener();
 
@@ -253,12 +362,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     }
 
     // ==========================================
-    // NEW: ADVANCED BOT INTEGRATION
+    // ADVANCED BOT INTEGRATION
     // ==========================================
     private void startBotSimulation() {
         botCharsTypedSoFar = 0;
 
-        // Assign Persona based on target WPM
         TypingBot.Persona persona;
         if (botWpm >= 80) persona = TypingBot.Persona.PRO;
         else if (botWpm >= 50) persona = TypingBot.Persona.NINJA;
@@ -282,7 +390,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             }
         });
 
-        // Unleash the bot!
         myBot.start();
     }
 
@@ -303,7 +410,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
         int myWpm = calculateWPM(inputField.getText().toString());
         int myAccuracy = calculateAccuracy(inputField.getText().toString(), currentParagraph);
-        int botAccuracy = 96; // Bots are pretty accurate
+        int botAccuracy = 96;
 
         DatabaseReference finalScoreRef = gameRef.child("final_scores").child(userId);
         finalScoreRef.child("wpm").setValue(myWpm);
@@ -349,11 +456,9 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 highlightText(typedText);
                 updateProgressOnFirebase(typedText.length());
 
-                // --- NEW: TELL THE BOT OUR PROGRESS FOR RUBBER-BANDING ---
                 if (isBotMatch && myBot != null) {
                     myBot.updatePlayerProgress(typedText.length());
                 }
-                // ---------------------------------------------------------
 
                 if (typedText.length() == currentParagraph.length() && typedText.equals(currentParagraph)) {
                     if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
@@ -580,7 +685,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         finalScoreRef.child("accuracy").setValue(myAccuracy);
 
         if (isBotMatch) {
-            // Calculate effective bot WPM based on where it was when the player finished
             int effectiveBotWpm = (int) ((botCharsTypedSoFar / 5f) / ((System.currentTimeMillis() - gameStartTime) / 60000f));
             if (effectiveBotWpm > botWpm) effectiveBotWpm = botWpm;
 
@@ -767,6 +871,10 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         }
         isGameOver = true;
 
+        if (!isFriendMatch) {
+            StatsManager.saveMultiplayerStats(userId, 0, false);
+        }
+
         cancelMyPresenceDisconnect();
         cancelOpponentDisconnectTimer();
         stopBotSimulation();
@@ -790,6 +898,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     }
 
     private void launchResultScreen(String resultType, String reason, int myWpm, int myAcc, int oppWpm, int oppAcc, String winnerId) {
+        if (!isFriendMatch) {
+            boolean isWin = "win".equals(resultType);
+            StatsManager.saveMultiplayerStats(userId, myWpm, isWin);
+        }
+
         try {
             Intent intent = new Intent(this, ResultActivity.class);
             intent.putExtra(ResultActivity.EXTRA_RESULT_TYPE, resultType);
@@ -802,6 +915,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
             intent.putExtra("cachedTotalXp", cachedTotalXp);
             intent.putExtra("cachedLevel", cachedLevel);
+            intent.putExtra("isFriendMatch", isFriendMatch);
 
             startActivityForResult(intent, 1000);
         } catch (Exception e) {

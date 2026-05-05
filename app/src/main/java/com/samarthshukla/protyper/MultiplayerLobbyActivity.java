@@ -65,11 +65,6 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     private String currentOperation = "NONE";
     private String activeRoomCode = null;
 
-    // Bot Matchmaking Timers
-    private Handler botHandler = new Handler();
-    private Runnable botRunnable;
-    private final int BOT_TIMEOUT_MS = 8000; // 8 Seconds until Bot spawns
-
     // Listeners so we can detach them if user cancels
     private ValueEventListener gameStartListener;
     private ValueEventListener hostRoomListener;
@@ -79,6 +74,11 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     private Handler statusHandler = new Handler();
     private Runnable statusDotsRunnable;
     private boolean animateStatusDots = false;
+
+    // --- RESTORED: BOT MATCHMAKING TIMERS ---
+    private Handler botHandler = new Handler();
+    private Runnable botRunnable;
+    private final int BOT_TIMEOUT_MS = 5000; // Triggers after 5 seconds of waiting
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,7 +156,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
 
     private void cancelOperation() {
         stopStatusDotsAnimation();
-        stopBotTimer(); // Stop the bot countdown!
+        stopBotTimer(); // Stop the bot countdown if we cancel!
 
         if ("RANDOM".equals(currentOperation)) {
             findingMatch = false;
@@ -193,7 +193,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     }
 
     // ==========================================
-    // RANDOM MATCHMAKING LOGIC
+    // RANDOM MATCHMAKING LOGIC (WITH GHOST FILTER)
     // ==========================================
 
     private void findMatch() {
@@ -217,12 +217,34 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
             @Override
             public Transaction.Result doTransaction(@NonNull MutableData currentData) {
                 String opponentId = null;
+
+                // --- NEW: GHOST QUEUE EXPLOIT FIX ---
+                long currentTime = System.currentTimeMillis();
+                long STALE_THRESHOLD_MS = 15000; // 15 Seconds
+                List<String> ghostsToRemove = new ArrayList<>();
+
                 for (MutableData player : currentData.getChildren()) {
-                    if (!player.getKey().equals(userId) && player.child("gameSessionId").getValue() == null) {
-                        opponentId = player.getKey();
-                        break;
+                    if (!player.getKey().equals(userId)) {
+                        if (player.child("gameSessionId").getValue() == null) {
+
+                            Long timestamp = player.child("timestamp").getValue(Long.class);
+
+                            // If they have no timestamp, or it's older than 15s, they are a Ghost.
+                            if (timestamp == null || (currentTime - timestamp > STALE_THRESHOLD_MS)) {
+                                ghostsToRemove.add(player.getKey());
+                            } else {
+                                opponentId = player.getKey();
+                                break; // Found a valid, alive opponent!
+                            }
+                        }
                     }
                 }
+
+                // Delete all the ghosts we found from the database queue
+                for (String ghostId : ghostsToRemove) {
+                    currentData.child(ghostId).setValue(null);
+                }
+                // ------------------------------------
 
                 if (opponentId != null) {
                     String gameSessionId = UUID.randomUUID().toString();
@@ -235,7 +257,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                 } else {
                     Map<String, Object> playerEntry = new HashMap<>();
                     playerEntry.put("userId", userId);
-                    playerEntry.put("timestamp", ServerValue.TIMESTAMP);
+                    playerEntry.put("timestamp", ServerValue.TIMESTAMP); // Stamp the current time
                     currentData.child(userId).setValue(playerEntry);
                     return Transaction.success(currentData);
                 }
@@ -280,12 +302,12 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                                 stopStatusDotsAnimation();
                                 cancelMatchButton.setVisibility(View.GONE);
                                 statusTextView.setText("Arena found! Starting...");
-                                startGameActivity(gameSessionIdToCreate);
+                                startGameActivity(gameSessionIdToCreate, false); // Random Match = False
                             });
                     return;
                 }
 
-                // NOBODY FOUND YET -> JOIN QUEUE & START BOT TIMER
+                // NOBODY FOUND YET -> JOIN QUEUE AND WAIT FOR A HUMAN
                 DataSnapshot myDataSnapshot = currentData.child(userId);
                 String finalGameSessionId = myDataSnapshot.child("gameSessionId").getValue(String.class);
 
@@ -295,7 +317,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     stopStatusDotsAnimation();
                     cancelMatchButton.setVisibility(View.GONE);
                     statusTextView.setText("Arena found! Preparing...");
-                    new Handler().postDelayed(() -> startGameActivity(finalGameSessionId), 1500);
+                    new Handler().postDelayed(() -> startGameActivity(finalGameSessionId, false), 1500);
                 } else if (currentData.child(userId).exists()) {
                     // Waiting in queue... start the bot countdown!
                     startBotTimer();
@@ -322,12 +344,12 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                 String gameSessionId = snapshot.child("gameSessionId").getValue(String.class);
                 if (gameSessionId != null && !gameSessionId.isEmpty()) {
                     stopBotTimer(); // A real player found us! Cancel the bot!
-
                     myQueueRef.removeEventListener(this);
+
                     stopStatusDotsAnimation();
                     cancelMatchButton.setVisibility(View.GONE);
                     statusTextView.setText("Arena found! Preparing...");
-                    new Handler().postDelayed(() -> startGameActivity(gameSessionId), 1500);
+                    new Handler().postDelayed(() -> startGameActivity(gameSessionId, false), 1500);
                 }
             }
 
@@ -360,9 +382,11 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
 
     private void triggerBotMatch() {
         // 1. Remove from the real matchmaking queue
-        mDatabase.child("matchmaking_queue").child(userId).removeValue();
-        if (gameStartListener != null) {
-            mDatabase.child("matchmaking_queue").child(userId).removeEventListener(gameStartListener);
+        if (userId != null) {
+            mDatabase.child("matchmaking_queue").child(userId).removeValue();
+            if (gameStartListener != null) {
+                mDatabase.child("matchmaking_queue").child(userId).removeEventListener(gameStartListener);
+            }
         }
 
         // 2. Create the Bot Session
@@ -377,7 +401,6 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         // --- BOT SPECIFIC FLAGS ---
         gameData.put("isBotMatch", true);
         gameData.put("botName", "Guest_" + (1000 + new Random().nextInt(8999)));
-// adaptive bots to be made.
         int botTargetWpm = 30 + new Random().nextInt(30); // Randomly 30 - 60 WPM
         gameData.put("botWpm", botTargetWpm);
 
@@ -393,7 +416,8 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                     stopStatusDotsAnimation();
                     cancelMatchButton.setVisibility(View.GONE);
                     statusTextView.setText("Arena found! Preparing...");
-                    new Handler().postDelayed(() -> startGameActivity(gameSessionId), 1500);
+                    // Random Match = False (XP IS GIVEN FOR BOTS)
+                    new Handler().postDelayed(() -> startGameActivity(gameSessionId, false), 1500);
                 });
     }
 
@@ -449,7 +473,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                                 stopStatusDotsAnimation();
                                 cancelMatchButton.setVisibility(View.GONE);
                                 statusTextView.setText("Match found! Starting...");
-                                startGameActivity(gameSessionId);
+                                startGameActivity(gameSessionId, true); // Friend Match = True
                             });
                 }
             }
@@ -499,7 +523,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                                 stopStatusDotsAnimation();
                                 cancelMatchButton.setVisibility(View.GONE);
                                 statusTextView.setText("Arena found! Preparing...");
-                                new Handler().postDelayed(() -> startGameActivity(sessionId), 1500);
+                                new Handler().postDelayed(() -> startGameActivity(sessionId, true), 1500); // Friend Match = True
                             }
                         }
                         @Override
@@ -534,7 +558,7 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     // SHARED GAME LAUNCH & UTILS
     // ==========================================
 
-    private void startGameActivity(String gameSessionId) {
+    private void startGameActivity(String gameSessionId, boolean isFriendMatch) {
         if (gameSessionId == null || gameSessionId.isEmpty()) {
             Toast.makeText(this, "Error: Invalid ID. Try again.", Toast.LENGTH_SHORT).show();
             cancelOperation();
@@ -548,6 +572,8 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MultiplayerGameActivity.class);
         intent.putExtra("gameSessionId", gameSessionId);
         intent.putExtra("userId", userId);
+        intent.putExtra("isFriendMatch", isFriendMatch);
+
         startActivity(intent);
         finish();
     }
@@ -567,21 +593,13 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
     }
 
     private String getRandomParagraphFromAssets() {
-        List<String> paragraphs = new ArrayList<>();
-        try {
-            InputStream is = getAssets().open("pg.txt");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            StringBuilder builder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) builder.append(line).append("\n");
-            reader.close();
-            String[] parts = builder.toString().split("(?m)^\\s*\\d+\\.\\s*");
-            for (String part : parts) {
-                if (!part.trim().isEmpty()) paragraphs.add(part.trim());
-            }
-        } catch (IOException ignored) {}
+        // 1. Instantly grab the paragraphs from our global vault!
+        if (DictionaryManager.getInstance().isLoaded && !DictionaryManager.getInstance().paragraphs.isEmpty()) {
+            List<String> paragraphs = DictionaryManager.getInstance().paragraphs;
+            return paragraphs.get(new Random().nextInt(paragraphs.size()));
+        }
 
-        if (!paragraphs.isEmpty()) return paragraphs.get(new Random().nextInt(paragraphs.size()));
+        // 2. Failsafe: Just in case the background thread hasn't finished loading yet
         return "The quick brown fox jumps over the lazy dog.";
     }
 
@@ -590,7 +608,8 @@ public class MultiplayerLobbyActivity extends AppCompatActivity {
                 "• First to finish correctly wins immediately.\n\n" +
                 "• If time runs out, higher accuracy wins. If tied, higher WPM wins.\n\n" +
                 "• Leaving the room gives the win to the other player.\n\n" +
-                "• If someone disconnects, the other player can wait or claim victory.";
+                "• If someone disconnects, the other player can wait or claim victory.\n\n" +
+                "• NOTE: XP and Win Rates are only tracked in Random Matchmaking, not Friend Rooms.";
 
         new AlertDialog.Builder(this)
                 .setTitle("Match Rules")

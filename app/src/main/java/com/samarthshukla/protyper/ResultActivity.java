@@ -1,7 +1,6 @@
 package com.samarthshukla.protyper;
 
 import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
@@ -13,8 +12,6 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.firebase.auth.FirebaseAuth;
 
 public class ResultActivity extends AppCompatActivity {
 
@@ -29,6 +26,9 @@ public class ResultActivity extends AppCompatActivity {
     private String userId;
     private int cachedTotalXp = 0;
     private int cachedLevel = 1;
+
+    // --- NEW: FLAG TO DETECT FRIEND MATCHES ---
+    private boolean isFriendMatch = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,9 +48,10 @@ public class ResultActivity extends AppCompatActivity {
         int myAcc = i.getIntExtra(EXTRA_MY_ACC, 0);
         userId = i.getStringExtra(EXTRA_YOUR_ID);
 
-        // Retrieve the pre-fetched XP data!
+        // Retrieve the pre-fetched XP data & Friend Match Flag!
         cachedTotalXp = i.getIntExtra("cachedTotalXp", 0);
         cachedLevel = i.getIntExtra("cachedLevel", 1);
+        isFriendMatch = i.getBooleanExtra("isFriendMatch", false);
 
         // Fallback if Intent misses the ID: Ask the unified XpManager!
         if (userId == null) {
@@ -76,9 +77,13 @@ public class ResultActivity extends AppCompatActivity {
         myAccuracyTv.setText("Accuracy: " + myAcc + "%");
         myWpmTv.setText("WPM: " + myWpm);
 
-        // Run the Progression Engine!
+        // --- NEW: DECIDE WHETHER TO REWARD XP OR SHOW UNRANKED UI ---
         if (userId != null) {
-            animateXpAndSave(myWpm, myAcc, resultType);
+            if (isFriendMatch) {
+                showFriendlyMatchUi(); // Kills the XP engine and hides the bar
+            } else {
+                animateXpAndSave(myWpm, myAcc, resultType); // Ranked match! Reward them!
+            }
         }
 
         menuBtn.setOnClickListener(v -> {
@@ -94,7 +99,32 @@ public class ResultActivity extends AppCompatActivity {
     }
 
     // ==========================================
-    // MULTIPLAYER XP ANIMATION ENGINE
+    // NEW: UNRANKED FRIENDLY MATCH UI
+    // ==========================================
+    private void showFriendlyMatchUi() {
+        TextView baseXpText = findViewById(R.id.baseXpText);
+        TextView resultXpText = findViewById(R.id.resultXpText);
+        TextView milestoneXpText = findViewById(R.id.milestoneXpText);
+        TextView xpEarnedText = findViewById(R.id.xpEarnedText);
+        ProgressBar xpProgressBar = findViewById(R.id.xpProgressBar);
+        TextView levelInfoText = findViewById(R.id.levelInfoText);
+
+        // Hide all the competitive XP breakdown text
+        if (baseXpText != null) baseXpText.setVisibility(View.GONE);
+        if (resultXpText != null) resultXpText.setVisibility(View.GONE);
+        if (milestoneXpText != null) milestoneXpText.setVisibility(View.GONE);
+        if (xpProgressBar != null) xpProgressBar.setVisibility(View.GONE);
+        if (levelInfoText != null) levelInfoText.setVisibility(View.GONE);
+
+        // Replace the main XP text with a cool Unranked badge
+        if (xpEarnedText != null) {
+            xpEarnedText.setText("Friendly Match: Unranked");
+            xpEarnedText.setTextColor(Color.parseColor("#8892B0")); // A sleek slate grey
+        }
+    }
+
+    // ==========================================
+    // MULTIPLAYER XP ANIMATION ENGINE (RANKED)
     // ==========================================
     private void animateXpAndSave(int wpm, int finalAccuracy, String resultType) {
         TextView baseXpText = findViewById(R.id.baseXpText);
@@ -161,7 +191,7 @@ public class ResultActivity extends AppCompatActivity {
             }
         });
 
-        animation.addListener(new AnimatorListenerAdapter() {
+        animation.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
