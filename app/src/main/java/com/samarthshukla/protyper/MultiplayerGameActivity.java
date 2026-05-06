@@ -1,6 +1,7 @@
 package com.samarthshukla.protyper;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -126,11 +127,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         paragraphCard = findViewById(R.id.paragraphCard);
         inputCard = findViewById(R.id.inputCard);
 
-        // Bind the new countdown UI
-        countdownText = findViewById(R.id.countdownText);
-
-        countdownDimBackground = findViewById(R.id.countdownDimBackground);
-
         setupKeyboardShiftBehavior();
 
         gameRef = FirebaseDatabase.getInstance().getReference("game_sessions").child(gameSessionId);
@@ -247,42 +243,56 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     }
 
     // ==========================================
-    // THE PRE-MATCH COUNTDOWN
+    // THE PRE-MATCH COUNTDOWN (FULLSCREEN FIX)
     // ==========================================
     private void startCountdown() {
-        if (countdownDimBackground != null) countdownDimBackground.setVisibility(View.VISIBLE);
-        if (countdownText != null) {
-            countdownText.setVisibility(View.VISIBLE);
-            // Optional: Set a heavy shadow to make it glow when lit
-            countdownText.setShadowLayer(20f, 0f, 0f, Color.TRANSPARENT);
+        android.view.ViewGroup rootView = findViewById(android.R.id.content);
+
+        // 1. Create the full-screen dim background dynamically (Ignores all XML padding!)
+        countdownDimBackground = new View(this);
+        countdownDimBackground.setBackgroundColor(Color.parseColor("#E6000000")); // Deep dark overlay
+        countdownDimBackground.setClickable(true); // Blocks touches during countdown
+        countdownDimBackground.setFocusable(true);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            countdownDimBackground.setElevation(100f); // Push above everything
         }
+        rootView.addView(countdownDimBackground, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // The animation parameters
+        // 2. Create the centered text dynamically
+        countdownText = new TextView(this);
+        countdownText.setGravity(android.view.Gravity.CENTER);
+        countdownText.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(this, R.font.difficulty));
+        countdownText.setTextSize(55f); // Made it slightly bigger
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            countdownText.setElevation(101f);
+        }
+        rootView.addView(countdownText, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
         final String[] words = {"THREE", "TWO", "ONE", "GO!!!"};
-        final long[] typeSpeeds = {70, 90, 110, 40}; // milliseconds per character
-        final long[] pauseAfter = {500, 500, 500, 800}; // pause after word finishes
+        final long[] typeSpeeds = {70, 90, 110, 40};
+        final long[] pauseAfter = {500, 500, 500, 800};
 
-        // Colors
-        final int colorGhost = Color.parseColor("#4A5568"); // Dull slate grey
+        final int colorGhost = Color.parseColor("#4A5568");
         final int colorLit = Color.WHITE;
-        final int colorGo = Color.parseColor("#39FF14"); // Neon green
+        final int colorGo = Color.parseColor("#39FF14");
 
-        // 1. Build the unlit "Ghost String"
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < words.length; i++) {
             sb.append(words[i]);
-            if (i < words.length - 1) sb.append("  "); // Two spaces between words
+            if (i < words.length - 1) sb.append("  ");
         }
         final String fullText = sb.toString();
 
         countdownText.setText(fullText);
         countdownText.setTextColor(colorGhost);
 
-        // 2. Prepare the SpannableString to color individual characters
         final SpannableString spannable = new SpannableString(fullText);
         final Handler handler = new Handler(Looper.getMainLooper());
 
-        // 3. The Recursive Typing Runner
         class GhostTyper implements Runnable {
             int wordIdx = 0;
             int charIdx = 0;
@@ -290,8 +300,11 @@ public class MultiplayerGameActivity extends AppCompatActivity {
 
             @Override
             public void run() {
+                // Failsafe: if activity closes during countdown
+                if (isDestroyed() || isFinishing()) return;
+
                 if (wordIdx >= words.length) {
-                    finishCountdown(); // We are done! Start the match!
+                    finishCountdown();
                     return;
                 }
 
@@ -299,25 +312,19 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 boolean isGoWord = currentWord.equals("GO!!!");
 
                 if (charIdx < currentWord.length()) {
-                    // Light up the current character
                     int color = isGoWord ? colorGo : colorLit;
                     spannable.setSpan(new ForegroundColorSpan(color), globalIdx, globalIdx + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
                     countdownText.setText(spannable);
 
                     if (isGoWord) {
-                        countdownText.setShadowLayer(30f, 0f, 0f, colorGo); // Add neon glow for GO!
+                        countdownText.setShadowLayer(30f, 0f, 0f, colorGo);
                     }
-
-                    // TODO: Play your Audio 'click' or 'thock' here!
-                    // if (soundPool != null) soundPool.play(typeSoundId, 1, 1, 0, 0, 1);
 
                     charIdx++;
                     globalIdx++;
-                    handler.postDelayed(this, typeSpeeds[wordIdx]); // Wait X ms before next character
+                    handler.postDelayed(this, typeSpeeds[wordIdx]);
                 } else {
-                    // Word is fully typed. Wait before starting the next word.
-                    globalIdx += 2; // Skip over the "  " spaces we added
+                    globalIdx += 2;
                     charIdx = 0;
                     long delay = pauseAfter[wordIdx];
                     wordIdx++;
@@ -325,19 +332,24 @@ public class MultiplayerGameActivity extends AppCompatActivity {
                 }
             }
         }
-
-        // Start the sequence 500ms after the screen loads
         handler.postDelayed(new GhostTyper(), 500);
     }
 
     private void finishCountdown() {
-        // Hide UI
-        if (countdownText != null) countdownText.setVisibility(View.GONE);
-        if (countdownDimBackground != null) countdownDimBackground.setVisibility(View.GONE);
+        // 1. Instantly remove the dynamic views from the screen
+        android.view.ViewGroup rootView = findViewById(android.R.id.content);
+        if (countdownDimBackground != null) rootView.removeView(countdownDimBackground);
+        if (countdownText != null) rootView.removeView(countdownText);
 
-        // NOW the match officially begins!
+        // 2. Unlock the keyboard
         inputField.setEnabled(true);
         inputField.requestFocus();
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) imm.showSoftInput(inputField, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+        }, 100);
+
+        // 3. NOW officially start the game timers!
         gameStartTime = System.currentTimeMillis();
 
         startTimer(); // The 120-second timer
