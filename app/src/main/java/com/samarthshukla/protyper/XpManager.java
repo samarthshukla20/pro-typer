@@ -99,20 +99,19 @@ public class XpManager {
         return currentLevel * 500;
     }
 
-    // Determines the player's title based on their current level
     public static String getTitleForLevel(int level) {
-        if (level >= 1 && level <= 9) {
-            return "Novice";
-        } else if (level >= 10 && level <= 19) {
-            return "Intermediate";
-        } else if (level >= 20 && level <= 29) {
-            return "Speedster";
-        } else if (level >= 30 && level <= 49) {
-            return "Pro Typer";
-        } else if (level >= 50) {
-            return "Grandmaster";
+        if (level >= 1 && level <= 2) {
+            return "Keystroke";
+        } else if (level >= 3 && level <= 5) {
+            return "Sprinter";
+        } else if (level >= 6 && level <= 8) {
+            return "Velocity";
+        } else if (level >= 9 && level <= 11) {
+            return "Supersonic";
+        } else if (level >= 12) {
+            return "Lightspeed";
         }
-        return "Beginner"; // Fallback safety
+        return "Keystroke"; // Fallback safety
     }
 
     // ==========================================

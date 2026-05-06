@@ -102,7 +102,7 @@
                         android:id="@+id/tvNextRank"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="500 XP · Apprentice"
+                        android:text="1000 XP · Sprinter"
                         android:textColor="#D0CCFF"
                         android:textSize="13sp"
                         android:gravity="end" />
@@ -142,192 +142,246 @@
             android:layout_marginTop="32dp"
             android:layout_marginBottom="12dp" />
 
-        <LinearLayout
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="4"
-            android:layout_marginBottom="12dp">
+            android:scrollbars="none"
+            android:layout_marginBottom="12dp"
+            android:clipToPadding="false"
+            android:paddingStart="0dp"
+            android:paddingEnd="24dp">
 
-            <!-- Novice - Active -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardTierNovice"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#0A192F"
-                app:strokeWidth="1dp"
-                app:strokeColor="#1E3A5F">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="4dp"
-                    android:gravity="center">
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_person"
-                        app:tint="#64B5F6" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Novice"
-                        android:textColor="#64B5F6"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="6dp" />
-                    <TextView
-                        android:id="@+id/tvRangeNovice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0–500"
-                        android:textColor="#4A6FA5"
-                        android:textSize="10sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:orientation="horizontal">
 
-            <!-- Apprentice -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardTierApprentice"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#0A192F"
-                app:strokeWidth="1dp"
-                app:strokeColor="#1E3A5F">
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <!-- Card 1: Keystroke -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardTierKeystroke"
+                    android:layout_width="130dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="4dp"
-                    android:gravity="center">
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_person"
-                        app:tint="#64B5F6" />
-                    <TextView
-                        android:layout_width="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#0A192F"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1E3A5F">
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Apprentice"
-                        android:textColor="#64B5F6"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="6dp" />
-                    <TextView
-                        android:id="@+id/tvRangeApprentice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="500–1500"
-                        android:textColor="#4A6FA5"
-                        android:textSize="10sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                        android:orientation="vertical"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_person"
+                            app:tint="#64B5F6" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Keystroke"
+                            android:textColor="#64B5F6"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:layout_marginTop="8dp" />
+                        <TextView
+                            android:id="@+id/tvRangeKeystroke"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0–1000"
+                            android:textColor="#4A6FA5"
+                            android:textSize="11sp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-            <!-- Expert -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardTierExpert"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#0A192F"
-                app:strokeWidth="1dp"
-                app:strokeColor="#1E3A5F">
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <!-- Card 2: Sprinter -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardTierSprinter"
+                    android:layout_width="130dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="4dp"
-                    android:gravity="center">
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_person"
-                        app:tint="#FF7043" />
-                    <TextView
-                        android:layout_width="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#0A192F"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1E3A5F">
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Expert"
-                        android:textColor="#FF7043"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="6dp" />
-                    <TextView
-                        android:id="@+id/tvRangeExpert"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="1500–4000"
-                        android:textColor="#7A3F30"
-                        android:textSize="10sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                        android:orientation="vertical"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_person"
+                            app:tint="#64B5F6" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sprinter"
+                            android:textColor="#64B5F6"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:layout_marginTop="8dp" />
+                        <TextView
+                            android:id="@+id/tvRangeSprinter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1000–2500"
+                            android:textColor="#4A6FA5"
+                            android:textSize="11sp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-            <!-- Master -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardTierMaster"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#0A192F"
-                app:strokeWidth="1dp"
-                app:strokeColor="#1E3A5F">
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <!-- Card 3: Velocity -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardTierVelocity"
+                    android:layout_width="130dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="4dp"
-                    android:gravity="center">
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_person"
-                        app:tint="#FFD700" />
-                    <TextView
-                        android:layout_width="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#0A192F"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1E3A5F">
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Master"
-                        android:textColor="#FFD700"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="6dp" />
-                    <TextView
-                        android:id="@+id/tvRangeMaster"
-                        android:layout_width="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_person"
+                            app:tint="#FF7043" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Velocity"
+                            android:textColor="#FF7043"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:layout_marginTop="8dp" />
+                        <TextView
+                            android:id="@+id/tvRangeVelocity"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2500–4000"
+                            android:textColor="#7A3F30"
+                            android:textSize="11sp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Card 4: Supersonic -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardTierSupersonic"
+                    android:layout_width="130dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#0A192F"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1E3A5F">
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="4000+"
-                        android:textColor="#7A6A00"
-                        android:textSize="10sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-        </LinearLayout>
+                        android:orientation="vertical"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_person"
+                            app:tint="#FFD700" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Supersonic"
+                            android:textColor="#FFD700"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:layout_marginTop="8dp" />
+                        <TextView
+                            android:id="@+id/tvRangeSupersonic"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="4000–5500"
+                            android:textColor="#7A6A00"
+                            android:textSize="11sp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Card 5: Lightspeed -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardTierLightspeed"
+                    android:layout_width="130dp"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#0A192F"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1E3A5F">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_person"
+                            app:tint="#00E5FF" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Lightspeed"
+                            android:textColor="#00E5FF"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:layout_marginTop="8dp" />
+                        <TextView
+                            android:id="@+id/tvRangeLightspeed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5500+"
+                            android:textColor="#006070"
+                            android:textSize="11sp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </HorizontalScrollView>
 
         <TextView
             android:layout_width="match_parent"

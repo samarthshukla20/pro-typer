@@ -19,14 +19,14 @@ import com.google.firebase.database.ValueEventListener;
 public class ProfileFragment extends Fragment {
 
     private TextView tvPlayerTitle, tvRankUpHint, tvXpEarned, tvNextRank, tvXpRemaining;
-    private TextView tvRangeNovice, tvRangeApprentice, tvRangeExpert, tvRangeMaster;
+    private TextView tvRangeKeystroke, tvRangeSprinter, tvRangeVelocity, tvRangeSupersonic, tvRangeLightspeed;
 
     // --- NEW: STATS TEXTVIEWS ---
     private TextView tvProfileTopSpeed, tvProfileAvgSpeed, tvProfileMatches, tvProfileWinRate;
 
     private ProgressBar xpProgressBar;
     private com.google.android.material.card.MaterialCardView
-            cardTierNovice, cardTierApprentice, cardTierExpert, cardTierMaster;
+            cardTierKeystroke, cardTierSprinter, cardTierVelocity, cardTierSupersonic, cardTierLightspeed;
 
     private DatabaseReference userRef;
     private ValueEventListener userListener;
@@ -44,16 +44,18 @@ public class ProfileFragment extends Fragment {
         tvXpRemaining  = view.findViewById(R.id.tvXpRemaining);
         xpProgressBar = view.findViewById(R.id.xpProgressBar);
 
-        tvRangeNovice     = view.findViewById(R.id.tvRangeNovice);
-        tvRangeApprentice = view.findViewById(R.id.tvRangeApprentice);
-        tvRangeExpert     = view.findViewById(R.id.tvRangeExpert);
-        tvRangeMaster     = view.findViewById(R.id.tvRangeMaster);
+        tvRangeKeystroke  = view.findViewById(R.id.tvRangeKeystroke);
+        tvRangeSprinter   = view.findViewById(R.id.tvRangeSprinter);
+        tvRangeVelocity   = view.findViewById(R.id.tvRangeVelocity);
+        tvRangeSupersonic = view.findViewById(R.id.tvRangeSupersonic);
+        tvRangeLightspeed = view.findViewById(R.id.tvRangeLightspeed);
 
         // Bind Rank Tier Cards
-        cardTierNovice     = view.findViewById(R.id.cardTierNovice);
-        cardTierApprentice = view.findViewById(R.id.cardTierApprentice);
-        cardTierExpert     = view.findViewById(R.id.cardTierExpert);
-        cardTierMaster     = view.findViewById(R.id.cardTierMaster);
+        cardTierKeystroke  = view.findViewById(R.id.cardTierKeystroke);
+        cardTierSprinter   = view.findViewById(R.id.cardTierSprinter);
+        cardTierVelocity   = view.findViewById(R.id.cardTierVelocity);
+        cardTierSupersonic = view.findViewById(R.id.cardTierSupersonic);
+        cardTierLightspeed = view.findViewById(R.id.cardTierLightspeed);
 
         // --- NEW: BIND STATS VIEWS ---
         tvProfileTopSpeed = view.findViewById(R.id.tvProfileTopSpeed);
@@ -109,7 +111,7 @@ public class ProfileFragment extends Fragment {
                 String title = XpManager.getTitleForLevel(currentLevel);
 
                 tvPlayerTitle.setText(title);
-                highlightActiveTier(title, totalXp);
+                highlightActiveTier(title);
 
                 if (tvRankUpHint != null) {
                     String nextRankName = XpManager.getTitleForLevel(currentLevel + 1);
@@ -166,16 +168,15 @@ public class ProfileFragment extends Fragment {
         userRef.addValueEventListener(userListener);
     }
 
-    private void highlightActiveTier(String title, int totalXp) {
-        // Define active and inactive styles
+    private void highlightActiveTier(String title) {
         int activeBackground   = 0xFF6C63FF;
         int inactiveBackground = 0xFF0A192F;
         int activeStroke       = 0xFFFFFFFF;
         int inactiveStroke     = 0xFF1E3A5F;
 
-        // Reset all 4 cards to inactive first
         com.google.android.material.card.MaterialCardView[] allCards = {
-                cardTierNovice, cardTierApprentice, cardTierExpert, cardTierMaster
+                cardTierKeystroke, cardTierSprinter, cardTierVelocity,
+                cardTierSupersonic, cardTierLightspeed
         };
         for (com.google.android.material.card.MaterialCardView card : allCards) {
             card.setCardBackgroundColor(inactiveBackground);
@@ -183,47 +184,22 @@ public class ProfileFragment extends Fragment {
             card.setStrokeWidth(2);
         }
 
-        // Highlight the matching card based on title string
         com.google.android.material.card.MaterialCardView activeCard;
-        if (title.equalsIgnoreCase("Apprentice"))     activeCard = cardTierApprentice;
-        else if (title.equalsIgnoreCase("Expert"))    activeCard = cardTierExpert;
-        else if (title.equalsIgnoreCase("Master"))    activeCard = cardTierMaster;
-        else                                          activeCard = cardTierNovice;
+        if (title.equalsIgnoreCase("Sprinter"))        activeCard = cardTierSprinter;
+        else if (title.equalsIgnoreCase("Velocity"))   activeCard = cardTierVelocity;
+        else if (title.equalsIgnoreCase("Supersonic")) activeCard = cardTierSupersonic;
+        else if (title.equalsIgnoreCase("Lightspeed")) activeCard = cardTierLightspeed;
+        else                                           activeCard = cardTierKeystroke;
 
         activeCard.setCardBackgroundColor(activeBackground);
         activeCard.setStrokeColor(activeStroke);
         activeCard.setStrokeWidth(4);
 
-        // Tier XP boundaries
-        int noviceMax     = 500;
-        int apprenticeMax = 1500;
-        int expertMax     = 4000;
-
-        int noviceStart     = 0;
-        int apprenticeStart = 0;
-        int expertStart     = 0;
-        int masterStart     = 0;
-
-        if (title.equalsIgnoreCase("Novice")) {
-            noviceStart = totalXp;
-        } else if (title.equalsIgnoreCase("Apprentice")) {
-            noviceStart = noviceMax;
-            apprenticeStart = totalXp;
-        } else if (title.equalsIgnoreCase("Expert")) {
-            noviceStart = noviceMax;
-            apprenticeStart = apprenticeMax;
-            expertStart = totalXp;
-        } else {
-            noviceStart = noviceMax;
-            apprenticeStart = apprenticeMax;
-            expertStart = expertMax;
-            masterStart = totalXp;
-        }
-
-        tvRangeNovice.setText(noviceStart + "–" + noviceMax);
-        tvRangeApprentice.setText(apprenticeStart + "–" + apprenticeMax);
-        tvRangeExpert.setText(expertStart + "–" + expertMax);
-        tvRangeMaster.setText(masterStart + "+");
+        tvRangeKeystroke.setText("0–1000");
+        tvRangeSprinter.setText("1000–2500");
+        tvRangeVelocity.setText("2500–4000");
+        tvRangeSupersonic.setText("4000–5500");
+        tvRangeLightspeed.setText("5500+");
     }
 
     @Override
