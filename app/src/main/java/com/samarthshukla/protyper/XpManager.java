@@ -100,15 +100,15 @@ public class XpManager {
     }
 
     public static String getTitleForLevel(int level) {
-        if (level >= 1 && level <= 2) {
+        if (level >= 1 && level <= 10) {
             return "Keystroke";
-        } else if (level >= 3 && level <= 5) {
+        } else if (level >= 11 && level <= 20) {
             return "Sprinter";
-        } else if (level >= 6 && level <= 8) {
+        } else if (level >= 21 && level <= 30) {
             return "Velocity";
-        } else if (level >= 9 && level <= 11) {
+        } else if (level >= 31 && level <= 40) {
             return "Supersonic";
-        } else if (level >= 12) {
+        } else if (level >= 41) {
             return "Lightspeed";
         }
         return "Keystroke"; // Fallback safety

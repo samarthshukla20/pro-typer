@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                     iconHistory.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
             ).start();
 
-            tvMainTitle.setVisibility(View.VISIBLE);
+            //tvMainTitle.setVisibility(View.VISIBLE);
 
             new Handler().postDelayed(() -> {
                 startActivity(new Intent(MainActivity.this, HistoryActivity.class));
@@ -305,11 +305,14 @@ public class MainActivity extends AppCompatActivity {
                     iconProfile.setColorFilter(colorSelected);
                     iconHome.setColorFilter(colorUnselected);
                     iconHistory.setColorFilter(colorUnselected);
+                    tvMainTitle.setVisibility(View.GONE);
+
                 } else {
                     centerOffset = tabHome.getX() + (tabHome.getWidth() / 2f) - (newPillWidth / 2f);
                     iconHome.setColorFilter(colorSelected);
                     iconProfile.setColorFilter(colorUnselected);
                     iconHistory.setColorFilter(colorUnselected);
+                    tvMainTitle.setVisibility(View.VISIBLE);
                 }
 
                 // Cancel any lingering animations and lock the pill exactly in place
