@@ -195,6 +195,59 @@ public class HardModeActivity extends AppCompatActivity {
     }
 
     // ==========================================
+    // THE "TIME'S UP" ANIMATION ENGINE
+    // ==========================================
+    private void showTimeUpAnimation() {
+        android.view.ViewGroup rootView = findViewById(android.R.id.content);
+
+        // 1. Create the dark overlay
+        final View timeUpDimBackground = new View(this);
+        timeUpDimBackground.setBackgroundColor(android.graphics.Color.parseColor("#D9000000")); // 85% Black
+        timeUpDimBackground.setClickable(true); // Block touches
+        timeUpDimBackground.setFocusable(true);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            timeUpDimBackground.setElevation(100f);
+        }
+        rootView.addView(timeUpDimBackground, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // 2. Create the "TIME'S UP!" text
+        final TextView timeUpText = new TextView(this);
+        timeUpText.setGravity(android.view.Gravity.CENTER);
+        timeUpText.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(this, R.font.difficulty));
+        timeUpText.setTextSize(65f); // Massive text
+        timeUpText.setTextColor(android.graphics.Color.parseColor("#FF3333")); // Neon Red
+        timeUpText.setText("TIME'S UP!");
+        timeUpText.setShadowLayer(40f, 0f, 0f, android.graphics.Color.parseColor("#FF0000")); // Glowing aura
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            timeUpText.setElevation(101f);
+        }
+        rootView.addView(timeUpText, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // 3. Play the game over sound
+        if (soundPool != null) {
+            soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
+        }
+
+        // 4. Animate it slamming onto the screen
+        timeUpText.setScaleX(0.3f);
+        timeUpText.setScaleY(0.3f);
+        timeUpText.animate().scaleX(1.1f).scaleY(1.1f).setDuration(600)
+                .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+
+        // 5. Wait 1.5 seconds, then clear the screen and show results
+        new Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (isDestroyed() || isFinishing()) return; // Failsafe
+            rootView.removeView(timeUpDimBackground);
+            rootView.removeView(timeUpText);
+            processGameOver(); // Move to the actual game over logic!
+        }, 1500);
+    }
+
+    // ==========================================
     // THE GHOST TYPING COUNTDOWN ENGINE
     // ==========================================
     private void startGhostCountdown() {
@@ -353,15 +406,7 @@ public class HardModeActivity extends AppCompatActivity {
         }
     }
 
-    private void gameOver() {
-        if (isGameOver) return;
-        isGameOver = true;
-
-        inputField.setEnabled(false);
-        if (soundPool != null) {
-            soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
-        }
-
+    private void processGameOver() {
         if (!hasShownRewardDialog) {
             hasShownRewardDialog = true;
             showRewardedAdDialog();
@@ -369,6 +414,16 @@ public class HardModeActivity extends AppCompatActivity {
             saveGameHistory();
             showAdThenGameOver();
         }
+    }
+
+    private void gameOver() {
+        if (isGameOver) return;
+        isGameOver = true;
+
+        inputField.setEnabled(false); // Lock the keyboard
+
+        // Trigger the intense animation!
+        showTimeUpAnimation();
     }
 
     private void showAdThenGameOver() {

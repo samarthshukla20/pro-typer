@@ -53,7 +53,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private String currentParagraph = "";
 
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 120000;
+    private static final int TIME_LIMIT = 12000;
     private long gameStartTime;
     private long matchEndTime = 0;
     private boolean isGameOver = false;
@@ -132,6 +132,50 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         gameRef = FirebaseDatabase.getInstance().getReference("game_sessions").child(gameSessionId);
 
         fetchOpponentIdAndParagraph();
+    }
+
+    // ==========================================
+    // MULTIPLAYER "TIME'S UP" ANIMATION ENGINE
+    // ==========================================
+    private void showTimeUpAnimation() {
+        android.view.ViewGroup rootView = findViewById(android.R.id.content);
+
+        final View timeUpDimBackground = new View(this);
+        timeUpDimBackground.setBackgroundColor(android.graphics.Color.parseColor("#D9000000"));
+        timeUpDimBackground.setClickable(true);
+        timeUpDimBackground.setFocusable(true);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            timeUpDimBackground.setElevation(100f);
+        }
+        rootView.addView(timeUpDimBackground, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        final TextView timeUpText = new TextView(this);
+        timeUpText.setGravity(android.view.Gravity.CENTER);
+        timeUpText.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(this, R.font.difficulty));
+        timeUpText.setTextSize(65f);
+        timeUpText.setTextColor(android.graphics.Color.parseColor("#FF3333"));
+        timeUpText.setText("TIME'S UP!");
+        timeUpText.setShadowLayer(40f, 0f, 0f, android.graphics.Color.parseColor("#FF0000"));
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            timeUpText.setElevation(101f);
+        }
+        rootView.addView(timeUpText, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        timeUpText.setScaleX(0.3f);
+        timeUpText.setScaleY(0.3f);
+        timeUpText.animate().scaleX(1.1f).scaleY(1.1f).setDuration(600)
+                .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+
+        new Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (isDestroyed() || isFinishing()) return;
+            rootView.removeView(timeUpDimBackground);
+            rootView.removeView(timeUpText);
+            processGameOver();
+        }, 1500);
     }
 
     private void setupKeyboardShiftBehavior() {
@@ -716,16 +760,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         }, 1500);
     }
 
-    private void gameOver() {
-        if (isGameOver) return;
-        isGameOver = true;
-        if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
-
-        cancelMyPresenceDisconnect();
-        stopBotSimulation();
-        if (timer != null) timer.cancel();
-        inputField.setEnabled(false);
-
+    private void processGameOver() {
         DatabaseReference finalScoreRef = gameRef.child("final_scores").child(userId);
         finalScoreRef.child("wpm").setValue(calculateWPM(inputField.getText().toString()));
         finalScoreRef.child("accuracy").setValue(calculateAccuracy(inputField.getText().toString(), currentParagraph));
@@ -748,6 +783,21 @@ public class MultiplayerGameActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    private void gameOver() {
+        if (isGameOver) return;
+        isGameOver = true;
+        if (matchEndTime == 0) matchEndTime = System.currentTimeMillis();
+
+        cancelMyPresenceDisconnect();
+        stopBotSimulation();
+        if (timer != null) timer.cancel();
+
+        inputField.setEnabled(false); // Lock the keyboard!
+
+        // Trigger the intense animation!
+        showTimeUpAnimation();
     }
 
     private int calculateWPM(String typedText) {

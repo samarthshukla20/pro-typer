@@ -67,7 +67,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private Random random = new Random();
     private int accuracy = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 120000; // 120s
+    private static final int TIME_LIMIT = 12000; // 120s
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private RewardedAd rewardedAd;
@@ -201,6 +201,55 @@ public class ParagraphActivity extends AppCompatActivity {
 
         soundIdParaComplete = soundPool.load(this, R.raw.para_complete_sound, 1);
         soundIdGameOver = soundPool.load(this, R.raw.game_over_sound, 1);
+    }
+
+    // ==========================================
+    // THE "TIME'S UP" ANIMATION ENGINE (PARAGRAPH)
+    // ==========================================
+    private void showTimeUpAnimation() {
+        android.view.ViewGroup rootView = findViewById(android.R.id.content);
+
+        final View timeUpDimBackground = new View(this);
+        timeUpDimBackground.setBackgroundColor(android.graphics.Color.parseColor("#D9000000"));
+        timeUpDimBackground.setClickable(true);
+        timeUpDimBackground.setFocusable(true);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            timeUpDimBackground.setElevation(100f);
+        }
+        rootView.addView(timeUpDimBackground, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        final TextView timeUpText = new TextView(this);
+        timeUpText.setGravity(android.view.Gravity.CENTER);
+        timeUpText.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(this, R.font.difficulty));
+        timeUpText.setTextSize(65f);
+        timeUpText.setTextColor(android.graphics.Color.parseColor("#FF3333"));
+        timeUpText.setText("TIME'S UP!");
+        timeUpText.setShadowLayer(40f, 0f, 0f, android.graphics.Color.parseColor("#FF0000"));
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            timeUpText.setElevation(101f);
+        }
+        rootView.addView(timeUpText, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // Play the game over sound
+        if (soundPool != null) {
+            soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
+        }
+
+        timeUpText.setScaleX(0.3f);
+        timeUpText.setScaleY(0.3f);
+        timeUpText.animate().scaleX(1.1f).scaleY(1.1f).setDuration(600)
+                .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+
+        new Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (isDestroyed() || isFinishing()) return;
+            rootView.removeView(timeUpDimBackground);
+            rootView.removeView(timeUpText);
+            processGameOver();
+        }, 1500);
     }
 
     // ==========================================
@@ -716,13 +765,7 @@ public class ParagraphActivity extends AppCompatActivity {
         finish();
     }
 
-    private void gameOver() {
-        if (isGameOver) return;
-        isGameOver = true;
-        inputField.setEnabled(false);
-        if (soundPool != null) {
-            soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
-        }
+    private void processGameOver() {
         accuracy = calculateAccuracy();
         if (!isParagraphFullyTyped && !hasShownRewardDialog) {
             hasShownRewardDialog = true;
@@ -730,6 +773,15 @@ public class ParagraphActivity extends AppCompatActivity {
         } else {
             showAdThenGameOver();
         }
+    }
+
+    private void gameOver() {
+        if (isGameOver) return;
+        isGameOver = true;
+        inputField.setEnabled(false);
+
+        // Trigger the intense animation!
+        showTimeUpAnimation();
     }
 
     private void showAdThenGameOver() {
