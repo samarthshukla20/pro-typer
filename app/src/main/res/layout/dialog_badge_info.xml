@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="32dp"
+    android:gravity="center"
+    android:background="#0A192F">
+
+    <ImageView
+        android:id="@+id/dialogBadgeImage"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_keystroke" />
+
+    <TextView
+        android:id="@+id/dialogBadgeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Keystroke"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#64B5F6" />
+
+    <TextView
+        android:id="@+id/dialogBadgeRange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Levels 1 - 10"
+        android:textSize="14sp"
+        android:textColor="#8892B0"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dialogBadgeDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="The starting line. You are learning the ropes and getting your fingers warmed up."
+        android:textAlignment="center"
+        android:textColor="#CCD6F6"
+        android:textSize="14sp"
+        android:lineSpacingExtra="4dp" />
+
+</LinearLayout>

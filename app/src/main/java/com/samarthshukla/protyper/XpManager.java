@@ -93,10 +93,41 @@ public class XpManager {
     // 5. PROGRESSION MATH (LEVELS & TITLES)
     // ==========================================
 
-    // Calculates how much total XP is required to reach the NEXT level.
-    // Example: Level 1 -> 2 requires 500 XP. Level 2 -> 3 requires 1,000 XP.
+    // Calculates how much total cumulative XP is required to reach the NEXT level.
     public static int getXpRequiredForNextLevel(int currentLevel) {
-        return currentLevel * 500;
+        int totalXp = 0;
+
+        // Tier 1: Levels 1 to 10 (500 XP per level)
+        if (currentLevel >= 1) {
+            int levelsInTier = Math.min(currentLevel, 10);
+            totalXp += levelsInTier * 500;
+        }
+
+        // Tier 2: Levels 11 to 20 (1000 XP per level)
+        if (currentLevel > 10) {
+            int levelsInTier = Math.min(currentLevel - 10, 10);
+            totalXp += levelsInTier * 1000;
+        }
+
+        // Tier 3: Levels 21 to 30 (1500 XP per level)
+        if (currentLevel > 20) {
+            int levelsInTier = Math.min(currentLevel - 20, 10);
+            totalXp += levelsInTier * 1500;
+        }
+
+        // Tier 4: Levels 31 to 40 (2000 XP per level)
+        if (currentLevel > 30) {
+            int levelsInTier = Math.min(currentLevel - 30, 10);
+            totalXp += levelsInTier * 2000;
+        }
+
+        // Tier 5: Levels 41+ (2500 XP per level)
+        if (currentLevel > 40) {
+            int levelsInTier = currentLevel - 40;
+            totalXp += levelsInTier * 2500;
+        }
+
+        return totalXp;
     }
 
     public static String getTitleForLevel(int level) {

@@ -20,14 +20,12 @@ public class ProfileFragment extends Fragment {
 
     private TextView tvPlayerTitle, tvRankUpHint, tvXpEarned, tvNextRank, tvXpRemaining;
     private TextView tvRangeKeystroke, tvRangeSprinter, tvRangeVelocity, tvRangeSupersonic, tvRangeLightspeed;
+    private android.widget.ImageView ivCurrentBadge;
 
     // --- NEW: STATS TEXTVIEWS ---
     private TextView tvProfileTopSpeed, tvProfileAvgSpeed, tvProfileMatches, tvProfileWinRate;
-
     private ProgressBar xpProgressBar;
-    private com.google.android.material.card.MaterialCardView
-            cardTierKeystroke, cardTierSprinter, cardTierVelocity, cardTierSupersonic, cardTierLightspeed;
-
+    private com.google.android.material.card.MaterialCardView cardTierKeystroke, cardTierSprinter, cardTierVelocity, cardTierSupersonic, cardTierLightspeed;
     private DatabaseReference userRef;
     private ValueEventListener userListener;
 
@@ -38,9 +36,9 @@ public class ProfileFragment extends Fragment {
 
         // Bind ID Card Elements
         tvPlayerTitle = view.findViewById(R.id.tvPlayerTitle);
+        ivCurrentBadge = view.findViewById(R.id.ivCurrentBadge);
         tvRankUpHint   = view.findViewById(R.id.tvRankUpHint);
         tvXpEarned     = view.findViewById(R.id.tvXpEarned);
-        tvNextRank     = view.findViewById(R.id.tvNextRank);
         tvXpRemaining  = view.findViewById(R.id.tvXpRemaining);
         xpProgressBar = view.findViewById(R.id.xpProgressBar);
 
@@ -78,6 +76,40 @@ public class ProfileFragment extends Fragment {
 
         // Start listening to Firebase for XP and Stats data
         loadPlayerDashboard();
+
+
+        // 1. Find the Cards
+        View cardKeystroke = view.findViewById(R.id.cardTierKeystroke);
+        View cardSprinter = view.findViewById(R.id.cardTierSprinter);
+        View cardVelocity = view.findViewById(R.id.cardTierVelocity);
+        View cardSupersonic = view.findViewById(R.id.cardTierSupersonic);
+        View cardLightspeed = view.findViewById(R.id.cardTierLightspeed);
+
+        // 2. Set the Popups
+        cardKeystroke.setOnClickListener(v -> showBadgeDialog(
+                R.drawable.ic_keystroke, "Keystroke", "Levels 1 - 10", android.graphics.Color.parseColor("#64B5F6"),
+                "The starting line. You are learning the ropes and getting your fingers warmed up for the arena."
+        ));
+
+        cardSprinter.setOnClickListener(v -> showBadgeDialog(
+                R.drawable.ic_sprinter, "Sprinter", "Levels 11 - 20", android.graphics.Color.parseColor("#64B5F6"),
+                "You're picking up the pace! Your muscle memory is locking in and your WPM is rising."
+        ));
+
+        cardVelocity.setOnClickListener(v -> showBadgeDialog(
+                R.drawable.ic_velocity, "Velocity", "Levels 21 - 30", android.graphics.Color.parseColor("#FF7043"),
+                "Blistering speed. You are now faster than the average typist and leaving opponents in the dust."
+        ));
+
+        cardSupersonic.setOnClickListener(v -> showBadgeDialog(
+                R.drawable.ic_supersonic, "Supersonic", "Levels 31 - 40", android.graphics.Color.parseColor("#FFD700"),
+                "Elite tier. Your hands move faster than sound. Only the most dedicated reach this rank."
+        ));
+
+        cardLightspeed.setOnClickListener(v -> showBadgeDialog(
+                R.drawable.ic_lightspeed, "Lightspeed", "Level 40+", android.graphics.Color.parseColor("#00E5FF"),
+                "The pinnacle of ProTyper. You type at the speed of light. You are a legendary competitor."
+        ));
 
         return view;
     }
@@ -119,7 +151,6 @@ public class ProfileFragment extends Fragment {
 
                     tvRankUpHint.setText("Level " + currentLevel + " · Rank up at " + nextLevelXp + " XP");
                     tvXpEarned.setText(totalXp + " XP earned");
-                    tvNextRank.setText(nextLevelXp + " XP · " + nextRankName);
                     tvXpRemaining.setText(xpToGo + " XP to go");
 
                     xpProgressBar.setMax(xpRequiredForNext);
@@ -169,9 +200,9 @@ public class ProfileFragment extends Fragment {
     }
 
     private void highlightActiveTier(String title) {
-        int activeBackground   = 0xFF6C63FF;
+        int activeBackground   = 0xFF0A192F;
         int inactiveBackground = 0xFF0A192F;
-        int activeStroke       = 0xFFFFFFFF;
+        int activeStroke       = 0xFF6C63FF;
         int inactiveStroke     = 0xFF1E3A5F;
 
         com.google.android.material.card.MaterialCardView[] allCards = {
@@ -185,21 +216,67 @@ public class ProfileFragment extends Fragment {
         }
 
         com.google.android.material.card.MaterialCardView activeCard;
-        if (title.equalsIgnoreCase("Sprinter"))        activeCard = cardTierSprinter;
-        else if (title.equalsIgnoreCase("Velocity"))   activeCard = cardTierVelocity;
-        else if (title.equalsIgnoreCase("Supersonic")) activeCard = cardTierSupersonic;
-        else if (title.equalsIgnoreCase("Lightspeed")) activeCard = cardTierLightspeed;
-        else                                           activeCard = cardTierKeystroke;
+        int badgeResId = R.drawable.ic_keystroke; // Default fallback
 
+        if (title.equalsIgnoreCase("Sprinter")) {
+            activeCard = cardTierSprinter;
+            badgeResId = R.drawable.ic_sprinter;
+        } else if (title.equalsIgnoreCase("Velocity")) {
+            activeCard = cardTierVelocity;
+            badgeResId = R.drawable.ic_velocity;
+        } else if (title.equalsIgnoreCase("Supersonic")) {
+            activeCard = cardTierSupersonic;
+            badgeResId = R.drawable.ic_supersonic;
+        } else if (title.equalsIgnoreCase("Lightspeed")) {
+            activeCard = cardTierLightspeed;
+            badgeResId = R.drawable.ic_lightspeed;
+        } else {
+            activeCard = cardTierKeystroke;
+        }
+
+        // 1. Highlight the correct card
         activeCard.setCardBackgroundColor(activeBackground);
         activeCard.setStrokeColor(activeStroke);
-        activeCard.setStrokeWidth(4);
+        activeCard.setStrokeWidth(10);
 
-        tvRangeKeystroke.setText("0–1000");
-        tvRangeSprinter.setText("1000–2500");
-        tvRangeVelocity.setText("2500–4000");
-        tvRangeSupersonic.setText("4000–5500");
-        tvRangeLightspeed.setText("5500+");
+        // 2. Set the actual badge in the top profile card!
+        if (ivCurrentBadge != null) {
+            ivCurrentBadge.setImageResource(badgeResId);
+        }
+
+        // Reset all ranges
+        tvRangeKeystroke.setText("Lv. 1–10");
+        tvRangeSprinter.setText("Lv. 11–20");
+        tvRangeVelocity.setText("Lv. 21–30");
+        tvRangeSupersonic.setText("Lv. 31–40");
+        tvRangeLightspeed.setText("Lv. 40+");
+    }
+
+    // ==========================================
+    // BADGE POPUP ENGINE
+    // ==========================================
+    private void showBadgeDialog(int imageResId, String title, String range, int color, String description) {
+        if (getContext() == null) return;
+
+        android.view.View dialogView = android.view.LayoutInflater.from(getContext()).inflate(R.layout.dialog_badge_info, null);
+
+        android.widget.ImageView badgeImage = dialogView.findViewById(R.id.dialogBadgeImage);
+        android.widget.TextView badgeTitle = dialogView.findViewById(R.id.dialogBadgeTitle);
+        android.widget.TextView badgeRange = dialogView.findViewById(R.id.dialogBadgeRange);
+        android.widget.TextView badgeDesc = dialogView.findViewById(R.id.dialogBadgeDescription);
+
+        badgeImage.setImageResource(imageResId);
+        badgeTitle.setText(title);
+        badgeTitle.setTextColor(color);
+        badgeRange.setText(range);
+        badgeDesc.setText(description);
+
+        androidx.appcompat.app.AlertDialog dialog = new com.google.android.material.dialog.MaterialAlertDialogBuilder(getContext())
+                .setView(dialogView)
+                .setBackground(androidx.core.content.ContextCompat.getDrawable(getContext(), R.drawable.card_background)) // Optional: rounds the dialog corners if you have a rounded drawable
+                .create();
+
+        dialog.show();
     }
 
     @Override
