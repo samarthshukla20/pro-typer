@@ -16,7 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="PLAYER ID"
-            android:textColor="#64B5F6"
+            android:textColor="#0284C7"
             android:textSize="14sp"
             android:textStyle="bold"
             android:letterSpacing="0.2"
@@ -27,8 +27,9 @@
             android:layout_height="wrap_content"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#0A192F"
-            app:strokeWidth="0dp">
+            app:cardBackgroundColor="#F2FFFFFF"
+            app:strokeWidth="1dp"
+            app:strokeColor="#E2E8F0">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -49,7 +50,6 @@
                         android:src="@drawable/ic_keystroke"
                         android:layout_gravity="center"/>
 
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -64,7 +64,7 @@
                             android:text="Unranked"
                             android:textSize="20sp"
                             android:textStyle="bold"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#0F172A"
                             android:fontFamily="@font/difficulty" />
 
                         <TextView
@@ -74,7 +74,7 @@
                             android:layout_height="wrap_content"
                             android:text="Level 1 · Rank up at 500 XP"
                             android:textSize="13sp"
-                            android:textColor="#D0CCFF" />
+                            android:textColor="#64748B" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -90,7 +90,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="0 XP earned"
-                        android:textColor="#FFFFFF"
+                        android:textColor="#0F172A"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
@@ -99,7 +99,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0 XP to go"
-                        android:textColor="#D0CCFF"
+                        android:textColor="#64748B"
                         android:textSize="12sp"
                         android:layout_gravity="end"
                         android:layout_marginTop="4dp"/>
@@ -111,8 +111,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="6dp"
                     android:layout_marginTop="8dp"
-                    android:progressTint="#FFFFFF"
-                    android:progressBackgroundTint="#9B95E0"
+                    android:progressTint="#0284C7"
+                    android:progressBackgroundTint="#E2E8F0"
                     android:progress="0"
                     android:max="100" />
             </LinearLayout>
@@ -122,7 +122,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="RANK TIERS"
-            android:textColor="#64B5F6"
+            android:textColor="#0284C7"
             android:textSize="14sp"
             android:textStyle="bold"
             android:letterSpacing="0.2"
@@ -150,9 +150,9 @@
                     android:layout_marginEnd="10dp"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="#0A192F"
+                    app:cardBackgroundColor="#F2FFFFFF"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#1E3A5F">
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -175,7 +175,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Keystroke"
-                                android:textColor="#64B5F6"
+                                android:textColor="#0284C7"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:maxLines="1" />
@@ -184,7 +184,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Lv. 1–10"
-                                android:textColor="#4A6FA5"
+                                android:textColor="#64748B"
                                 android:textSize="13sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
@@ -198,9 +198,9 @@
                     android:layout_marginEnd="10dp"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="#0A192F"
+                    app:cardBackgroundColor="#F2FFFFFF"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#1E3A5F">
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -223,7 +223,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Sprinter"
-                                android:textColor="#64B5F6"
+                                android:textColor="#2563EB"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:maxLines="1" />
@@ -232,7 +232,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Lv. 11–20"
-                                android:textColor="#4A6FA5"
+                                android:textColor="#64748B"
                                 android:textSize="13sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
@@ -246,9 +246,9 @@
                     android:layout_marginEnd="10dp"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="#0A192F"
+                    app:cardBackgroundColor="#F2FFFFFF"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#1E3A5F">
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -271,7 +271,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Velocity"
-                                android:textColor="#64B5F6"
+                                android:textColor="#EA580C"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:maxLines="1" />
@@ -280,7 +280,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Lv. 21–30"
-                                android:textColor="#4A6FA5"
+                                android:textColor="#64748B"
                                 android:textSize="13sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
@@ -294,9 +294,9 @@
                     android:layout_marginEnd="10dp"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="#0A192F"
+                    app:cardBackgroundColor="#F2FFFFFF"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#1E3A5F">
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -319,7 +319,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Supersonic"
-                                android:textColor="#64B5F6"
+                                android:textColor="#D97706"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:maxLines="1" />
@@ -328,7 +328,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Lv. 31–40"
-                                android:textColor="#4A6FA5"
+                                android:textColor="#64748B"
                                 android:textSize="13sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
@@ -342,9 +342,9 @@
                     android:layout_marginEnd="10dp"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="#0A192F"
+                    app:cardBackgroundColor="#F2FFFFFF"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#1E3A5F">
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -367,7 +367,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Lightspeed"
-                                android:textColor="#64B5F6"
+                                android:textColor="#0891B2"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:maxLines="1" />
@@ -376,7 +376,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Lv. 41+"
-                                android:textColor="#4A6FA5"
+                                android:textColor="#64748B"
                                 android:textSize="13sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
@@ -389,7 +389,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="LIFETIME STATS"
-            android:textColor="#64B5F6"
+            android:textColor="#0284C7"
             android:textSize="14sp"
             android:textStyle="bold"
             android:letterSpacing="0.2"
@@ -414,7 +414,9 @@
                     android:layout_height="100dp"
                     android:layout_marginEnd="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardBackgroundColor="#0A192F">
+                    app:cardBackgroundColor="#F2FFFFFF"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -424,14 +426,14 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Top Speed"
-                            android:textColor="#64B5F6"
+                            android:textColor="#0284C7"
                             android:textSize="12sp"/>
                         <TextView
                             android:id="@+id/tvProfileTopSpeed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="-- WPM"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#0F172A"
                             android:textSize="24sp"
                             android:textStyle="bold"
                             android:layout_marginTop="4dp"/>
@@ -444,7 +446,9 @@
                     android:layout_height="100dp"
                     android:layout_marginStart="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardBackgroundColor="#0A192F">
+                    app:cardBackgroundColor="#F2FFFFFF"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -454,14 +458,14 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Avg. Speed"
-                            android:textColor="#64B5F6"
+                            android:textColor="#0284C7"
                             android:textSize="12sp"/>
                         <TextView
                             android:id="@+id/tvProfileAvgSpeed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#0F172A"
                             android:textSize="24sp"
                             android:textStyle="bold"
                             android:layout_marginTop="4dp"/>
@@ -481,7 +485,9 @@
                     android:layout_height="100dp"
                     android:layout_marginEnd="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardBackgroundColor="#0A192F">
+                    app:cardBackgroundColor="#F2FFFFFF"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -491,14 +497,14 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Matches"
-                            android:textColor="#64B5F6"
+                            android:textColor="#0284C7"
                             android:textSize="12sp"/>
                         <TextView
                             android:id="@+id/tvProfileMatches"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#0F172A"
                             android:textSize="24sp"
                             android:textStyle="bold"
                             android:layout_marginTop="4dp"/>
@@ -511,7 +517,9 @@
                     android:layout_height="100dp"
                     android:layout_marginStart="6dp"
                     app:cardCornerRadius="16dp"
-                    app:cardBackgroundColor="#0A192F">
+                    app:cardBackgroundColor="#F2FFFFFF"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E2E8F0">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -521,14 +529,14 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Win Rate"
-                            android:textColor="#64B5F6"
+                            android:textColor="#0284C7"
                             android:textSize="12sp"/>
                         <TextView
                             android:id="@+id/tvProfileWinRate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="-- %"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#0F172A"
                             android:textSize="24sp"
                             android:textStyle="bold"
                             android:layout_marginTop="4dp"/>
@@ -550,8 +558,8 @@
                 android:layout_height="64dp"
                 android:src="@drawable/htp"
                 android:background="@drawable/circle_outline"
-                android:backgroundTint="#0A192F"
-                app:tint="#448AFF"
+                android:backgroundTint="#F2FFFFFF"
+                app:tint="#0284C7"
                 android:padding="16dp"
                 android:scaleType="centerInside"
                 android:layout_marginEnd="24dp"
@@ -563,8 +571,8 @@
                 android:layout_height="64dp"
                 android:src="@drawable/about"
                 android:background="@drawable/circle_outline"
-                android:backgroundTint="#0A192F"
-                app:tint="#448AFF"
+                android:backgroundTint="#F2FFFFFF"
+                app:tint="#0284C7"
                 android:padding="16dp"
                 android:scaleType="centerInside"
                 android:elevation="6dp"/>

@@ -195,6 +195,47 @@ public class HardModeActivity extends AppCompatActivity {
     }
 
     // ==========================================
+    // THE LEVEL UP ANIMATION ENGINE (XML VERSION)
+    // ==========================================
+    private void playLevelUpAnimation(int newLevel) {
+
+        // --- CRASH PREVENTER ---
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+
+        // 1. Create a Full-Screen, borderless Dialog
+        android.app.Dialog levelUpDialog = new android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        levelUpDialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        levelUpDialog.setContentView(R.layout.dialog_level_up);
+        levelUpDialog.setCancelable(false); // Force them to watch it!
+
+        // 2. Set the text
+        TextView tvLevelSubtitle = levelUpDialog.findViewById(R.id.tvLevelSubtitle);
+        tvLevelSubtitle.setText("You reached Level " + newLevel);
+
+        // Optional: Play Sound here
+        // if (soundPool != null) soundPool.play(soundIdLevelUp, 1, 1, 0, 0, 1);
+
+        // 3. Show it and animate the text pop
+        levelUpDialog.show();
+
+        View textContainer = levelUpDialog.findViewById(R.id.textContainer);
+        textContainer.setScaleX(0.3f);
+        textContainer.setScaleY(0.3f);
+        textContainer.animate().scaleX(1.1f).scaleY(1.1f).setDuration(800)
+                .setInterpolator(new android.view.animation.OvershootInterpolator())
+                .withEndAction(() -> textContainer.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()).start();
+
+        // 4. Auto-dismiss after 3 seconds
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (!isDestroyed() && !isFinishing() && levelUpDialog.isShowing()) {
+                levelUpDialog.dismiss();
+            }
+        }, 3000);
+    }
+
+    // ==========================================
     // THE "TIME'S UP" ANIMATION ENGINE
     // ==========================================
     private void showTimeUpAnimation() {
@@ -347,7 +388,7 @@ public class HardModeActivity extends AppCompatActivity {
     private void loadWordsInstantly() {
         words.clear();
 
-        // Grab the pre-loaded 26-file data from our vault! Takes < 1 millisecond.
+        // Grab the preloaded 26-file data from our vault! Takes < 1 millisecond.
         if (DictionaryManager.getInstance().isLoaded && !DictionaryManager.getInstance().singleWords.isEmpty()) {
             words.addAll(DictionaryManager.getInstance().singleWords);
         } else {
@@ -513,14 +554,21 @@ public class HardModeActivity extends AppCompatActivity {
             public void onAnimationEnd(android.animation.Animator animation) {
                 super.onAnimationEnd(animation);
 
-                // SAVE THE COMBINED XP TO FIREBASE
                 XpManager.saveXpToFirebase(userId, totalEarnedXp);
 
-                // Update local cache so if they click "Retry", the next match's math is correct
+                // --- NEW: CHECK FOR LEVEL UP ---
+                int oldLevel = cachedLevel;
+
                 cachedTotalXp += totalEarnedXp;
                 while (cachedTotalXp >= XpManager.getXpRequiredForNextLevel(cachedLevel)) {
                     cachedLevel++;
                 }
+
+                // If the level went up, fire the explosion!
+                if (cachedLevel > oldLevel) {
+                    playLevelUpAnimation(cachedLevel);
+                }
+                // -------------------------------
             }
         });
 
@@ -608,11 +656,20 @@ public class HardModeActivity extends AppCompatActivity {
         countdownRunnable[0] = new Runnable() {
             @Override
             public void run() {
+                // --- THE ZOMBIE HANDLER FIX ---
+                if (isFinishing() || isDestroyed()) {
+                    return; // If the screen is dead, kill the background timer instantly!
+                }
+                // ------------------------------
+
                 secondsLeft[0]--;
                 if (secondsLeft[0] > 0) {
                     handler.postDelayed(this, 1000);
                 } else {
-                    dialog.dismiss();
+                    // Safety check before dismissing
+                    if (dialog != null && dialog.isShowing()) {
+                        dialog.dismiss();
+                    }
                     totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
                     saveGameHistory();
                     showAdThenGameOver();
@@ -707,9 +764,11 @@ public class HardModeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // 1. Kill the zombie timer!
         if (timer != null) {
             timer.cancel();
         }
+        // 2. Release the sound pool
         if (soundPool != null) {
             soundPool.release();
             soundPool = null;

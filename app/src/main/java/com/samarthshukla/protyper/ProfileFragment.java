@@ -200,10 +200,11 @@ public class ProfileFragment extends Fragment {
     }
 
     private void highlightActiveTier(String title) {
-        int activeBackground   = 0xFF0A192F;
-        int inactiveBackground = 0xFF0A192F;
-        int activeStroke       = 0xFF6C63FF;
-        int inactiveStroke     = 0xFF1E3A5F;
+        // Updated to Deep Dive Light Theme Colors
+        int activeBackground   = 0xF2FFFFFF; // 95% White
+        int inactiveBackground = 0xF2FFFFFF;
+        int activeStroke       = 0xFF0284C7; // Bold Ocean Blue highlight!
+        int inactiveStroke     = 0xFFE2E8F0; // Soft Silver default
 
         com.google.android.material.card.MaterialCardView[] allCards = {
                 cardTierKeystroke, cardTierSprinter, cardTierVelocity,

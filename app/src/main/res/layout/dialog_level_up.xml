@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#C0000000"> <com.airbnb.lottie.LottieAnimationView
+    android:id="@+id/lottieConfetti"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:lottie_fileName="confetti.json"
+    android:scaleType="centerCrop"
+    app:lottie_autoPlay="true" />
+
+    <LinearLayout
+        android:id="@+id/textContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_centerInParent="true"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LEVEL UP!"
+            android:textSize="55sp"
+            android:textColor="#FFD700"
+            android:fontFamily="@font/difficulty"
+            android:shadowColor="#FFA500"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="30" />
+
+        <TextView
+            android:id="@+id/tvLevelSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="You reached Level X"
+            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/difficulty" />
+    </LinearLayout>
+
+</RelativeLayout>

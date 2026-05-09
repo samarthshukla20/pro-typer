@@ -27,59 +27,62 @@ public class XpManager {
     // ==========================================
     // 2. PARAGRAPH MODE
     // ==========================================
-    public static int calculateParagraphXp(int wpm, int accuracy, boolean isCompleted) {
-        // Safe math: multiplying first before dividing prevents Java from rounding down to 0
-        int totalXp = (int) ((wpm * (float) accuracy) / 100f);
 
-        // Completion Bonus
-        if (isCompleted) {
-            totalXp += 20;
-        }
+    public static int getParagraphBaseXp(int wpm, int accuracy) {
+        return (int) ((wpm * (float) accuracy) / 100f);
+    }
 
-        // Accuracy Bonus Bracket
+    public static int getParagraphCompletionBonus(boolean isCompleted) {
+        return isCompleted ? 20 : 0;
+    }
+
+    public static int getParagraphSpeedBonus(int wpm, int accuracy) {
         if (accuracy > 80) {
-            if (wpm >= 0 && wpm <= 30) {
-                totalXp += 15;
-            } else if (wpm >= 31 && wpm <= 60) {
-                totalXp += 30;
-            } else if (wpm >= 61 && wpm <= 90) {
-                totalXp += 45;
-            } else if (wpm >= 91) {
-                totalXp += 50;
-            }
+            if (wpm >= 91) return 50;
+            if (wpm >= 61) return 45;
+            if (wpm >= 31) return 30;
+            return 15;
         }
+        return 0;
+    }
 
-        return totalXp;
+    // Keep the main method for simple totals if ever needed elsewhere
+    public static int calculateParagraphXp(int wpm, int accuracy, boolean isCompleted) {
+        return getParagraphBaseXp(wpm, accuracy)
+                + getParagraphCompletionBonus(isCompleted)
+                + getParagraphSpeedBonus(wpm, accuracy);
     }
 
     // ==========================================
     // 3. MULTIPLAYER MODE
     // ==========================================
-    // result: "win", "draw", or "lose"
-    public static int calculateMultiplayerXp(int wpm, int accuracy, String result) {
-        int totalXp = (int) ((wpm * (float) accuracy) / 100f);
+
+    public static int getMultiplayerBaseXp(int wpm, int accuracy) {
+        return (int) ((wpm * (float) accuracy) / 100f);
+    }
+
+    public static int getMultiplayerResultBonus(String result) {
         String safeResult = result != null ? result.toLowerCase() : "lose";
+        if (safeResult.equals("win")) return 75;
+        if (safeResult.equals("draw")) return 30;
+        return 0; // "lose" gives 0
+    }
 
-        // Result Bonus
-        if (safeResult.equals("win")) {
-            totalXp += 75;
-        } else if (safeResult.equals("draw")) {
-            totalXp += 30;
-        }
-        // Note: Lose adds 0, so we just skip it.
-
-        // Milestone Bonus (> 80% accuracy)
+    public static int getMultiplayerMilestoneBonus(int accuracy, String result) {
         if (accuracy > 80) {
-            if (safeResult.equals("win")) {
-                totalXp += 50;
-            } else if (safeResult.equals("draw")) {
-                totalXp += 30;
-            } else if (safeResult.equals("lose")) {
-                totalXp += 10;
-            }
+            String safeResult = result != null ? result.toLowerCase() : "lose";
+            if (safeResult.equals("win")) return 50;
+            if (safeResult.equals("draw")) return 30;
+            if (safeResult.equals("lose")) return 10;
         }
+        return 0;
+    }
 
-        return totalXp;
+    // Keep the main method for simple totals if ever needed
+    public static int calculateMultiplayerXp(int wpm, int accuracy, String result) {
+        return getMultiplayerBaseXp(wpm, accuracy)
+                + getMultiplayerResultBonus(result)
+                + getMultiplayerMilestoneBonus(accuracy, result);
     }
 
     // ==========================================

@@ -67,7 +67,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private Random random = new Random();
     private int accuracy = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 12000; // 120s
+    private static final int TIME_LIMIT = 120000; // 120s
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private RewardedAd rewardedAd;
@@ -201,6 +201,40 @@ public class ParagraphActivity extends AppCompatActivity {
 
         soundIdParaComplete = soundPool.load(this, R.raw.para_complete_sound, 1);
         soundIdGameOver = soundPool.load(this, R.raw.game_over_sound, 1);
+    }
+
+    // ==========================================
+    // THE LEVEL UP ANIMATION ENGINE (XML VERSION)
+    // ==========================================
+    private void playLevelUpAnimation(int newLevel) {
+
+        // --- CRASH PREVENTER ---
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+
+        android.app.Dialog levelUpDialog = new android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        levelUpDialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        levelUpDialog.setContentView(R.layout.dialog_level_up);
+        levelUpDialog.setCancelable(false);
+
+        android.widget.TextView tvLevelSubtitle = levelUpDialog.findViewById(R.id.tvLevelSubtitle);
+        tvLevelSubtitle.setText("You reached Level " + newLevel);
+
+        levelUpDialog.show();
+
+        android.view.View textContainer = levelUpDialog.findViewById(R.id.textContainer);
+        textContainer.setScaleX(0.3f);
+        textContainer.setScaleY(0.3f);
+        textContainer.animate().scaleX(1.1f).scaleY(1.1f).setDuration(800)
+                .setInterpolator(new android.view.animation.OvershootInterpolator())
+                .withEndAction(() -> textContainer.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()).start();
+
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (!isDestroyed() && !isFinishing() && levelUpDialog.isShowing()) {
+                levelUpDialog.dismiss();
+            }
+        }, 3000);
     }
 
     // ==========================================
@@ -353,7 +387,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private void loadWordsInstantly() {
         words.clear();
 
-        // Grab the pre-loaded data from our vault!
+        // Grab the preloaded data from our vault!
         if (DictionaryManager.getInstance().isLoaded && !DictionaryManager.getInstance().paragraphs.isEmpty()) {
             words.addAll(DictionaryManager.getInstance().paragraphs);
         } else {
@@ -569,20 +603,15 @@ public class ParagraphActivity extends AppCompatActivity {
 
         if (xpEarnedText == null || xpProgressBar == null) return;
 
-        int baseXp = (int) ((wpm * (float) finalAccuracy) / 100f);
-        int completionXp = isParagraphFullyTyped ? 20 : 0;
-        int speedXp = 0;
-
-        if (finalAccuracy > 80) {
-            if (wpm >= 91) speedXp = 50;
-            else if (wpm >= 61) speedXp = 45;
-            else if (wpm >= 31) speedXp = 30;
-            else speedXp = 15;
-        }
-
+        // --- NEW: FETCH RECEIPT DETAILS FROM XpManager ---
+        int baseXp = XpManager.getParagraphBaseXp(wpm, finalAccuracy);
+        int completionXp = XpManager.getParagraphCompletionBonus(isParagraphFullyTyped);
+        int speedXp = XpManager.getParagraphSpeedBonus(wpm, finalAccuracy);
         int adXp = currentSessionAdXp;
+
         final int totalEarnedXp = baseXp + completionXp + speedXp + adXp;
 
+        // --- POPULATE THE UI RECEIPT ---
         if (baseXpText != null) {
             baseXpText.setText("Base XP: +" + baseXp);
         }
@@ -623,21 +652,31 @@ public class ParagraphActivity extends AppCompatActivity {
             int animatedValue = (int) anim.getAnimatedValue();
             if (animatedValue >= maxXpForThisLevel) {
                 levelInfoText.setText("Level UP!");
-                levelInfoText.setTextColor(Color.parseColor("#FFD700"));
+                levelInfoText.setTextColor(android.graphics.Color.parseColor("#FFD700"));
             } else {
                 levelInfoText.setText("Level " + cachedLevel + " (" + animatedValue + " / " + maxXpForThisLevel + ")");
             }
         });
 
-        animation.addListener(new AnimatorListenerAdapter() {
+        animation.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override
-            public void onAnimationEnd(Animator animation) {
+            public void onAnimationEnd(android.animation.Animator animation) {
                 super.onAnimationEnd(animation);
-                XpManager.saveXpToFirebase(userId, totalEarnedXp);
+
+                // --- CHECK FOR LEVEL UP ---
+                int oldLevel = cachedLevel;
 
                 cachedTotalXp += totalEarnedXp;
                 while (cachedTotalXp >= XpManager.getXpRequiredForNextLevel(cachedLevel)) {
                     cachedLevel++;
+                }
+
+                // Save to Firebase
+                XpManager.saveXpToFirebase(userId, totalEarnedXp);
+
+                // If the level went up, fire the explosion!
+                if (cachedLevel > oldLevel) {
+                    playLevelUpAnimation(cachedLevel);
                 }
             }
         });
@@ -828,11 +867,20 @@ public class ParagraphActivity extends AppCompatActivity {
             @Override
             public void run() {
                 secondsLeft[0]--;
-                dialog.setTitle("Add +15 sec? (" + secondsLeft[0] + "s)");
+
+                // --- THE ZOMBIE HANDLER FIX ---
+                if (!isFinishing() && !isDestroyed() && dialog != null && dialog.isShowing()) {
+                    dialog.setTitle("Add +15 sec? (" + secondsLeft[0] + "s)");
+                }
+                // ------------------------------
+
                 if (secondsLeft[0] > 0) {
                     handler.postDelayed(this, 1000);
                 } else {
-                    dialog.dismiss();
+                    // Also check if dialog is showing before dismissing to be extra safe
+                    if (dialog != null && dialog.isShowing()) {
+                        dialog.dismiss();
+                    }
                     totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
                     showGameOverCard(accuracy);
                 }
@@ -930,9 +978,11 @@ public class ParagraphActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // 1. Kill the zombie timer!
         if (timer != null) {
             timer.cancel();
         }
+        // 2. Release the sound pool
         if (soundPool != null) {
             soundPool.release();
             soundPool = null;

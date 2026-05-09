@@ -99,6 +99,40 @@ public class ResultActivity extends AppCompatActivity {
     }
 
     // ==========================================
+    // THE LEVEL UP ANIMATION ENGINE (XML VERSION)
+    // ==========================================
+    private void playLevelUpAnimation(int newLevel) {
+
+        // --- CRASH PREVENTER ---
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+
+        android.app.Dialog levelUpDialog = new android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        levelUpDialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        levelUpDialog.setContentView(R.layout.dialog_level_up);
+        levelUpDialog.setCancelable(false);
+
+        android.widget.TextView tvLevelSubtitle = levelUpDialog.findViewById(R.id.tvLevelSubtitle);
+        tvLevelSubtitle.setText("You reached Level " + newLevel);
+
+        levelUpDialog.show();
+
+        android.view.View textContainer = levelUpDialog.findViewById(R.id.textContainer);
+        textContainer.setScaleX(0.3f);
+        textContainer.setScaleY(0.3f);
+        textContainer.animate().scaleX(1.1f).scaleY(1.1f).setDuration(800)
+                .setInterpolator(new android.view.animation.OvershootInterpolator())
+                .withEndAction(() -> textContainer.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()).start();
+
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (!isDestroyed() && !isFinishing() && levelUpDialog.isShowing()) {
+                levelUpDialog.dismiss();
+            }
+        }, 3000);
+    }
+
+    // ==========================================
     // NEW: UNRANKED FRIENDLY MATCH UI
     // ==========================================
     private void showFriendlyMatchUi() {
@@ -136,19 +170,10 @@ public class ResultActivity extends AppCompatActivity {
 
         if (xpEarnedText == null || xpProgressBar == null) return;
 
-        // 1. Calculate Breakdown Math
-        int baseXp = (int) ((wpm * (float) finalAccuracy) / 100f);
-        int resultXp = 0;
-        int milestoneXp = 0;
-
-        if ("win".equals(resultType)) resultXp = 75;
-        else if ("draw".equals(resultType)) resultXp = 30;
-
-        if (finalAccuracy > 80) {
-            if ("win".equals(resultType)) milestoneXp = 50;
-            else if ("draw".equals(resultType)) milestoneXp = 30;
-            else if ("lose".equals(resultType)) milestoneXp = 10;
-        }
+        // --- NEW: FETCH RECEIPT DETAILS FROM XpManager ---
+        int baseXp = XpManager.getMultiplayerBaseXp(wpm, finalAccuracy);
+        int resultXp = XpManager.getMultiplayerResultBonus(resultType);
+        int milestoneXp = XpManager.getMultiplayerMilestoneBonus(finalAccuracy, resultType);
 
         final int totalEarnedXp = baseXp + resultXp + milestoneXp;
 
@@ -185,7 +210,7 @@ public class ResultActivity extends AppCompatActivity {
             int animatedValue = (int) anim.getAnimatedValue();
             if (animatedValue >= maxXpForThisLevel) {
                 levelInfoText.setText("Level UP!");
-                levelInfoText.setTextColor(Color.parseColor("#FFD700"));
+                levelInfoText.setTextColor(android.graphics.Color.parseColor("#FFD700"));
             } else {
                 levelInfoText.setText("Level " + cachedLevel + " (" + animatedValue + " / " + maxXpForThisLevel + ")");
             }
@@ -193,10 +218,24 @@ public class ResultActivity extends AppCompatActivity {
 
         animation.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override
-            public void onAnimationEnd(Animator animation) {
+            public void onAnimationEnd(android.animation.Animator animation) {
                 super.onAnimationEnd(animation);
-                // Save globally using our Manager!
+
+                // --- CHECK FOR LEVEL UP ---
+                int oldLevel = cachedLevel;
+
+                cachedTotalXp += totalEarnedXp;
+                while (cachedTotalXp >= XpManager.getXpRequiredForNextLevel(cachedLevel)) {
+                    cachedLevel++;
+                }
+
+                // Save to Firebase
                 XpManager.saveXpToFirebase(userId, totalEarnedXp);
+
+                // If the level went up, fire the explosion!
+                if (cachedLevel > oldLevel) {
+                    playLevelUpAnimation(cachedLevel);
+                }
             }
         });
 
