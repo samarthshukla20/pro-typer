@@ -133,6 +133,83 @@ public class ResultActivity extends AppCompatActivity {
     }
 
     // ==========================================
+    // STRATEGIC REVIEW PROMPT ENGINE
+    // ==========================================
+    private void checkAndShowReviewDialog(int finalLevel, String resultType, boolean didLevelUp) {
+        if (!"win".equalsIgnoreCase(resultType)) return; // Only ask when they are happy!
+
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+        int state = prefs.getInt("review_state", 0);
+
+        if (state == 2) return; // State 2 = Done forever. Do not bother them.
+
+        boolean shouldShow = false;
+        android.content.SharedPreferences.Editor editor = prefs.edit();
+
+        if (state == 0) {
+            // State 0: Tracking the first 5 wins
+            int winCount = prefs.getInt("mp_win_count", 0) + 1;
+            editor.putInt("mp_win_count", winCount).apply();
+
+            if (winCount == 5) {
+                shouldShow = true;
+            }
+        } else if (state == 1) {
+            // State 1: The Sprinter Backup Plan (Level 11)
+            if (finalLevel >= 11) {
+                shouldShow = true;
+            }
+        }
+
+        if (shouldShow) {
+            // Delay showing the dialog so it doesn't overlap with the Level Up explosion!
+            long delay = didLevelUp ? 3500 : 1000;
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    showReviewDialog(state);
+                }
+            }, delay);
+        }
+    }
+
+    private void showReviewDialog(int currentState) {
+        androidx.appcompat.app.AlertDialog.Builder builder = new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
+        android.view.View dialogView = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_rate_app, null);
+        builder.setView(dialogView);
+
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        dialog.setCancelable(false); // Force an answer
+
+        com.google.android.material.button.MaterialButton btnYes = dialogView.findViewById(R.id.btnRateYes);
+        com.google.android.material.button.MaterialButton btnNo = dialogView.findViewById(R.id.btnRateNo);
+
+        btnYes.setOnClickListener(v -> {
+            // State 2 = Lock it forever
+            getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE).edit().putInt("review_state", 2).apply();
+            dialog.dismiss();
+
+            // Safely open the Google Play Store
+            try {
+                startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("market://details?id=" + getPackageName())));
+            } catch (android.content.ActivityNotFoundException e) {
+                startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://play.google.com/store/apps/details?id=com.samarthshukla.protyper&pcampaignid=web_share" + getPackageName())));
+            }
+        });
+
+        btnNo.setOnClickListener(v -> {
+            // If State 0 -> Go to State 1. If State 1 -> Go to State 2.
+            int nextState = (currentState == 0) ? 1 : 2;
+            getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE).edit().putInt("review_state", nextState).apply();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    // ==========================================
     // NEW: UNRANKED FRIENDLY MATCH UI
     // ==========================================
     private void showFriendlyMatchUi() {
@@ -221,7 +298,6 @@ public class ResultActivity extends AppCompatActivity {
             public void onAnimationEnd(android.animation.Animator animation) {
                 super.onAnimationEnd(animation);
 
-                // --- CHECK FOR LEVEL UP ---
                 int oldLevel = cachedLevel;
 
                 cachedTotalXp += totalEarnedXp;
@@ -229,13 +305,17 @@ public class ResultActivity extends AppCompatActivity {
                     cachedLevel++;
                 }
 
-                // Save to Firebase
                 XpManager.saveXpToFirebase(userId, totalEarnedXp);
 
-                // If the level went up, fire the explosion!
-                if (cachedLevel > oldLevel) {
+                boolean didLevelUp = (cachedLevel > oldLevel);
+
+                if (didLevelUp) {
                     playLevelUpAnimation(cachedLevel);
                 }
+
+                // --- NEW: TRIGGER THE REVIEW LOGIC ---
+                // We pass in if they leveled up so it knows how long to wait!
+                checkAndShowReviewDialog(cachedLevel, resultType, didLevelUp);
             }
         });
 
