@@ -64,6 +64,14 @@ public class MainActivity extends AppCompatActivity {
     private String currentTab = "HOME";
     // ----------------------------------
 
+    // --- THE DIRECT NOTIFICATION LAUNCHER ---
+    private final androidx.activity.result.ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Toast.makeText(this, "Notifications Enabled!", Toast.LENGTH_SHORT).show();
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
             fragmentManager.beginTransaction().add(R.id.fragment_container, homeFragment, "HOME").commit();
             activeFragment = homeFragment;
             currentTab = "HOME";
+            checkAndShowNotificationPrimer();
         } else {
             homeFragment = fragmentManager.findFragmentByTag("HOME");
             profileFragment = fragmentManager.findFragmentByTag("PROFILE");
@@ -242,25 +251,6 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAnalytics.logEvent("session_start", null);
         checkInternetOnStart();
 
-
-
-        // Notification checks
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle("Allow Notifications")
-                        .setMessage("This app would like to send you notifications. Would you like to allow notifications?")
-                        .setCancelable(true)
-                        .setPositiveButton("Yes", (dialog, which) -> {
-                            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
-                                    NOTIFICATION_PERMISSION_REQUEST_CODE);
-                        })
-                        .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
-                        .show();
-            }
-        }
-
         networkReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -268,6 +258,44 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         registerReceiver(networkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
+    // ==========================================
+    // AGGRESSIVE NOTIFICATION PRIMER
+    // ==========================================
+    private void checkAndShowNotificationPrimer() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        boolean hasAgreedToPrimer = prefs.getBoolean("has_agreed_to_notifications", false);
+
+        if (!hasAgreedToPrimer) {
+            new Handler(android.os.Looper.getMainLooper()).postDelayed(this::showCustomNotificationDialog, 1000);
+        }
+    }
+
+    private void showCustomNotificationDialog() {
+        if (isFinishing() || isDestroyed()) return;
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Stay in the Loop!")
+                .setMessage("Enable notifications to know when you rank up or receive multiplayer challenges.")
+                .setPositiveButton("Yes, turn them on", (dialog, which) -> {
+                    getSharedPreferences("AppPrefs", MODE_PRIVATE).edit().putBoolean("has_agreed_to_notifications", true).apply();
+                    requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
+                })
+                .setNegativeButton("Maybe Later", (dialog, which) -> {
+                    // They said no. We dismiss and ask again next time!
+                    dialog.dismiss();
+                })
+                .setCancelable(false)
+                .show();
     }
 
 
