@@ -1,10 +1,11 @@
 package com.samarthshukla.protyper;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -22,10 +23,11 @@ public class ProfileFragment extends Fragment {
     private TextView tvRangeKeystroke, tvRangeSprinter, tvRangeVelocity, tvRangeSupersonic, tvRangeLightspeed;
     private android.widget.ImageView ivCurrentBadge;
 
-    // --- NEW: STATS TEXTVIEWS ---
     private TextView tvProfileTopSpeed, tvProfileAvgSpeed, tvProfileMatches, tvProfileWinRate;
     private ProgressBar xpProgressBar;
     private com.google.android.material.card.MaterialCardView cardTierKeystroke, cardTierSprinter, cardTierVelocity, cardTierSupersonic, cardTierLightspeed;
+    private HorizontalScrollView rankScrollView; // --- NEW: SCROLL VIEW VARIABLE ---
+
     private DatabaseReference userRef;
     private ValueEventListener userListener;
 
@@ -42,6 +44,9 @@ public class ProfileFragment extends Fragment {
         tvXpRemaining  = view.findViewById(R.id.tvXpRemaining);
         xpProgressBar = view.findViewById(R.id.xpProgressBar);
 
+        // --- NEW: BIND THE SCROLL VIEW ---
+        rankScrollView = view.findViewById(R.id.rankScrollView);
+
         tvRangeKeystroke  = view.findViewById(R.id.tvRangeKeystroke);
         tvRangeSprinter   = view.findViewById(R.id.tvRangeSprinter);
         tvRangeVelocity   = view.findViewById(R.id.tvRangeVelocity);
@@ -55,37 +60,29 @@ public class ProfileFragment extends Fragment {
         cardTierSupersonic = view.findViewById(R.id.cardTierSupersonic);
         cardTierLightspeed = view.findViewById(R.id.cardTierLightspeed);
 
-        // --- NEW: BIND STATS VIEWS ---
         tvProfileTopSpeed = view.findViewById(R.id.tvProfileTopSpeed);
         tvProfileAvgSpeed = view.findViewById(R.id.tvProfileAvgSpeed);
         tvProfileMatches  = view.findViewById(R.id.tvProfileMatches);
         tvProfileWinRate  = view.findViewById(R.id.tvProfileWinRate);
 
-        // Bind Circular Utility Buttons
         android.widget.ImageButton btnHowToPlay = view.findViewById(R.id.btnHowToPlay);
         android.widget.ImageButton btnAbout = view.findViewById(R.id.btnAbout);
 
         MainActivity mainActivity = (MainActivity) requireActivity();
-
-        // Apply our custom squish animation to the rows so they feel tactile
         mainActivity.applySquishAnimation(btnHowToPlay);
         mainActivity.applySquishAnimation(btnAbout);
 
         btnHowToPlay.setOnClickListener(v -> mainActivity.showHowToPlayPopup());
         btnAbout.setOnClickListener(v -> mainActivity.showAdThenStart(AboutActivity.class));
 
-        // Start listening to Firebase for XP and Stats data
         loadPlayerDashboard();
 
-
-        // 1. Find the Cards
         View cardKeystroke = view.findViewById(R.id.cardTierKeystroke);
         View cardSprinter = view.findViewById(R.id.cardTierSprinter);
         View cardVelocity = view.findViewById(R.id.cardTierVelocity);
         View cardSupersonic = view.findViewById(R.id.cardTierSupersonic);
         View cardLightspeed = view.findViewById(R.id.cardTierLightspeed);
 
-        // 2. Set the Popups
         cardKeystroke.setOnClickListener(v -> showBadgeDialog(
                 R.drawable.ic_keystroke, "Keystroke", "Levels 1 - 10", android.graphics.Color.parseColor("#64B5F6"),
                 "The starting line. You are learning the ropes and getting your fingers warmed up for the arena."
@@ -108,7 +105,7 @@ public class ProfileFragment extends Fragment {
 
         cardLightspeed.setOnClickListener(v -> showBadgeDialog(
                 R.drawable.ic_lightspeed, "Lightspeed", "Level 40+", android.graphics.Color.parseColor("#00E5FF"),
-                "The pinnacle of ProTyper. You type at the speed of light. You are a legendary competitor."
+                "The pinnacle of Pro Typer. You type at the speed of light. You are a legendary competitor."
         ));
 
         return view;
@@ -121,7 +118,7 @@ public class ProfileFragment extends Fragment {
         userListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (tvPlayerTitle == null) return;
+                if (!isAdded() || tvPlayerTitle == null) return;
 
                 int totalXp = 0;
                 int currentLevel = 1;
@@ -133,7 +130,6 @@ public class ProfileFragment extends Fragment {
                     if (dbLevel != null) currentLevel = dbLevel;
                 }
 
-                // 1. PROCESS XP & TIERS
                 int previousLevelXp = (currentLevel > 1) ? XpManager.getXpRequiredForNextLevel(currentLevel - 1) : 0;
                 int nextLevelXp = XpManager.getXpRequiredForNextLevel(currentLevel);
 
@@ -146,9 +142,7 @@ public class ProfileFragment extends Fragment {
                 highlightActiveTier(title);
 
                 if (tvRankUpHint != null) {
-                    String nextRankName = XpManager.getTitleForLevel(currentLevel + 1);
                     int xpToGo = nextLevelXp - totalXp;
-
                     tvRankUpHint.setText("Level " + currentLevel + " · Rank up at " + nextLevelXp + " XP");
                     tvXpEarned.setText(totalXp + " XP earned");
                     tvXpRemaining.setText(xpToGo + " XP to go");
@@ -160,7 +154,6 @@ public class ProfileFragment extends Fragment {
                             .start();
                 }
 
-                // --- NEW: 2. PROCESS LIFETIME STATS ---
                 int highestWpm = 0;
                 int totalMatches = 0;
                 int totalWpmSum = 0;
@@ -182,13 +175,15 @@ public class ProfileFragment extends Fragment {
                     tvProfileMatches.setText(String.valueOf(totalMatches));
                     tvProfileWinRate.setText(winRate + " %");
 
-                    // Color code the Win Rate for extra aesthetic
+                    int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+                    boolean isDarkMode = (currentNightMode == Configuration.UI_MODE_NIGHT_YES);
+
                     if (winRate >= 50) {
-                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#39FF14")); // Neon Green for good
+                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#39FF14"));
                     } else if (winRate > 0) {
-                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#FF007A")); // Neon Pink for bad
+                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#FF007A"));
                     } else {
-                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#FFFFFF")); // White if 0
+                        tvProfileWinRate.setTextColor(isDarkMode ? 0xFFFFFFFF : 0xFF000000);
                     }
                 }
             }
@@ -200,16 +195,31 @@ public class ProfileFragment extends Fragment {
     }
 
     private void highlightActiveTier(String title) {
-        // Updated to Deep Dive Light Theme Colors
-        int activeBackground   = 0xF2FFFFFF; // 95% White
-        int inactiveBackground = 0xF2FFFFFF;
-        int activeStroke       = 0xFF0284C7; // Bold Ocean Blue highlight!
-        int inactiveStroke     = 0xFFE2E8F0; // Soft Silver default
+        if (!isAdded() || getContext() == null) return;
+
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        boolean isDarkMode = (currentNightMode == Configuration.UI_MODE_NIGHT_YES);
+
+        int activeBackground;
+        int inactiveBackground;
+        int inactiveStroke;
+        int activeStroke = 0xFF0284C7;
+
+        if (isDarkMode) {
+            activeBackground   = 0xFF1F2A38;
+            inactiveBackground = 0xFF1F2A38;
+            inactiveStroke     = 0xFF334155;
+        } else {
+            activeBackground   = 0xF2E3F0FF;
+            inactiveBackground = 0xF2E3F0FF;
+            inactiveStroke     = 0xFFE2E8F0;
+        }
 
         com.google.android.material.card.MaterialCardView[] allCards = {
                 cardTierKeystroke, cardTierSprinter, cardTierVelocity,
                 cardTierSupersonic, cardTierLightspeed
         };
+
         for (com.google.android.material.card.MaterialCardView card : allCards) {
             card.setCardBackgroundColor(inactiveBackground);
             card.setStrokeColor(inactiveStroke);
@@ -217,7 +227,7 @@ public class ProfileFragment extends Fragment {
         }
 
         com.google.android.material.card.MaterialCardView activeCard;
-        int badgeResId = R.drawable.ic_keystroke; // Default fallback
+        int badgeResId = R.drawable.ic_keystroke;
 
         if (title.equalsIgnoreCase("Sprinter")) {
             activeCard = cardTierSprinter;
@@ -235,29 +245,38 @@ public class ProfileFragment extends Fragment {
             activeCard = cardTierKeystroke;
         }
 
-        // 1. Highlight the correct card
         activeCard.setCardBackgroundColor(activeBackground);
         activeCard.setStrokeColor(activeStroke);
         activeCard.setStrokeWidth(10);
 
-        // 2. Set the actual badge in the top profile card!
         if (ivCurrentBadge != null) {
             ivCurrentBadge.setImageResource(badgeResId);
         }
 
-        // Reset all ranges
         tvRangeKeystroke.setText("Lv. 1–10");
         tvRangeSprinter.setText("Lv. 11–20");
         tvRangeVelocity.setText("Lv. 21–30");
         tvRangeSupersonic.setText("Lv. 31–40");
         tvRangeLightspeed.setText("Lv. 40+");
+
+        // --- NEW: AUTO-CENTER THE SCROLL VIEW! ---
+        if (rankScrollView != null) {
+            // We use .post() to wait a tiny millisecond to guarantee the UI has drawn the cards
+            // before we try to calculate their mathematical widths!
+            rankScrollView.post(() -> {
+                int cardCenter = activeCard.getLeft() + (activeCard.getWidth() / 2);
+                int scrollCenter = rankScrollView.getWidth() / 2;
+                int targetScrollX = cardCenter - scrollCenter;
+
+                // Smoothly slide over to the active card
+                rankScrollView.smoothScrollTo(targetScrollX, 0);
+            });
+        }
+        // ------------------------------------------
     }
 
-    // ==========================================
-    // BADGE POPUP ENGINE
-    // ==========================================
     private void showBadgeDialog(int imageResId, String title, String range, int color, String description) {
-        if (getContext() == null) return;
+        if (!isAdded() || getContext() == null) return;
 
         android.view.View dialogView = android.view.LayoutInflater.from(getContext()).inflate(R.layout.dialog_badge_info, null);
 
@@ -274,7 +293,7 @@ public class ProfileFragment extends Fragment {
 
         androidx.appcompat.app.AlertDialog dialog = new com.google.android.material.dialog.MaterialAlertDialogBuilder(getContext())
                 .setView(dialogView)
-                .setBackground(androidx.core.content.ContextCompat.getDrawable(getContext(), R.drawable.card_background)) // Optional: rounds the dialog corners if you have a rounded drawable
+                .setBackground(androidx.core.content.ContextCompat.getDrawable(getContext(), R.drawable.card_background))
                 .create();
 
         dialog.show();
@@ -283,7 +302,6 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Prevent memory leaks when navigating away
         if (userRef != null && userListener != null) {
             userRef.removeEventListener(userListener);
         }

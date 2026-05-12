@@ -2,31 +2,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Base application theme with AppCompat support -->
     <style name="Theme.TypingMaster" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Material3 color attributes -->
-        <item name="colorPrimary">@android:color/white</item>
-        <item name="colorOnPrimary">@android:color/black</item>
-        <item name="colorSecondary">@android:color/white</item>
+        <item name="colorPrimary">@color/pro_blue_primary</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">@color/pro_accent</item>
         <item name="colorOnSecondary">@android:color/black</item>
-        <item name="colorSurface">@android:color/white</item>
-        <item name="colorOnSurface">@android:color/black</item>
+
+        <item name="android:colorBackground">@color/bg_main</item>
+        <item name="colorSurface">@color/bg_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+
         <item name="colorError">@android:color/holo_red_dark</item>
         <item name="colorOnError">@android:color/white</item>
 
-        <!-- Status bar and navigation bar colors -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
 
-        <!-- Make status bar icons dark in light mode -->
         <item name="android:windowLightStatusBar">true</item>
 
-        <item name="colorOutline">@android:color/darker_gray</item>
-        <item name="colorSurfaceVariant">@android:color/darker_gray</item> <!-- Use darker gray for contrast -->
-        
-        
+        <item name="colorOutline">@color/border_unfocused</item>
+        <item name="colorSurfaceVariant">@color/border_unfocused</item>
     </style>
-    
+
     <style name="EasyModeButtonStyle" parent="Widget.Material3.Button">
         <!-- Customize as needed -->
         <item name="android:textAllCaps">false</item>
@@ -34,7 +32,7 @@
         <!-- You can specify a fontFamily if desired -->
         <!-- <item name="android:fontFamily">@font/your_custom_font</item> -->
     </style>
-    
+
     <style name="PillButtonStyle" parent="Widget.Material3.Button">
     <!-- Make text non-all caps and apply rounded corners -->
     <item name="android:textAllCaps">false</item>
@@ -43,16 +41,16 @@
     <item name="android:textSize">16sp</item>
     <item name="android:fontFamily">@font/font</item>
 </style>
-        
+
    <style name="ActiveItemTextAppearance" parent="TextAppearance.Material3.BodyMedium">
     <item name="android:textStyle">bold</item>
     <!-- Add other customizations as needed -->
 </style>
-    
+
     <style name="Widget.App.CustomNavigationView" parent="Widget.Material3.NavigationView">
     <item name="itemTextAppearanceActive">@style/ActiveItemTextAppearance</item>
 </style>
-    
+
     <!-- In res/values/styles.xml -->
 <style name="CircleShapeAppearance">
     <item name="cornerFamily">rounded</item>
@@ -66,7 +64,7 @@
     <!-- Optional: Remove extra padding if needed -->
     <item name="iconPadding">0dp</item>
 </style>
-    
+
    <style name="ThemeOverlay.Material3.AppBar" parent="ThemeOverlay.Material3">
     <item name="android:background">?attr/colorSurface</item>
     <item name="android:textColorPrimary">?attr/colorOnSurface</item>
@@ -81,11 +79,11 @@
     <item name="android:background">?attr/colorPrimary</item>
     <item name="android:textAppearance">?attr/textAppearanceSubtitle1</item>
 </style>
-    
+
     <style name="Theme.Splash" parent="Theme.Material3.DayNight.NoActionBar">
             <item name="android:windowNoTitle">true</item>
             <item name="android:windowBackground">?attr/colorSurface</item>
                 <item name="android:windowFullscreen">true</item>
                     </style>
-    
+
 </resources>

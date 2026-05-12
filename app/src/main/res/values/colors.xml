@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Text color for light mode -->
-    <color name="textColor">#000000</color> <!-- Black for light mode -->
+    <color name="pro_blue_primary">#0284C7</color>
+    <color name="pro_blue_light">#D6E8FF</color>
+    <color name="pro_blue_dark">#0F172A</color>
+    <color name="pro_accent">#39FF14</color>
 
-    <!-- Optional: Define a custom gray if needed -->
-    <color name="gray">#FF808080</color> <!-- Custom gray color -->
-    
-    
-    <!-- In light mode, use a dark gray for the unfocused border -->
+    <color name="bg_main">#FFFFFF</color>
+    <color name="bg_card">#F8FAFC</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+
+    <color name="textColor">#000000</color>
+    <color name="gray">#FF808080</color>
     <color name="border_unfocused_light">#424242</color>
-    <!-- Alias for use in the selector -->
     <color name="border_unfocused">@color/border_unfocused_light</color>
-    
-   <color name="popup_menu_background">?attr/colorSurface</color>
-    
+
+    <color name="popup_menu_background">?attr/colorSurface</color>
     <color name="howToPlayOverlay">#55000000</color>
+
+    <color name="profile_card_bg">#D6E8FF</color>
+    <color name="profile_text_main">#0F172A</color>
+    <color name="profile_text_sub">#64748B</color>
+    <color name="profile_stroke">#E2E8F0</color>
 </resources>
