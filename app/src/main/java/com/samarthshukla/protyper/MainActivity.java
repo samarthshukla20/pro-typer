@@ -87,13 +87,52 @@ public class MainActivity extends AppCompatActivity {
 
         tvMainTitle = findViewById(R.id.tvMainTitle);
 
-        // --- NEW: SMART FRAGMENT INITIALIZATION ---
+        // --- NEW: INTERCEPT NOTIFICATION CLICKS (THE SWITCHBOARD) ---
+        String targetScreen = "HOME"; // Default fallback
+
+        if (getIntent() != null && getIntent().getExtras() != null) {
+            if (getIntent().hasExtra("open_target")) {
+                targetScreen = getIntent().getStringExtra("open_target");
+
+                // Route to external Activities immediately
+                if ("HISTORY".equalsIgnoreCase(targetScreen)) {
+                    startActivity(new Intent(this, HistoryActivity.class));
+                } else if ("PARAGRAPH".equalsIgnoreCase(targetScreen)) {
+                    startActivity(new Intent(this, ParagraphActivity.class));
+                } else if ("MULTIPLAYER".equalsIgnoreCase(targetScreen)) {
+                    startActivity(new Intent(this, MultiplayerLobbyActivity.class));
+                } else if ("EASY_MODE".equalsIgnoreCase(targetScreen)) {
+                    startActivity(new Intent(this, EasyModeActivity.class));
+                } else if ("MEDIUM_MODE".equalsIgnoreCase(targetScreen)) {
+                    startActivity(new Intent(this, MediumModeActivity.class));
+                } else if ("HARD_MODE".equalsIgnoreCase(targetScreen)) {
+                    startActivity(new Intent(this, HardModeActivity.class));
+                }
+            }
+        }
+        // ------------------------------------------------------------
+
+        // --- SMART FRAGMENT INITIALIZATION ---
         if (savedInstanceState == null) {
-            fragmentManager.beginTransaction().add(R.id.fragment_container, profileFragment, "PROFILE").hide(profileFragment).commit();
-            fragmentManager.beginTransaction().add(R.id.fragment_container, homeFragment, "HOME").commit();
-            activeFragment = homeFragment;
-            currentTab = "HOME";
+
+            // Check if the notification wanted us to open the PROFILE tab directly
+            if ("PROFILE".equalsIgnoreCase(targetScreen)) {
+                fragmentManager.beginTransaction().add(R.id.fragment_container, homeFragment, "HOME").hide(homeFragment).commit();
+                fragmentManager.beginTransaction().add(R.id.fragment_container, profileFragment, "PROFILE").commit();
+                activeFragment = profileFragment;
+                currentTab = "PROFILE";
+                tvMainTitle.setVisibility(View.GONE);
+            } else {
+                // Default Home Tab startup
+                fragmentManager.beginTransaction().add(R.id.fragment_container, profileFragment, "PROFILE").hide(profileFragment).commit();
+                fragmentManager.beginTransaction().add(R.id.fragment_container, homeFragment, "HOME").commit();
+                activeFragment = homeFragment;
+                currentTab = "HOME";
+                tvMainTitle.setVisibility(View.VISIBLE);
+            }
+
             checkAndShowNotificationPrimer();
+
         } else {
             homeFragment = fragmentManager.findFragmentByTag("HOME");
             profileFragment = fragmentManager.findFragmentByTag("PROFILE");
@@ -101,10 +140,10 @@ public class MainActivity extends AppCompatActivity {
             currentTab = savedInstanceState.getString("CURRENT_TAB", "HOME");
             if (currentTab.equals("PROFILE")) {
                 activeFragment = profileFragment;
-                tvMainTitle.setVisibility(View.GONE); // Remember to keep title hidden!
+                tvMainTitle.setVisibility(View.GONE);
             } else {
                 activeFragment = homeFragment;
-                tvMainTitle.setVisibility(View.VISIBLE); // Remember to show title!
+                tvMainTitle.setVisibility(View.VISIBLE);
             }
         }
         // ------------------------------------------
@@ -114,8 +153,50 @@ public class MainActivity extends AppCompatActivity {
         startTypewriterAnimation();
 
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) { String token = task.getResult(); }
+            if (task.isSuccessful()) {
+                String token = task.getResult();
+                // Print it to Logcat so you can copy it!
+                android.util.Log.d("FCM_TOKEN", "My Test Token: " + token);
+            }
         });
+        // Test token -
+        // fQHnKFxSQj6GgAOi9ltvlq:APA91bGXufw_Nr6h2hw6IOECPHBCawgrTDaF7aFUioBr5TWynqWzgYtb4h8VWwHHp9Pc2R7YGRlcENUZ0_9wVBdTiP2zYVo2yZRIxAd1MhtgBJ5CzuzA5eY
+
+        // open_target : MULTIPLAYER
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent); // Updates the Activity's Intent with the new Notification Intent!
+
+        // Check if the notification is trying to route us somewhere
+        if (intent != null && intent.getExtras() != null && intent.hasExtra("open_target")) {
+            String targetScreen = intent.getStringExtra("open_target");
+
+            if ("HISTORY".equalsIgnoreCase(targetScreen)) {
+                startActivity(new Intent(this, HistoryActivity.class));
+            } else if ("PARAGRAPH".equalsIgnoreCase(targetScreen)) {
+                startActivity(new Intent(this, ParagraphActivity.class));
+            } else if ("MULTIPLAYER".equalsIgnoreCase(targetScreen)) {
+                startActivity(new Intent(this, MultiplayerLobbyActivity.class));
+            } else if ("EASY_MODE".equalsIgnoreCase(targetScreen)) {
+                startActivity(new Intent(this, EasyModeActivity.class));
+            } else if ("MEDIUM_MODE".equalsIgnoreCase(targetScreen)) {
+                startActivity(new Intent(this, MediumModeActivity.class));
+            } else if ("HARD_MODE".equalsIgnoreCase(targetScreen)) {
+                startActivity(new Intent(this, HardModeActivity.class));
+            } else if ("PROFILE".equalsIgnoreCase(targetScreen)) {
+                // Switch to profile tab dynamically without recreating the Activity
+                if (activeFragment != profileFragment) {
+                    fragmentManager.beginTransaction().hide(activeFragment).show(profileFragment).commit();
+                    activeFragment = profileFragment;
+                    currentTab = "PROFILE";
+                    if (tvMainTitle != null) tvMainTitle.setVisibility(View.GONE);
+                    setupBottomNavigation(); // Re-trigger the UI pill animation
+                }
+            }
+        }
     }
 
     private void setupBottomNavigation() {
@@ -274,9 +355,14 @@ public class MainActivity extends AppCompatActivity {
 
         android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         boolean hasAgreedToPrimer = prefs.getBoolean("has_agreed_to_notifications", false);
+        long lastAskedTime = prefs.getLong("last_time_asked_notifications", 0);
+        long threeDaysInMillis = 1L * 24 * 60 * 60 * 1000; // 1 day
 
         if (!hasAgreedToPrimer) {
-            new Handler(android.os.Looper.getMainLooper()).postDelayed(this::showCustomNotificationDialog, 1000);
+            // Only ask if it has been more than 1 day since we last asked!
+            if (System.currentTimeMillis() - lastAskedTime > threeDaysInMillis) {
+                new Handler(android.os.Looper.getMainLooper()).postDelayed(this::showCustomNotificationDialog, 1000);
+            }
         }
     }
 
@@ -291,7 +377,11 @@ public class MainActivity extends AppCompatActivity {
                     requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
                 })
                 .setNegativeButton("Maybe Later", (dialog, which) -> {
-                    // They said no. We dismiss and ask again next time!
+                    // Save the exact time they said NO, so the 1-day timer starts!
+                    getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
+                            .putLong("last_time_asked_notifications", System.currentTimeMillis())
+                            .apply();
+
                     dialog.dismiss();
                 })
                 .setCancelable(false)

@@ -15,7 +15,7 @@ public class SplashActivity extends Activity {
     private View progressFill;
     private TextView progressText;
     private Handler handler = new Handler();
-    private int duration = 2000; // 4 seconds
+    private int duration = 2000; // 2 seconds
     private long startTime;
     private Runnable progressUpdater;
 
@@ -78,7 +78,17 @@ public class SplashActivity extends Activity {
 
                 @Override
                 public void onAnimationEnd(android.view.animation.Animation animation) {
-                    startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                    Intent mainIntent = new Intent(SplashActivity.this, MainActivity.class);
+
+                    // --- THE BATON RELAY: Catch Firebase data and pass it forward! ---
+                    if (getIntent() != null && getIntent().getExtras() != null) {
+                        if (getIntent().hasExtra("open_target")) {
+                            mainIntent.putExtra("open_target", getIntent().getStringExtra("open_target"));
+                        }
+                    }
+                    // -----------------------------------------------------------------
+
+                    startActivity(mainIntent);
                     overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                     finish();
                 }
