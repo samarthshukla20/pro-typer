@@ -30,7 +30,7 @@
             android:gravity="center"
             android:textSize="44sp"
             android:fontFamily="@font/font"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/text_primary"
             android:text="PRO TYPER" />
 
         <FrameLayout
@@ -47,11 +47,10 @@
             android:layout_alignParentBottom="true"
             android:layout_marginHorizontal="24dp"
             android:layout_marginBottom="24dp"
-            app:cardBackgroundColor="#212121"
+            app:cardBackgroundColor="@color/bg_card"
             app:cardCornerRadius="36dp"
             app:cardElevation="16dp"
-            app:strokeWidth="0dp"
-            app:strokeColor="#1E293B">
+            app:strokeWidth="0dp">
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -62,7 +61,7 @@
                     android:layout_width="80dp"
                     android:layout_height="match_parent"
                     android:layout_marginVertical="10dp"
-                    app:cardBackgroundColor="#64B5F6"
+                    app:cardBackgroundColor="@color/pro_blue_primary"
                     app:cardCornerRadius="26dp"
                     app:cardElevation="0dp"
                     app:strokeWidth="0dp" />
@@ -88,7 +87,7 @@
                             android:layout_height="32dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_trophy"
-                            app:tint="#64B5F6"/>
+                            app:tint="@color/text_secondary"/>
                     </FrameLayout>
 
                     <FrameLayout
@@ -105,7 +104,7 @@
                             android:layout_height="32dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_play"
-                            app:tint="#FFFFFF"/>
+                            app:tint="@android:color/white"/>
                     </FrameLayout>
 
                     <FrameLayout
@@ -122,7 +121,7 @@
                             android:layout_height="32dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_shield"
-                            app:tint="#64B5F6"/>
+                            app:tint="@color/text_secondary"/>
                     </FrameLayout>
                 </LinearLayout>
             </FrameLayout>

@@ -5,7 +5,7 @@
     android:id="@+id/congratsCardContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:background="@color/howToPlayOverlay"
     android:clickable="false"
     android:focusable="false">
 
@@ -27,19 +27,21 @@
             android:gravity="center"
             android:layout_marginBottom="20dp"
             android:fontFamily="@font/font"
-            android:textColor="?attr/colorOnBackground" />
+            android:textColor="@color/pro_accent" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/mainCongratsCard"
             android:layout_width="320dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="40dp"
-            app:strokeColor="?attr/colorOnPrimaryContainer"
+            app:strokeColor="@color/pro_blue_primary"
+            app:strokeWidth="2dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:cardBackgroundColor="?attr/colorPrimaryContainer"
+            app:cardBackgroundColor="@color/bg_card"
             app:layout_constraintEnd_toEndOf="parent"
             style="@style/Widget.MaterialComponents.CardView"
             android:layout_marginTop="20dp"
+            app:cardElevation="0dp"
             app:cardCornerRadius="24dp">
 
             <LinearLayout
@@ -58,7 +60,7 @@
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:fontFamily="@font/difficulty"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/text_primary"
                     android:layout_marginTop="24dp"
                     android:layout_marginBottom="16dp" />
 
@@ -67,10 +69,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
-                    app:strokeColor="?attr/colorOnSecondaryContainer"
+                    app:strokeColor="@color/border_unfocused"
+                    app:strokeWidth="1dp"
                     android:padding="14dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/bg_card"
                     android:layout_marginTop="10dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginBottom="8dp"
@@ -95,7 +98,7 @@
                             android:layout_height="wrap_content"
                             android:textSize="20sp"
                             android:fontFamily="@font/difficulty"
-                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:textColor="@color/text_primary"
                             android:layout_marginStart="8dp"
                             android:text="Accuracy: 0"
                             android:textStyle="bold" />
@@ -107,10 +110,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="16dp"
-                    app:strokeColor="?attr/colorOnSecondaryContainer"
+                    app:strokeColor="@color/border_unfocused"
+                    app:strokeWidth="1dp"
                     android:padding="14dp"
-                    app:cardElevation="4dp"
-                    app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/bg_card"
                     android:layout_marginTop="8dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginBottom="24dp"
@@ -135,7 +139,7 @@
                             android:layout_height="wrap_content"
                             android:textSize="20sp"
                             android:fontFamily="@font/difficulty"
-                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:textColor="@color/text_primary"
                             android:layout_marginStart="8dp"
                             android:text="WPM: 0"
                             android:textStyle="bold" />
@@ -162,7 +166,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Base XP: +0"
-                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textColor="@color/text_secondary"
                             android:textSize="15sp"
                             android:fontFamily="@font/difficulty" />
 
@@ -171,7 +175,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Completion: +20"
-                            android:textColor="#4CAF50"
+                            android:textColor="@color/pro_accent"
                             android:textSize="15sp"
                             android:visibility="gone"
                             android:fontFamily="@font/difficulty" />
@@ -181,7 +185,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Speed Bonus: +15"
-                            android:textColor="#4CAF50"
+                            android:textColor="@color/pro_accent"
                             android:textSize="15sp"
                             android:visibility="gone"
                             android:fontFamily="@font/difficulty" />
@@ -202,14 +206,14 @@
                             android:layout_height="1dp"
                             android:layout_marginTop="6dp"
                             android:layout_marginBottom="6dp"
-                            android:background="?attr/colorOutlineVariant" />
+                            android:background="@color/border_unfocused" />
 
                         <TextView
                             android:id="@+id/xpEarnedText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Total: + 0 XP"
-                            android:textColor="#4CAF50"
+                            android:textColor="@color/pro_accent"
                             android:textSize="22sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/difficulty" />
@@ -221,7 +225,8 @@
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
                         android:layout_height="14dp"
-                        android:progressTint="#4CAF50"
+                        android:progressTint="@color/pro_accent"
+                        android:progressBackgroundTint="@color/border_unfocused"
                         android:progress="0"
                         android:max="100" />
 
@@ -233,7 +238,7 @@
                         android:textSize="14sp"
                         android:layout_marginTop="8dp"
                         android:fontFamily="@font/difficulty"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textColor="@color/text_secondary" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -251,9 +256,10 @@
                         android:layout_marginEnd="16dp"
                         android:text="Menu"
                         android:textSize="18sp"
-                        android:textColor="?attr/colorSurface"
+                        android:textColor="@android:color/white"
+                        app:backgroundTint="@color/pro_blue_primary"
                         app:cornerRadius="50dp"
-                        app:elevation="6dp"
+                        app:elevation="0dp"
                         android:fontFamily="@font/difficulty"
                         style="@style/Widget.Material3.Button"
                         android:gravity="center" />
@@ -267,9 +273,10 @@
                         android:layout_marginStart="16dp"
                         android:text="Retry"
                         android:textSize="18sp"
-                        android:textColor="?attr/colorSurface"
+                        android:textColor="@android:color/white"
+                        app:backgroundTint="@color/pro_blue_primary"
                         app:cornerRadius="50dp"
-                        app:elevation="6dp"
+                        app:elevation="0dp"
                         android:fontFamily="@font/difficulty"
                         style="@style/Widget.Material3.Button"
                         android:gravity="center" />

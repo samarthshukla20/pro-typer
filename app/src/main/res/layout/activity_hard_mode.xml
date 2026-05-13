@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
-     xmlns:android="http://schemas.android.com/apk/res/android"
-     xmlns:app="http://schemas.android.com/apk/res-auto"
-     xmlns:tools="http://schemas.android.com/tools"
-     android:layout_height="match_parent"
-     android:layout_width="match_parent"
-     android:background="?attr/colorSurface"
-     tools:context=".EasyModeActivity">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:background="@color/bg_main"
+    tools:context=".HardModeActivity">
 
-    <!-- GHOST TYPING COUNTDOWN VIEWS -->
     <View
         android:id="@+id/countdownDimBackground"
         android:layout_width="match_parent"
@@ -23,8 +22,8 @@
         android:layout_height="wrap_content"
         android:textAlignment="center"
         android:fontFamily="@font/difficulty"
-        android:textColor="#4A5568"
-        android:textSize="40sp"
+        android:textColor="@color/pro_blue_primary"
+        android:textSize="80sp"
         android:textStyle="bold"
         android:visibility="gone"
         android:elevation="10dp"
@@ -34,176 +33,184 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
-         android:layout_height="wrap_content"
-         android:layout_width="wrap_content"
-         app:layout_constraintTop_toTopOf="parent"
-         app:layout_constraintStart_toStartOf="parent"
-         android:textSize="39sp"
-         android:fontFamily="@font/font"
-         android:textColor="?attr/colorOnSurface"
-         app:layout_constraintEnd_toEndOf="parent"
-         android:layout_marginTop="32dp"
-         android:id="@+id/title"
-         android:text="Difficulty: Hard"
-         android:textStyle="bold" />
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textSize="39sp"
+        android:fontFamily="@font/font"
+        android:textColor="@color/text_primary"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp"
+        android:id="@+id/title"
+        android:text="Difficulty: Hard"
+        android:textStyle="bold" />
 
     <com.google.android.material.card.MaterialCardView
-         android:layout_height="wrap_content"
-         android:layout_width="wrap_content"
-         android:layout_marginEnd="16dp"
-         app:strokeColor="?attr/colorOnSurfaceVariant"
-         app:layout_constraintStart_toStartOf="parent"
-         app:cardBackgroundColor="?attr/colorSurfaceVariant"
-         style="@style/Widget.MaterialComponents.CardView"
-         android:layout_marginTop="40dp"
-         android:layout_marginStart="16dp"
-         app:cardCornerRadius="16dp"
-         app:layout_constraintTop_toBottomOf="@id/title"
-         android:id="@+id/timerCard">
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginEnd="16dp"
+        app:strokeColor="@color/border_unfocused"
+        app:layout_constraintStart_toStartOf="parent"
+        app:cardBackgroundColor="@color/bg_card"
+        style="@style/Widget.MaterialComponents.CardView"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        android:id="@+id/timerCard">
 
         <LinearLayout
-             android:layout_height="wrap_content"
-             android:layout_width="wrap_content"
-             android:padding="12dp"
-             android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <ImageView
-                 android:layout_height="20dp"
-                 android:layout_width="20dp"
-                 android:src="@drawable/timer" />
+                android:layout_height="20dp"
+                android:layout_width="20dp"
+                android:src="@drawable/timer" />
 
             <TextView
-                 android:layout_height="wrap_content"
-                 android:layout_width="wrap_content"
-                 android:textSize="14sp"
-                 android:textColor="?attr/colorOnSurface"
-                 android:layout_marginStart="8dp"
-                 android:id="@+id/timerText"
-                 android:text="Time left: 0s" />
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginStart="8dp"
+                android:id="@+id/timerText"
+                android:text="Time left: 0s" />
 
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
-         android:layout_height="wrap_content"
-         android:layout_width="wrap_content"
-         android:layout_marginEnd="16dp"
-         app:strokeColor="?attr/colorOnSurfaceVariant"
-         app:cardBackgroundColor="?attr/colorSurfaceVariant"
-         app:layout_constraintEnd_toEndOf="parent"
-         style="@style/Widget.MaterialComponents.CardView"
-         android:layout_marginTop="40dp"
-         android:layout_marginStart="16dp"
-         app:cardCornerRadius="16dp"
-         app:layout_constraintTop_toBottomOf="@id/title"
-         android:id="@+id/scoreCard">
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginEnd="16dp"
+        app:strokeColor="@color/border_unfocused"
+        app:cardBackgroundColor="@color/bg_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        style="@style/Widget.MaterialComponents.CardView"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        android:id="@+id/scoreCard">
 
         <LinearLayout
-             android:layout_height="wrap_content"
-             android:layout_width="wrap_content"
-             android:padding="12dp"
-             android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <ImageView
-                 android:layout_height="20dp"
-                 android:layout_width="20dp"
-                 android:src="@drawable/score" />
+                android:layout_height="20dp"
+                android:layout_width="20dp"
+                android:src="@drawable/score" />
 
             <TextView
-                 android:layout_height="wrap_content"
-                 android:layout_width="wrap_content"
-                 android:textSize="14sp"
-                 android:textColor="?attr/colorOnSurface"
-                 android:layout_marginStart="8dp"
-                 android:id="@+id/scoreText"
-                 android:text="Score: 0" />
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginStart="8dp"
+                android:id="@+id/scoreText"
+                android:text="Score: 0" />
 
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 
-    
-
     <com.google.android.material.card.MaterialCardView
-         android:layout_height="150dp"
-         android:layout_width="250dp"
-         app:strokeColor="?attr/colorOnPrimaryContainer"
-         app:layout_constraintStart_toStartOf="parent"
-         app:cardBackgroundColor="?attr/colorPrimaryContainer"
-         app:layout_constraintEnd_toEndOf="parent"
-         style="@style/Widget.MaterialComponents.CardView"
-         android:layout_marginTop="80dp"
-         app:layout_constraintBottom_toTopOf="@id/textInputLayout"
-         app:cardCornerRadius="24dp"
-         app:layout_constraintTop_toBottomOf="@id/timerCard"
-         android:id="@+id/wordCard">
+        android:layout_height="150dp"
+        android:layout_width="250dp"
+        app:strokeColor="@color/pro_blue_primary"
+        app:strokeWidth="2dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:cardBackgroundColor="@color/bg_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        style="@style/Widget.MaterialComponents.CardView"
+        android:layout_marginTop="80dp"
+        app:cardElevation="0dp"
+        app:layout_constraintBottom_toTopOf="@id/textInputLayout"
+        app:cardCornerRadius="24dp"
+        app:layout_constraintTop_toBottomOf="@id/timerCard"
+        android:id="@+id/wordCard">
 
         <LinearLayout
-             android:layout_height="match_parent"
-             android:layout_width="match_parent"
-             android:gravity="center"
-             android:padding="12dp"
-             android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:padding="12dp"
+            android:orientation="vertical">
 
             <TextView
-                 android:layout_height="wrap_content"
-                 android:layout_width="wrap_content"
-                 android:gravity="center"
-                 android:textSize="16sp"
-                 android:fontFamily="@font/difficulty"
-                 android:textColor="?attr/colorOnPrimaryContainer"
-                 android:id="@+id/instructionText"
-                 android:text="Type the following word"
-                 android:textStyle="bold"
-                 android:layout_gravity="center" />
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="center"
+                android:textSize="14sp"
+                android:fontFamily="@font/difficulty"
+                android:textColor="@color/text_secondary"
+                android:id="@+id/instructionText"
+                android:text="TYPE THE FOLLOWING WORD"
+                android:letterSpacing="0.1"
+                android:textStyle="bold"
+                android:layout_gravity="center" />
 
             <TextView
-                 android:layout_height="wrap_content"
-                 android:layout_width="wrap_content"
-                 android:gravity="center"
-                 android:textSize="30sp"
-                 android:fontFamily="@font/difficulty"
-                 android:textColor="?attr/colorOnPrimaryContainer"
-                 android:layout_marginTop="8dp"
-                 android:id="@+id/wordDisplay"
-                 android:text="wapped"
-                 android:textStyle="bold"
-                 android:layout_gravity="center" />
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="center"
+                android:textSize="34sp"
+                android:fontFamily="@font/difficulty"
+                android:textColor="@color/pro_blue_primary"
+                android:layout_marginTop="8dp"
+                android:id="@+id/wordDisplay"
+                android:text="wapped"
+                android:textStyle="bold"
+                android:layout_gravity="center" />
 
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.textfield.TextInputLayout
-    android:id="@+id/textInputLayout"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:layout_marginEnd="16dp"
-    android:layout_marginStart="16dp"
-    android:layout_marginTop="32dp"
-    android:layout_marginBottom="80dp"
-    app:layout_constraintTop_toBottomOf="@id/wordCard"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:boxCornerRadiusBottomEnd="20dp"
-    app:boxCornerRadiusTopStart="20dp"
-    app:boxCornerRadiusTopEnd="20dp"
-    app:boxCornerRadiusBottomStart="20dp"
-    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-    app:boxBackgroundMode="outline"
-    app:boxStrokeColor="@color/textinput_outline"
-    app:boxStrokeWidth="2dp">
+        android:id="@+id/textInputLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="80dp"
+        app:layout_constraintTop_toBottomOf="@id/wordCard"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:boxCornerRadiusBottomEnd="20dp"
+        app:boxCornerRadiusTopStart="20dp"
+        app:boxCornerRadiusTopEnd="20dp"
+        app:boxCornerRadiusBottomStart="20dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeColor="@color/textinput_outline"
+        app:boxStrokeWidth="2dp">
 
-    <com.google.android.material.textfield.TextInputEditText
-         android:id="@+id/inputField"
-         android:layout_width="match_parent"
-         android:layout_height="wrap_content"
-         android:hint="Type here..."
-         android:textSize="18sp"
-         android:textColor="?attr/colorOnSurface"
-         android:fontFamily="@font/difficulty" />
-</com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/inputField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Type here..."
+            android:textSize="18sp"
+            android:textColor="@color/text_primary"
+            android:fontFamily="@font/difficulty" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

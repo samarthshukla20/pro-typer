@@ -5,8 +5,8 @@
     <color name="pro_blue_dark">#0F172A</color>
     <color name="pro_accent">#39FF14</color>
 
-    <color name="bg_main">#FFFFFF</color>
-    <color name="bg_card">#F8FAFC</color>
+    <color name="bg_main">#f6f9fe</color>
+    <color name="bg_card">#deebf3</color>
     <color name="text_primary">#0F172A</color>
     <color name="text_secondary">#64748B</color>
 

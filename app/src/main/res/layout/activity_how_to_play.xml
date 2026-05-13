@@ -5,88 +5,90 @@
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#66000000">  <!-- semi-transparent black -->
+    android:background="@color/howToPlayOverlay">
 
-    <!-- Mode Selection Card -->
     <com.google.android.material.card.MaterialCardView
-         android:id="@+id/cardModeSelection"
-         android:layout_width="match_parent"
-         android:layout_height="wrap_content"
-         android:layout_margin="32dp"
-         app:cardCornerRadius="16dp"
-         app:cardElevation="8dp"
-         app:strokeColor="?attr/colorPrimary"
-         app:strokeWidth="2dp"
-         app:cardBackgroundColor="?attr/colorPrimaryContainer"
-         android:layout_gravity="center">
-      
-         <LinearLayout
-             android:layout_width="match_parent"
-             android:layout_height="wrap_content"
-             android:orientation="vertical"
-             android:padding="16dp">
-            
+        android:id="@+id/cardModeSelection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="32dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/pro_blue_primary"
+        app:strokeWidth="2dp"
+        app:cardBackgroundColor="@color/bg_card"
+        android:layout_gravity="center">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
             <TextView
-                 android:id="@+id/tvHeading"
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:text="How To Play"
-                 android:textSize="40sp"
-                 android:fontFamily="@font/difficulty"
-                 android:textColor="?attr/colorOnSurface"
-                 android:layout_gravity="center_horizontal"
-                 android:paddingBottom="16dp"/>
-             
-             <com.google.android.material.button.MaterialButton
-                 android:id="@+id/btnSingleWord"
-                 style="@style/Widget.Material3.Button"
-                 android:layout_width="match_parent"
-                 android:layout_height="48dp"
-                 android:text="SINGLE WORD MODE"
-                 android:fontFamily="@font/font"
-                 android:layout_marginBottom="16dp"/>
-             
-             <com.google.android.material.button.MaterialButton
-                 android:id="@+id/btnParagraphPopup"
-                 style="@style/Widget.Material3.Button"
-                 android:layout_width="match_parent"
-                 android:layout_height="48dp"
-                 android:text="PARAGRAPH MODE"
-                 android:fontFamily="@font/font"/>
-         </LinearLayout>
+                android:id="@+id/tvHeading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="How To Play"
+                android:textSize="40sp"
+                android:fontFamily="@font/difficulty"
+                android:textColor="@color/text_primary"
+                android:layout_gravity="center_horizontal"
+                android:paddingBottom="24dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSingleWord"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="SINGLE WORD MODE"
+                android:textColor="@android:color/white"
+                app:backgroundTint="@color/pro_blue_primary"
+                android:fontFamily="@font/font"
+                android:layout_marginBottom="16dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnParagraphPopup"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="PARAGRAPH MODE"
+                android:textColor="@android:color/white"
+                app:backgroundTint="@color/pro_blue_primary"
+                android:fontFamily="@font/font"/>
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
-   
-    <!-- Instruction Card (Initially hidden) -->
+
     <com.google.android.material.card.MaterialCardView
-         android:id="@+id/cardInstruction"
-         android:layout_width="match_parent"
-         android:layout_height="wrap_content"
-         android:layout_margin="32dp"
-         app:cardCornerRadius="16dp"
-         app:cardElevation="8dp"
-         app:strokeColor="?attr/colorPrimary"
-         app:strokeWidth="2dp"
-         app:cardBackgroundColor="?attr/colorPrimaryContainer"
-         android:layout_gravity="center"
-         android:visibility="gone">
-      
-         <LinearLayout
-             android:layout_width="match_parent"
-             android:layout_height="wrap_content"
-             android:orientation="vertical"
-             android:padding="16dp">
-             
-             
-             
-             <TextView
-                 android:id="@+id/tvInstruction"
-                 android:layout_width="match_parent"
-                 android:layout_height="wrap_content"
-                 android:text="Instructions go here..."
-                 android:textSize="16sp"
-                 android:fontFamily="@font/font"
-                 android:textColor="?attr/colorOnSurface"/>
-         </LinearLayout>
+        android:id="@+id/cardInstruction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="32dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/pro_blue_primary"
+        app:strokeWidth="2dp"
+        app:cardBackgroundColor="@color/bg_card"
+        android:layout_gravity="center"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/tvInstruction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Instructions go here..."
+                android:textSize="16sp"
+                android:lineSpacingExtra="4dp"
+                android:fontFamily="@font/font"
+                android:textColor="@color/text_primary"/>
+
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
-    
+
 </FrameLayout>

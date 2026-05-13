@@ -16,7 +16,7 @@
         android:textColor="@android:color/white"
         app:backgroundTint="#00BCD4"
         app:cornerRadius="32dp"
-        app:elevation="6dp"
+        app:elevation="0dp"
         android:fontFamily="@font/difficulty" />
 
     <com.google.android.material.button.MaterialButton
@@ -29,7 +29,7 @@
         android:textColor="@android:color/white"
         app:backgroundTint="#FFCA28"
         app:cornerRadius="32dp"
-        app:elevation="6dp"
+        app:elevation="0dp"
         android:layout_marginTop="20dp"
         android:fontFamily="@font/difficulty" />
 
@@ -43,7 +43,7 @@
         android:textColor="@android:color/white"
         app:backgroundTint="#FF4081"
         app:cornerRadius="32dp"
-        app:elevation="6dp"
+        app:elevation="0dp"
         android:layout_marginTop="20dp"
         android:fontFamily="@font/difficulty" />
 

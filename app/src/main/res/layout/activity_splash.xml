@@ -1,8 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/splash_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:background="@color/bg_main"
     android:padding="24dp">
 
     <LinearLayout
@@ -27,7 +28,7 @@
             android:layout_marginTop="0dp"
             android:fontFamily="@font/difficulty"
             android:text="PRO TYPER"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/text_primary"
             android:textSize="38sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -57,7 +58,7 @@
             android:fontFamily="@font/splash"
             android:gravity="center"
             android:text="0%"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
     </FrameLayout>
@@ -74,6 +75,7 @@
         android:fontFamily="@font/version"
         android:padding="0dp"
         android:text="@string/app_version"
+        android:textColor="@color/text_secondary"
         android:textSize="14sp" />
 
 </RelativeLayout>
