@@ -25,7 +25,7 @@ android {
         applicationId "com.samarthshukla.protyper"
         minSdk 24
         targetSdk 36
-        versionCode 18
+        versionCode 19
         versionName "1.9.5"
 
         vectorDrawables {
@@ -47,6 +47,7 @@ android {
 
     buildFeatures {
         viewBinding false  // If not using ViewBinding, this is fine.
+        buildConfig true
     }
 }
 
@@ -93,5 +94,8 @@ dependencies {
     // (Optional but highly recommended) Firebase Analytics
     // You already have this, but make sure it's here
     implementation 'com.google.firebase:firebase-analytics'
+
+    // Firebase config for deciding priority of an update.
+    implementation("com.google.firebase:firebase-config")
 
 }

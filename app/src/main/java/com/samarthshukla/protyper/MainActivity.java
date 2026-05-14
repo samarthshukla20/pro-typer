@@ -32,7 +32,21 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.samarthshukla.protyper.BuildConfig;
 import com.google.firebase.messaging.FirebaseMessaging;
+
+// --- NEW: GOOGLE PLAY IN-APP UPDATE IMPORTS ---
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.UpdateAvailability;
+// ----------------------------------------------
+
+// --- NEW: FIREBASE REMOTE CONFIG IMPORTS ---
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
+// ----------------------------------------------
 
 public class MainActivity extends AppCompatActivity {
 
@@ -62,6 +76,10 @@ public class MainActivity extends AppCompatActivity {
 
     // Track active tab for the 'Back' button
     private String currentTab = "HOME";
+
+    // --- NEW: APP UPDATE VARIABLES ---
+    private AppUpdateManager appUpdateManager;
+    private static final int UPDATE_REQUEST_CODE = 100;
     // ----------------------------------
 
     // --- THE DIRECT NOTIFICATION LAUNCHER ---
@@ -76,6 +94,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // --- TRIGGER GOOGLE PLAY UPDATE CHECK INSTANTLY ---
+        checkForAppUpdate();
+        // --------------------------------------------------
 
         DictionaryManager.getInstance().loadDataAsync(this);
 
@@ -155,22 +177,72 @@ public class MainActivity extends AppCompatActivity {
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 String token = task.getResult();
-                // Print it to Logcat so you can copy it!
                 android.util.Log.d("FCM_TOKEN", "My Test Token: " + token);
             }
         });
-        // Test token -
-        // fQHnKFxSQj6GgAOi9ltvlq:APA91bGXufw_Nr6h2hw6IOECPHBCawgrTDaF7aFUioBr5TWynqWzgYtb4h8VWwHHp9Pc2R7YGRlcENUZ0_9wVBdTiP2zYVo2yZRIxAd1MhtgBJ5CzuzA5eY
-
-        // open_target : MULTIPLAYER
     }
+
+    // ==========================================
+    // GOOGLE PLAY IN-APP UPDATE ENGINE WITH FIREBASE
+    // ==========================================
+    private void checkForAppUpdate() {
+        FirebaseRemoteConfig mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                // NOTE: Set to 0 for instant testing while developing.
+                // Before launching to the Play Store, change 0 to 3600 (1 hour) to save battery/bandwidth!
+                .setMinimumFetchIntervalInSeconds(3600)
+                .build();
+        mFirebaseRemoteConfig.setConfigSettingsAsync(configSettings);
+
+        // 1. Fetch the remote config from Firebase first
+        mFirebaseRemoteConfig.fetchAndActivate().addOnCompleteListener(this, task -> {
+            // Fetch the minimum version you typed into the Firebase website
+            long minimumRequiredVersion = mFirebaseRemoteConfig.getLong("minimum_required_version");
+
+            // Get the user's current app version
+            long currentAppVersion = BuildConfig.VERSION_CODE;
+
+            // If they are lower than the minimum, prepare to force the update!
+            boolean isHighPriority = currentAppVersion < minimumRequiredVersion;
+
+            // 2. Ask Google Play if there is an update
+            appUpdateManager = AppUpdateManagerFactory.create(this);
+            appUpdateManager.getAppUpdateInfo().addOnSuccessListener(appUpdateInfo -> {
+
+                boolean isUpdateAvailable = appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE;
+
+                if (isUpdateAvailable) {
+                    try {
+                        if (isHighPriority && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                            // FORCE the user to update (Full screen takeover)
+                            appUpdateManager.startUpdateFlowForResult(
+                                    appUpdateInfo,
+                                    AppUpdateType.IMMEDIATE,
+                                    this,
+                                    UPDATE_REQUEST_CODE);
+
+                        } else if (appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
+                            // POLITE background update (They can keep playing)
+                            appUpdateManager.startUpdateFlowForResult(
+                                    appUpdateInfo,
+                                    AppUpdateType.FLEXIBLE,
+                                    this,
+                                    UPDATE_REQUEST_CODE);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        });
+    }
+    // ==========================================
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        setIntent(intent); // Updates the Activity's Intent with the new Notification Intent!
+        setIntent(intent);
 
-        // Check if the notification is trying to route us somewhere
         if (intent != null && intent.getExtras() != null && intent.hasExtra("open_target")) {
             String targetScreen = intent.getStringExtra("open_target");
 
@@ -187,13 +259,12 @@ public class MainActivity extends AppCompatActivity {
             } else if ("HARD_MODE".equalsIgnoreCase(targetScreen)) {
                 startActivity(new Intent(this, HardModeActivity.class));
             } else if ("PROFILE".equalsIgnoreCase(targetScreen)) {
-                // Switch to profile tab dynamically without recreating the Activity
                 if (activeFragment != profileFragment) {
                     fragmentManager.beginTransaction().hide(activeFragment).show(profileFragment).commit();
                     activeFragment = profileFragment;
                     currentTab = "PROFILE";
                     if (tvMainTitle != null) tvMainTitle.setVisibility(View.GONE);
-                    setupBottomNavigation(); // Re-trigger the UI pill animation
+                    setupBottomNavigation();
                 }
             }
         }
@@ -212,17 +283,13 @@ public class MainActivity extends AppCompatActivity {
         int colorSelected = android.graphics.Color.parseColor("#FFFFFF");
         int colorUnselected = android.graphics.Color.parseColor("#64B5F6");
 
-        // Snap to the CORRECT tab on initial load/theme change
         tabHome.post(() -> {
-            // 1. Calculate the target width manually
             int newPillWidth = tabHome.getWidth() - 48;
 
-            // 2. Set the layout params
             android.view.ViewGroup.LayoutParams params = navIndicator.getLayoutParams();
             params.width = newPillWidth;
             navIndicator.setLayoutParams(params);
 
-            // 3. Use our manual width for the centering math!
             float centerOffset;
             if (currentTab.equals("PROFILE")) {
                 tvMainTitle.setVisibility(View.GONE);
@@ -259,7 +326,6 @@ public class MainActivity extends AppCompatActivity {
             iconHome.setColorFilter(colorSelected);
             iconProfile.setColorFilter(colorUnselected);
 
-            // Subtle click bump
             iconHome.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).withEndAction(() ->
                     iconHome.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
             ).start();
@@ -283,7 +349,6 @@ public class MainActivity extends AppCompatActivity {
             iconProfile.setColorFilter(colorSelected);
             iconHome.setColorFilter(colorUnselected);
 
-            // Subtle click bump
             iconProfile.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).withEndAction(() ->
                     iconProfile.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
             ).start();
@@ -297,12 +362,9 @@ public class MainActivity extends AppCompatActivity {
 
             iconHistory.setColorFilter(colorSelected);
 
-            // Subtle click bump
             iconHistory.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).withEndAction(() ->
                     iconHistory.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
             ).start();
-
-            //tvMainTitle.setVisibility(View.VISIBLE);
 
             new Handler().postDelayed(() -> {
                 startActivity(new Intent(MainActivity.this, HistoryActivity.class));
@@ -332,6 +394,25 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAnalytics.logEvent("session_start", null);
         checkInternetOnStart();
 
+        // --- NEW: HANDLE RESUMING FORCED UPDATES ---
+        if (appUpdateManager != null) {
+            appUpdateManager.getAppUpdateInfo().addOnSuccessListener(appUpdateInfo -> {
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                    try {
+                        // If an Immediate update was in progress and the user minimized the app, force it again!
+                        appUpdateManager.startUpdateFlowForResult(
+                                appUpdateInfo,
+                                AppUpdateType.IMMEDIATE,
+                                this,
+                                UPDATE_REQUEST_CODE);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+        // -------------------------------------------
+
         networkReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -356,10 +437,9 @@ public class MainActivity extends AppCompatActivity {
         android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         boolean hasAgreedToPrimer = prefs.getBoolean("has_agreed_to_notifications", false);
         long lastAskedTime = prefs.getLong("last_time_asked_notifications", 0);
-        long threeDaysInMillis = 1L * 24 * 60 * 60 * 1000; // 1 day
+        long threeDaysInMillis = 1L * 24 * 60 * 60 * 1000;
 
         if (!hasAgreedToPrimer) {
-            // Only ask if it has been more than 1 day since we last asked!
             if (System.currentTimeMillis() - lastAskedTime > threeDaysInMillis) {
                 new Handler(android.os.Looper.getMainLooper()).postDelayed(this::showCustomNotificationDialog, 1000);
             }
@@ -377,7 +457,6 @@ public class MainActivity extends AppCompatActivity {
                     requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
                 })
                 .setNegativeButton("Maybe Later", (dialog, which) -> {
-                    // Save the exact time they said NO, so the 1-day timer starts!
                     getSharedPreferences("AppPrefs", MODE_PRIVATE).edit()
                             .putLong("last_time_asked_notifications", System.currentTimeMillis())
                             .apply();
@@ -393,7 +472,6 @@ public class MainActivity extends AppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
-        // Only run this when the app actually regains focus and is fully drawn on the screen!
         if (hasFocus) {
             View navIndicator = findViewById(R.id.navIndicator);
             View tabHome = findViewById(R.id.tabHome);
@@ -405,9 +483,8 @@ public class MainActivity extends AppCompatActivity {
             android.widget.ImageView iconProfile = findViewById(R.id.iconProfile);
 
             int colorSelected = android.graphics.Color.parseColor("#FFFFFF");
-            int colorUnselected = android.graphics.Color.parseColor("#64B5F6"); // Make sure this matches your unselected icon color!
+            int colorUnselected = android.graphics.Color.parseColor("#64B5F6");
 
-            // Double check that the layout actually has a width before doing math
             if (navIndicator != null && tabHome != null && tabHome.getWidth() > 0) {
                 int newPillWidth = tabHome.getWidth() - 48;
 
@@ -433,7 +510,6 @@ public class MainActivity extends AppCompatActivity {
                     tvMainTitle.setVisibility(View.VISIBLE);
                 }
 
-                // Cancel any lingering animations and lock the pill exactly in place
                 navIndicator.animate().cancel();
                 navIndicator.setX(centerOffset);
             }
@@ -641,7 +717,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        // Save which tab we are currently looking at before a theme change
         outState.putString("CURRENT_TAB", currentTab);
     }
 
