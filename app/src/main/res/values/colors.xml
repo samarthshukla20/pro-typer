@@ -3,7 +3,7 @@
     <color name="pro_blue_primary">#0284C7</color>
     <color name="pro_blue_light">#D6E8FF</color>
     <color name="pro_blue_dark">#0F172A</color>
-    <color name="pro_accent">#39FF14</color>
+    <color name="pro_accent">#228B22</color>
 
     <color name="bg_main">#f6f9fe</color>
     <color name="bg_card">#deebf3</color>
@@ -12,7 +12,7 @@
 
     <color name="textColor">#000000</color>
     <color name="gray">#FF808080</color>
-    <color name="border_unfocused_light">#424242</color>
+    <color name="border_unfocused_light">#0284C7</color>
     <color name="border_unfocused">@color/border_unfocused_light</color>
 
     <color name="popup_menu_background">?attr/colorSurface</color>
@@ -21,5 +21,5 @@
     <color name="profile_card_bg">#D6E8FF</color>
     <color name="profile_text_main">#0F172A</color>
     <color name="profile_text_sub">#64748B</color>
-    <color name="profile_stroke">#E2E8F0</color>
+    <color name="profile_stroke">#0284C7</color>
 </resources>

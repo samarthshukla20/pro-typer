@@ -7,7 +7,7 @@
     android:layout_margin="8dp"
     app:cardElevation="0dp"
     app:cardBackgroundColor="@color/bg_card"
-    app:strokeWidth="1dp"
+    app:strokeWidth="2dp"
     app:strokeColor="@color/border_unfocused">
 
     <LinearLayout
@@ -23,7 +23,7 @@
             android:text="Mode: Easy"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@color/pro_blue_primary"
+            android:textColor="@color/text_primary"
             android:fontFamily="@font/difficulty"
             android:layout_marginBottom="8dp"/>
 

@@ -179,9 +179,9 @@ public class ProfileFragment extends Fragment {
                     boolean isDarkMode = (currentNightMode == Configuration.UI_MODE_NIGHT_YES);
 
                     if (winRate >= 50) {
-                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#39FF14"));
+                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#228B22"));
                     } else if (winRate > 0) {
-                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#FF007A"));
+                        tvProfileWinRate.setTextColor(android.graphics.Color.parseColor("#EF4444"));
                     } else {
                         tvProfileWinRate.setTextColor(isDarkMode ? 0xFFFFFFFF : 0xFF000000);
                     }

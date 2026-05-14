@@ -67,7 +67,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private Random random = new Random();
     private int accuracy = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 120000; // 120s
+    private static final int TIME_LIMIT = 12000; // 120s
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private RewardedAd rewardedAd;
