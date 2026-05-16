@@ -4,12 +4,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.TypedValue;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
-import android.widget.ImageButton;
-import com.google.android.material.button.MaterialButton;
-import com.samarthshukla.protyper.R;
 
 public class AboutActivity extends AppCompatActivity {
 
@@ -18,48 +16,29 @@ public class AboutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
 
-        // Setup top toolbar back button.
+        // Setup top toolbar back button
         ImageButton backButton = findViewById(R.id.backButton);
         backButton.setOnClickListener(v -> onBackPressed());
 
-        // Social button: Instagram only.
-        findViewById(R.id.btnInstagram).setOnClickListener(v ->
-            openUrl("https://www.instagram.com/pro.typer.info?igsh=Z2NjNGcxaXJzemV0"));
-        
-        // Social button: Instagram only.
-        findViewById(R.id.btnFaceBook).setOnClickListener(v ->
-            openUrl("https://www.facebook.com/share/1A2Ar6a1Gp/"));
+        // --- NEW: Website Row ---
+        LinearLayout btnWebsite = findViewById(R.id.btnWebsite);
+        btnWebsite.setOnClickListener(v ->
+                openUrl("https://pro-typer.vercel.app/aboutus.html"));
 
+        // --- Social Row: Instagram ---
+        LinearLayout btnInstagram = findViewById(R.id.btnInstagram);
+        btnInstagram.setOnClickListener(v ->
+                openUrl("https://www.instagram.com/pro.typer.info?igsh=Z2NjNGcxaXJzemV0"));
 
-        // Donation card "Click here" button.
-        findViewById(R.id.btnDonate).setOnClickListener(v ->
-            openUrl("https://crowdfund.org/c/support-us-by-donating-a-little-share-of-yours/"));
+        // --- Social Row: Facebook ---
+        LinearLayout btnFaceBook = findViewById(R.id.btnFaceBook);
+        btnFaceBook.setOnClickListener(v ->
+                openUrl("https://www.facebook.com/share/1A2Ar6a1Gp/"));
 
-        // Learn More buttons for profiles: redirect to LinkedIn.
-        MaterialButton btnLearnMore1 = findViewById(R.id.btnLearnMore1);
-        btnLearnMore1.setOnClickListener(v ->
-            openUrl("https://linktr.ee/lyfofashu")); // Replace with your actual URL
-
-        MaterialButton btnLearnMore2 = findViewById(R.id.btnLearnMore2);
-        btnLearnMore2.setOnClickListener(v ->
-            openUrl("https://beacons.ai/samarthshukla")); // Replace with your actual URL
-
-        // Set lm.png icon next to text for both Learn More buttons.
-        // ICON_GRAVITY_TEXT_START positions the icon to the left of the text.
-        btnLearnMore1.setIconResource(R.drawable.lm);
-        btnLearnMore1.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_END);
-        btnLearnMore1.setIconPadding(dpToPx(8));
-
-        btnLearnMore2.setIconResource(R.drawable.lm);
-        btnLearnMore2.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_END);
-        btnLearnMore2.setIconPadding(dpToPx(8));
-    }
-
-    /**
-     * Utility function to convert dp to pixels.
-     */
-    private int dpToPx(int dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
+        // --- Donation Row ---
+        LinearLayout btnDonate = findViewById(R.id.btnDonate);
+        btnDonate.setOnClickListener(v ->
+                openUrl("https://crowdfund.org/c/support-us-by-donating-a-little-share-of-yours/"));
     }
 
     /**

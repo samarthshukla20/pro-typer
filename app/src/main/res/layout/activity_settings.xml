@@ -52,7 +52,7 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="#33888888"
+                app:strokeColor="@color/border_unfocused"
                 app:cardBackgroundColor="@color/profile_card_bg">
 
                 <LinearLayout
@@ -113,7 +113,7 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="2dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="#33888888"
+                app:strokeColor="@color/border_unfocused"
                 app:cardBackgroundColor="@color/profile_card_bg">
 
                 <RelativeLayout
