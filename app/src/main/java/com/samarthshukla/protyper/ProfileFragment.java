@@ -1,11 +1,13 @@
 package com.samarthshukla.protyper;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -65,15 +67,16 @@ public class ProfileFragment extends Fragment {
 
         android.widget.ImageButton btnHowToPlay = view.findViewById(R.id.btnHowToPlay);
         android.widget.ImageButton btnAbout = view.findViewById(R.id.btnAbout);
+        android.widget.ImageButton btnSettings = view.findViewById(R.id.btnSettings);
+
 
         MainActivity mainActivity = (MainActivity) requireActivity();
         mainActivity.applySquishAnimation(btnHowToPlay);
         mainActivity.applySquishAnimation(btnAbout);
 
         btnHowToPlay.setOnClickListener(v -> mainActivity.showHowToPlayPopup());
-        btnAbout.setOnClickListener(v -> mainActivity.showAdThenStart(AboutActivity.class));
-
-        // NOTE: loadPlayerDashboard() was removed from here and moved to onResume()!
+        btnAbout.setOnClickListener(v -> { startActivity(new Intent(getActivity(), AboutActivity.class)); });
+        btnSettings.setOnClickListener(v -> { startActivity(new Intent(getActivity(), SettingsActivity.class)); });
 
         View cardKeystroke = view.findViewById(R.id.cardTierKeystroke);
         View cardSprinter = view.findViewById(R.id.cardTierSprinter);

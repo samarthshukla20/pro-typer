@@ -3,7 +3,7 @@
     <color name="pro_blue_primary">#0284C7</color>
     <color name="pro_blue_light">#D6E8FF</color>
     <color name="pro_blue_dark">#0F172A</color>
-    <color name="pro_accent">#39FF14</color>
+    <color name="pro_accent">#228B22</color>
 
     <color name="bg_main">#0B1120</color>
     <color name="bg_card">#1F2A38</color>
@@ -11,7 +11,7 @@
     <color name="text_secondary">#A0B2C6</color>
 
     <color name="textColor">#FFFFFF</color>
-    <color name="border_unfocused">@android:color/white</color>
+    <color name="border_unfocused">#0284C7</color>
 
     <color name="profile_card_bg">#1F2A38</color>
     <color name="profile_text_main">#FFFFFF</color>

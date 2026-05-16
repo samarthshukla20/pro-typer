@@ -70,6 +70,7 @@ public class EasyModeActivity extends AppCompatActivity {
     private SoundPool soundPool;
     private int soundIdCorrect;
     private int soundIdGameOver;
+    private float gameVolume = 1.0f;
 
     // --- XP CACHE VARIABLES ---
     private int cachedTotalXp = 0;
@@ -194,6 +195,11 @@ public class EasyModeActivity extends AppCompatActivity {
 
         soundIdCorrect = soundPool.load(this, R.raw.correct_sound, 1);
         soundIdGameOver = soundPool.load(this, R.raw.game_over_sound, 1);
+
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        int savedVolume = prefs.getInt("volume", 100); // Default to 100 if they haven't set it
+        gameVolume = savedVolume / 100f; // Math: 70 becomes 0.7f
+
     }
 
     // ==========================================
@@ -272,7 +278,7 @@ public class EasyModeActivity extends AppCompatActivity {
 
         // 3. Play the game over sound
         if (soundPool != null) {
-            soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
+            soundPool.play(soundIdGameOver, gameVolume, gameVolume, 0, 0, 1);
         }
 
         // 4. Animate it slamming onto the screen
@@ -443,7 +449,7 @@ public class EasyModeActivity extends AppCompatActivity {
             score += 1;
             scoreText.setText("Score: " + score);
             inputField.setText("");
-            soundPool.play(soundIdCorrect, 1, 1, 0, 0, 1);
+            soundPool.play(soundIdCorrect, gameVolume, gameVolume, 0, 0, 1);
             generateNewWord();
             startTimer();
         }

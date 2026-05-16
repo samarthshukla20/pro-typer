@@ -84,6 +84,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private SoundPool soundPool;
     private int soundIdParaComplete;
     private int soundIdGameOver;
+    private float gameVolume = 1.0f;
 
     // --- XP CACHE VARIABLES ---
     private int cachedTotalXp = 0;
@@ -201,6 +202,11 @@ public class ParagraphActivity extends AppCompatActivity {
 
         soundIdParaComplete = soundPool.load(this, R.raw.para_complete_sound, 1);
         soundIdGameOver = soundPool.load(this, R.raw.game_over_sound, 1);
+
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        int savedVolume = prefs.getInt("volume", 100); // Default to 100 if they haven't set it
+        gameVolume = savedVolume / 100f; // Math: 70 becomes 0.7f
+
     }
 
     // ==========================================
@@ -270,7 +276,7 @@ public class ParagraphActivity extends AppCompatActivity {
 
         // Play the game over sound
         if (soundPool != null) {
-            soundPool.play(soundIdGameOver, 1, 1, 0, 0, 1);
+            soundPool.play(soundIdGameOver, gameVolume, gameVolume, 0, 0, 1);
         }
 
         timeUpText.setScaleX(0.3f);
@@ -531,7 +537,7 @@ public class ParagraphActivity extends AppCompatActivity {
         rootView.addView(confetti);
 
         if (soundPool != null) {
-            soundPool.play(soundIdParaComplete, 1, 1, 0, 0, 1);
+            soundPool.play(soundIdParaComplete, gameVolume, gameVolume, 0, 0, 1);
         }
 
         confetti.playAnimation();
@@ -962,6 +968,7 @@ public class ParagraphActivity extends AppCompatActivity {
             });
         } else {
             Toast.makeText(this, "Ad is still loading or unavailable. Check connection.", Toast.LENGTH_SHORT).show();
+            showAdThenGameOver();
         }
     }
 

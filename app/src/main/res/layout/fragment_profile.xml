@@ -576,7 +576,21 @@
                 app:tint="@color/pro_blue_primary"
                 android:padding="16dp"
                 android:scaleType="centerInside"
+                android:layout_marginEnd="24dp"
                 android:elevation="6dp"/>
+
+            <ImageButton
+                android:id="@+id/btnSettings"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_settings"
+                android:background="@drawable/circle_outline"
+                android:backgroundTint="@color/profile_card_bg"
+                app:tint="@color/pro_blue_primary"
+                android:padding="16dp"
+                android:scaleType="centerInside"
+                android:elevation="6dp"/>
+
         </LinearLayout>
 
     </LinearLayout>

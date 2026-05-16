@@ -188,6 +188,7 @@
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textInputLayout"
         android:layout_width="0dp"
@@ -202,12 +203,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         app:boxBackgroundMode="outline"
-        app:boxStrokeColor="@color/textinput_outline"
         app:boxStrokeWidth="2dp"
         app:boxCornerRadiusTopStart="20dp"
         app:boxCornerRadiusTopEnd="20dp"
         app:boxCornerRadiusBottomStart="20dp"
-        app:boxCornerRadiusBottomEnd="20dp">
+        app:boxCornerRadiusBottomEnd="20dp"
+
+        app:boxStrokeColor="@color/pro_blue_primary"
+        app:hintTextColor="@color/pro_blue_primary"
+        android:textColorHint="#888888">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/inputField"
@@ -219,7 +223,6 @@
             android:scrollHorizontally="true"
             android:inputType="text"
             android:fontFamily="@font/difficulty"
-            android:textColorHint="@color/text_secondary"
             android:textColor="@color/text_primary" />
 
     </com.google.android.material.textfield.TextInputLayout>

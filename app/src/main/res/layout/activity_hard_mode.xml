@@ -199,8 +199,10 @@
         app:boxCornerRadiusBottomStart="20dp"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         app:boxBackgroundMode="outline"
-        app:boxStrokeColor="@color/textinput_outline"
-        app:boxStrokeWidth="2dp">
+        app:boxStrokeWidth="2dp"
+        app:boxStrokeColor="@color/pro_blue_primary"
+        app:hintTextColor="@color/pro_blue_primary"
+        android:textColorHint="#888888">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/inputField"
