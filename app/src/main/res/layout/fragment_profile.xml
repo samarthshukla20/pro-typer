@@ -564,7 +564,7 @@
                 android:padding="16dp"
                 android:scaleType="centerInside"
                 android:layout_marginEnd="24dp"
-                android:elevation="6dp"/>
+                android:elevation="0dp"/>
 
             <ImageButton
                 android:id="@+id/btnAbout"
@@ -577,7 +577,7 @@
                 android:padding="16dp"
                 android:scaleType="centerInside"
                 android:layout_marginEnd="24dp"
-                android:elevation="6dp"/>
+                android:elevation="0dp"/>
 
             <ImageButton
                 android:id="@+id/btnSettings"
@@ -589,7 +589,7 @@
                 app:tint="@color/pro_blue_primary"
                 android:padding="16dp"
                 android:scaleType="centerInside"
-                android:elevation="6dp"/>
+                android:elevation="0dp"/>
 
         </LinearLayout>
 

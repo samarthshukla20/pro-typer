@@ -61,7 +61,7 @@
                 app:cornerRadius="12dp"
                 app:elevation="0dp"
                 android:fontFamily="@font/font"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="8dp"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnParagraphPopup"
@@ -69,6 +69,32 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:text="PARAGRAPH MODE"
+                android:textColor="@android:color/white"
+                app:backgroundTint="@color/pro_blue_primary"
+                app:cornerRadius="12dp"
+                app:elevation="0dp"
+                android:fontFamily="@font/font"
+                android:layout_marginBottom="8dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMultiplayerPopup"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="MULTIPLAYER MODE"
+                android:textColor="@android:color/white"
+                app:backgroundTint="@color/pro_blue_primary"
+                app:cornerRadius="12dp"
+                app:elevation="0dp"
+                android:fontFamily="@font/font"
+                android:layout_marginBottom="8dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnXpSystemPopup"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="XP &amp; LEVELLING"
                 android:textColor="@android:color/white"
                 app:backgroundTint="@color/pro_blue_primary"
                 app:cornerRadius="12dp"

@@ -572,18 +572,43 @@ public class MainActivity extends AppCompatActivity {
         TextView tvInstruction = popupView.findViewById(R.id.tvInstructionPopup);
         MaterialButton btnSingleWord = popupView.findViewById(R.id.btnSingleWordPopup);
         MaterialButton btnParagraph = popupView.findViewById(R.id.btnParagraphPopup);
+        MaterialButton btnMultiplayer = popupView.findViewById(R.id.btnMultiplayerPopup);
+        MaterialButton btnXpSystem = popupView.findViewById(R.id.btnXpSystemPopup);
 
         tvHeading.setText("How To Play");
 
         btnSingleWord.setOnClickListener(view -> {
-            String instruction = "SINGLE WORD MODE INSTRUCTIONS:\n\n1. Choose your difficulty.\n2. Type the displayed word correctly.\n3. 1 point is given per word.\n4. Beat your high score!";
+            String instruction = "SINGLE WORD MODE:\n\n1. Choose Easy, Medium, or Hard difficulty.\n2. Type the displayed word correctly before the timer runs out.\n3. Earn 1 point per word.\n4. Survive as long as you can to set a high score!";
             tvInstruction.setText(instruction);
             buttonContainer.setVisibility(View.GONE);
         });
 
         btnParagraph.setOnClickListener(view -> {
-            String instruction = "PARAGRAPH MODE INSTRUCTIONS:\n\n1. A paragraph will be displayed.\n2. Type the entire paragraph exactly.\n3. Your Accuracy and Words Per Minute (WPM) will be shown.";
+            String instruction = "PARAGRAPH MODE:\n\n1. A full paragraph will be displayed.\n2. Type the text exactly as shown, matching case and punctuation.\n3. Your Accuracy and Words Per Minute (WPM) will be calculated at the end.";
             tvInstruction.setText(instruction);
+            buttonContainer.setVisibility(View.GONE);
+        });
+
+        btnMultiplayer.setOnClickListener(view -> {
+            String instruction = "MULTIPLAYER ARENA:\n\n1. Match up against another player in real-time.\n2. Both players type the same paragraph.\n3. Keep an eye on the progress bars to see who is leading!\n4. The first to finish with the highest accuracy wins.";
+            tvInstruction.setText(instruction);
+            buttonContainer.setVisibility(View.GONE);
+        });
+
+        btnXpSystem.setOnClickListener(view -> {
+            // We use basic HTML tags here (<br> for line breaks, <b> for bold, and <a> for the link)
+            String instruction = "<b>XP & LEVELING SYSTEM:</b><br><br>" +
+                    "1. Play games to earn Base XP (Harder modes reward more XP).<br>" +
+                    "2. Watch ads to earn extra 10 XP.<br>" +
+                    "3. Fill your XP bar to Level Up and show off your typing rank!<br>" +
+                    "4. Visit our <a href=\"https://pro-typer.vercel.app/\">website</a> for more information on this.";
+
+            // Parse the HTML so the TextView understands it
+            tvInstruction.setText(androidx.core.text.HtmlCompat.fromHtml(instruction, androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY));
+
+            // MANDATORY: This line is what actually makes the link clickable!
+            tvInstruction.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+
             buttonContainer.setVisibility(View.GONE);
         });
 
