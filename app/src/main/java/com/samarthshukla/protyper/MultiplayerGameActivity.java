@@ -53,7 +53,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private String currentParagraph = "";
 
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 12000;
+    private static final int TIME_LIMIT = 120000;
     private long gameStartTime;
     private long matchEndTime = 0;
     private boolean isGameOver = false;

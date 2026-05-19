@@ -26,7 +26,7 @@
             android:exported="false" />
         <activity
             android:name=".SettingsActivity"
-            android:exported="false" /> <!-- Updated theme to Material3 -->
+            android:exported="false" />
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-6788521747770576~9666327989" />
@@ -70,10 +70,6 @@
 
         <service
             android:name=".MyFirebaseMessagingService"
-            android:exported="false" />
-
-        <activity
-            android:name=".SettingsActivity"
             android:exported="false" />
 
     </application>

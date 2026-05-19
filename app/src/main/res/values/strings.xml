@@ -12,7 +12,7 @@
     <string name="timer_default">10s</string>
     <string name="type_hint">Type here…</string>
 
-    <string name="app_version">v2.0(beta)</string>
+    <string name="app_version">v2.0</string>
 
     <!-- Firebase OAuth Client ID -->
     <string name="default_web_client_id">AIzaSyCZ9D-cCTeCN4xHRtgCElRBq0X25ruiPp8</string>
@@ -38,9 +38,9 @@
     <!-- ca-app-pub-6788521747770576/9041805167 - real ban-->
     <!-- ca-app-pub-3940256099942544/5224354917 - test rew-->
     <!-- ca-app-pub-6788521747770576/5809137167 - real rew-->
-    <string name="Interstitial">ca-app-pub-394025609712</string>
-    <string name="Banner">ca-app-pub-3940256099942978111</string>
-    <string name="Rewarded">ca-app-pub-394025609954917</string>
+    <string name="Interstitial">ca-app-pub-6788521747790973990</string>
+    <string name="Banner">ca-app-pub-678852174777041805167</string>
+    <string name="Rewarded">ca-app-pub-67885217477709137167</string>
 
 
 </resources>

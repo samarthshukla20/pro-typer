@@ -647,61 +647,32 @@ public class MediumModeActivity extends AppCompatActivity {
     }
 
     private void showRewardedAdDialog() {
-        final AlertDialog dialog;
         final AlertDialog.Builder builder = new MaterialAlertDialogBuilder(this);
         final View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_rewarded_single, null);
 
+        // (Optional) TextView message = dialogView.findViewById(R.id.rewardMessage);
         MaterialButton watchAdButton = dialogView.findViewById(R.id.btnWatchAd);
         MaterialButton cancelButton = dialogView.findViewById(R.id.btnCancel);
 
         builder.setView(dialogView);
-        dialog = builder.create();
+
+        // THIS is the magic line that forces them to make a choice!
+        builder.setCancelable(false);
+
+        final AlertDialog dialog = builder.create();
         dialog.setCancelable(false);
 
         pauseStartTime = System.currentTimeMillis();
 
-        final Handler handler = new Handler();
-        final int[] secondsLeft = {500000000};
-
-        builder.setTitle("Continue Game?");
-
-        final Runnable[] countdownRunnable = new Runnable[1];
-        countdownRunnable[0] = new Runnable() {
-            @Override
-            public void run() {
-                // --- THE ZOMBIE HANDLER FIX ---
-                if (isFinishing() || isDestroyed()) {
-                    return; // If the screen is dead, kill the background timer instantly!
-                }
-                // ------------------------------
-
-                secondsLeft[0]--;
-                if (secondsLeft[0] > 0) {
-                    handler.postDelayed(this, 1000);
-                } else {
-                    // Safety check before dismissing
-                    if (dialog != null && dialog.isShowing()) {
-                        dialog.dismiss();
-                    }
-                    totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
-                    saveGameHistory();
-                    showAdThenGameOver();
-                }
-            }
-        };
-        handler.postDelayed(countdownRunnable[0], 1000);
-
         watchAdButton.setOnClickListener(v -> {
-            handler.removeCallbacks(countdownRunnable[0]);
+            // No more handler callbacks to remove! Just dismiss and show the ad.
             dialog.dismiss();
             showRewardedAd();
         });
 
         cancelButton.setOnClickListener(v -> {
-            handler.removeCallbacks(countdownRunnable[0]);
             dialog.dismiss();
             totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
-            saveGameHistory();
             showAdThenGameOver();
         });
 
@@ -725,6 +696,9 @@ public class MediumModeActivity extends AppCompatActivity {
                 @Override
                 public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
                     rewardedAd = null;
+                    // --- FIX 1: Ad failed to show, save history before Game Over! ---
+                    totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
+                    saveGameHistory();
                     showAdThenGameOver();
                 }
             });
@@ -738,6 +712,9 @@ public class MediumModeActivity extends AppCompatActivity {
 
         } else {
             Toast.makeText(this, "Ad is still loading or unavailable. Check connection.", Toast.LENGTH_SHORT).show();
+            // --- FIX 2: Ad was null/unavailable, save history before Game Over! ---
+            totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
+            saveGameHistory();
             showAdThenGameOver();
         }
     }

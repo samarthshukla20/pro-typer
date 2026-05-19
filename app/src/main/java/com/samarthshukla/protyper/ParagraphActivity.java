@@ -67,7 +67,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private Random random = new Random();
     private int accuracy = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 12000; // 120s
+    private static final int TIME_LIMIT = 120000; // 120s
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private RewardedAd rewardedAd;
@@ -852,12 +852,13 @@ public class ParagraphActivity extends AppCompatActivity {
     private void showRewardedAdDialog() {
         final AlertDialog.Builder builder = new MaterialAlertDialogBuilder(this);
         final View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_rewarded_ad, null);
-        TextView message = dialogView.findViewById(R.id.rewardMessage);
+
         MaterialButton watchAdButton = dialogView.findViewById(R.id.btnWatchAd);
         MaterialButton cancelButton = dialogView.findViewById(R.id.btnCancel);
 
         builder.setView(dialogView);
-        builder.setCancelable(false);
+        builder.setCancelable(false); // Magic line: Forces them to click a button!
+
         final AlertDialog dialog = builder.create();
         dialog.setCancelable(false);
 
@@ -866,43 +867,12 @@ public class ParagraphActivity extends AppCompatActivity {
         dialog.getWindow().setDimAmount(0.9f);
         dialog.show();
 
-        final int[] secondsLeft = {500000000};
-        dialog.setTitle("Add +15 sec? (" + secondsLeft[0] + "s)");
-
-        final Handler handler = new Handler();
-        final Runnable countdownRunnable = new Runnable() {
-            @Override
-            public void run() {
-                secondsLeft[0]--;
-
-                // --- THE ZOMBIE HANDLER FIX ---
-                if (!isFinishing() && !isDestroyed() && dialog != null && dialog.isShowing()) {
-                    dialog.setTitle("Add +15 sec? (" + secondsLeft[0] + "s)");
-                }
-                // ------------------------------
-
-                if (secondsLeft[0] > 0) {
-                    handler.postDelayed(this, 1000);
-                } else {
-                    // Also check if dialog is showing before dismissing to be extra safe
-                    if (dialog != null && dialog.isShowing()) {
-                        dialog.dismiss();
-                    }
-                    totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
-                    showGameOverCard(accuracy);
-                }
-            }
-        };
-        handler.postDelayed(countdownRunnable, 1000);
-
         watchAdButton.setOnClickListener(v -> {
-            handler.removeCallbacks(countdownRunnable);
             dialog.dismiss();
             showRewardedAd();
         });
 
         cancelButton.setOnClickListener(v -> {
-            handler.removeCallbacks(countdownRunnable);
             dialog.dismiss();
             totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
             showAdThenGameOver();
@@ -959,6 +929,8 @@ public class ParagraphActivity extends AppCompatActivity {
                 @Override
                 public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
                     rewardedAd = null;
+                    // --- FIX 1: Add the paused time so it doesn't ruin their WPM! ---
+                    totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
                     showAdThenGameOver();
                 }
             });
@@ -969,6 +941,8 @@ public class ParagraphActivity extends AppCompatActivity {
             });
         } else {
             Toast.makeText(this, "Ad is still loading or unavailable. Check connection.", Toast.LENGTH_SHORT).show();
+            // --- FIX 2: Add the paused time so it doesn't ruin their WPM! ---
+            totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
             showAdThenGameOver();
         }
     }
