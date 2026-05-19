@@ -330,6 +330,7 @@ public class ParagraphActivity extends AppCompatActivity {
 
             @Override
             public void run() {
+                if (isFinishing() || isDestroyed()) return;
                 if (wordIdx >= wordsList.length) {
                     finishCountdown();
                     return;

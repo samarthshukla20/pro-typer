@@ -58,7 +58,7 @@ public class HardModeActivity extends AppCompatActivity {
     private Random random = new Random();
     private int score = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 4000; // 10 seconds per word
+    private static final int TIME_LIMIT = 4000; // 4 seconds per word
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private long gameStartTime;
@@ -332,6 +332,7 @@ public class HardModeActivity extends AppCompatActivity {
 
             @Override
             public void run() {
+                if (isFinishing() || isDestroyed()) return;
                 if (wordIdx >= wordsList.length) {
                     finishCountdown();
                     return;
@@ -447,7 +448,9 @@ public class HardModeActivity extends AppCompatActivity {
             score += 1;
             scoreText.setText("Score: " + score);
             inputField.setText("");
-            soundPool.play(soundIdCorrect, gameVolume, gameVolume, 0, 0, 1);
+            if (soundPool != null && soundIdCorrect != 0) {
+                soundPool.play(soundIdCorrect, gameVolume, gameVolume, 0, 0, 1);
+            }
             generateNewWord();
             startTimer();
         }

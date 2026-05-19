@@ -334,6 +334,7 @@ public class EasyModeActivity extends AppCompatActivity {
 
             @Override
             public void run() {
+                if (isFinishing() || isDestroyed()) return;
                 if (wordIdx >= wordsList.length) {
                     finishCountdown();
                     return;
@@ -449,7 +450,9 @@ public class EasyModeActivity extends AppCompatActivity {
             score += 1;
             scoreText.setText("Score: " + score);
             inputField.setText("");
-            soundPool.play(soundIdCorrect, gameVolume, gameVolume, 0, 0, 1);
+            if (soundPool != null && soundIdCorrect != 0) {
+                soundPool.play(soundIdCorrect, gameVolume, gameVolume, 0, 0, 1);
+            }
             generateNewWord();
             startTimer();
         }
