@@ -8,9 +8,13 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.SpannableStringBuilder;
+import android.text.style.ClickableSpan;
+import android.text.style.URLSpan;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -601,18 +605,54 @@ public class MainActivity extends AppCompatActivity {
                     "1. Play games to earn Base XP (Harder modes reward more XP).<br>" +
                     "2. Watch ads to earn extra 10 XP.<br>" +
                     "3. Fill your XP bar to Level Up and show off your typing rank!<br>" +
-                    "4. Visit our <a href=\"https://pro-typer.vercel.app/\">website</a> for more information on this.";
-
-            // Parse the HTML so the TextView understands it
-            tvInstruction.setText(androidx.core.text.HtmlCompat.fromHtml(instruction, androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY));
-
-            // MANDATORY: This line is what actually makes the link clickable!
-            tvInstruction.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+                    "4. Visit our <a href=\"https://pro-typer.vercel.app/#ranksandxp\">website</a> for more information on this.";
+            setInAppHtmlLink(instruction, tvInstruction);
 
             buttonContainer.setVisibility(View.GONE);
         });
 
         dialog.show();
+    }
+
+    private void setInAppHtmlLink(String htmlText, android.widget.TextView textView) {
+        // 1. Parse the HTML
+        CharSequence sequence = androidx.core.text.HtmlCompat.fromHtml(htmlText, androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY);
+        SpannableStringBuilder spannableBuilder = new SpannableStringBuilder(sequence);
+
+        // 2. Find all the default HTML links
+        URLSpan[] urls = spannableBuilder.getSpans(0, sequence.length(), URLSpan.class);
+
+        for (URLSpan span : urls) {
+            int start = spannableBuilder.getSpanStart(span);
+            int end = spannableBuilder.getSpanEnd(span);
+            int flags = spannableBuilder.getSpanFlags(span);
+
+            // 3. Replace them with our custom click behavior
+            ClickableSpan customClickableSpan = new ClickableSpan() {
+                @Override
+                public void onClick(View view) {
+                    String clickedUrl = span.getURL();
+
+                    // CALL YOUR IN-APP BROWSER METHOD HERE
+                    openInAppBrowser(clickedUrl);
+                }
+            };
+
+            spannableBuilder.removeSpan(span);
+            spannableBuilder.setSpan(customClickableSpan, start, end, flags);
+        }
+
+        textView.setText(spannableBuilder);
+        textView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+    }
+
+    private void openInAppBrowser(String url) {
+        androidx.browser.customtabs.CustomTabsIntent.Builder builder = new androidx.browser.customtabs.CustomTabsIntent.Builder();
+        // Optional: Set toolbar color to match your app theme
+        // builder.setToolbarColor(ContextCompat.getColor(this, R.color.your_app_color));
+
+        androidx.browser.customtabs.CustomTabsIntent customTabsIntent = builder.build();
+        customTabsIntent.launchUrl(this, Uri.parse(url));
     }
 
 

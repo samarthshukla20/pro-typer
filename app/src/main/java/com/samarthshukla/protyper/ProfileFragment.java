@@ -265,11 +265,27 @@ public class ProfileFragment extends Fragment {
         tvRangeLightspeed.setText("Lv. 40+");
 
         if (rankScrollView != null) {
-            rankScrollView.post(() -> {
-                int cardCenter = activeCard.getLeft() + (activeCard.getWidth() / 2);
-                int scrollCenter = rankScrollView.getWidth() / 2;
-                int targetScrollX = cardCenter - scrollCenter;
-                rankScrollView.smoothScrollTo(targetScrollX, 0);
+            // BUG FIX: Dynamic Layout Waiter
+            rankScrollView.post(new Runnable() {
+                @Override
+                public void run() {
+                    // Safety check if user leaves fragment quickly
+                    if (!isAdded()) return;
+
+                    // If Android hasn't finished drawing the cards yet, their width will be 0.
+                    // If so, wait 50ms and try running this exact check again!
+                    if (activeCard.getWidth() == 0 || rankScrollView.getWidth() == 0) {
+                        rankScrollView.postDelayed(this, 50);
+                        return;
+                    }
+
+                    // Once widths are > 0, the UI is fully drawn. Do the math and scroll!
+                    int cardCenter = activeCard.getLeft() + (activeCard.getWidth() / 2);
+                    int scrollCenter = rankScrollView.getWidth() / 2;
+                    int targetScrollX = cardCenter - scrollCenter;
+
+                    rankScrollView.smoothScrollTo(targetScrollX, 0);
+                }
             });
         }
     }

@@ -671,6 +671,8 @@ public class EasyModeActivity extends AppCompatActivity {
         cancelButton.setOnClickListener(v -> {
             dialog.dismiss();
             totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
+            // --- BUG FIX: Explicitly save the history when they cancel the ad! ---
+            saveGameHistory();
             showAdThenGameOver();
         });
 
