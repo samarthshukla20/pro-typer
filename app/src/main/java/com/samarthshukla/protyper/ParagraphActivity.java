@@ -155,36 +155,25 @@ public class ParagraphActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) { checkWord(); }
         });
 
-        KeyboardVisibilityEvent.setEventListener(this, isOpen -> {
-            View wordCard = findViewById(R.id.wordCard);
-            View textInputLayout = findViewById(R.id.textInputLayout);
-            View rootView = findViewById(android.R.id.content);
-            Rect r = new Rect();
-            rootView.getWindowVisibleDisplayFrame(r);
-            int screenHeight = rootView.getRootView().getHeight();
-            int keypadHeight = screenHeight - r.bottom;
-            if (isOpen && keypadHeight > screenHeight * 0.15) {
-                int availableHeight = screenHeight - keypadHeight;
-                int[] inputLocation = new int[2];
-                textInputLayout.getLocationOnScreen(inputLocation);
-                int inputBottom = inputLocation[1] + textInputLayout.getHeight();
-                int overlap = inputBottom - availableHeight;
-                if (overlap < 0) overlap = 0;
-                int[] wordLocation = new int[2];
-                wordCard.getLocationOnScreen(wordLocation);
-                int wordBottom = wordLocation[1] + wordCard.getHeight();
-                int currentGap = inputLocation[1] - wordBottom;
-                int minGap = dpToPx(8);
-                int extraGapReduction = currentGap - minGap;
-                if (extraGapReduction < 0) extraGapReduction = 0;
-                int translationForInput = -overlap;
-                int translationForWord = -Math.min(overlap, extraGapReduction);
-                textInputLayout.animate().translationY(translationForInput).setDuration(100).start();
-                wordCard.animate().translationY(translationForWord).setDuration(100).start();
-            } else {
-                textInputLayout.animate().translationY(0).setDuration(100).start();
-                wordCard.animate().translationY(0).setDuration(100).start();
+        // --- MODERN KEYBOARD OVERLAP FIX (Android 15/16 Safe) ---
+        View rootView = findViewById(android.R.id.content);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, windowInsets) -> {
+            // Get the height of the system bars AND the Keyboard (IME)
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars() |
+                            androidx.core.view.WindowInsetsCompat.Type.ime()
+            );
+
+            // Apply padding to the root view. This dynamically "squishes" the layout
+            // so the text input box sits perfectly above the keyboard without translating/overlapping!
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+
+            // Trigger auto-scroll so the user doesn't lose their place when the keyboard pops up
+            if (paragraphScrollView != null && inputField != null && inputField.getText() != null) {
+                paragraphScrollView.post(() -> autoScrollParagraph(inputField.getText().length()));
             }
+
+            return androidx.core.view.WindowInsetsCompat.CONSUMED;
         });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

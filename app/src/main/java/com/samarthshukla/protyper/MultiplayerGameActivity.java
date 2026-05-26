@@ -35,8 +35,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent;
-
 public class MultiplayerGameActivity extends AppCompatActivity {
 
     private static final String TAG = "MultiplayerGameActivity";
@@ -51,33 +49,27 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     private DatabaseReference gameRef;
     private String gameSessionId, userId, opponentId;
     private String currentParagraph = "";
-
     private CountDownTimer timer;
     private static final int TIME_LIMIT = 120000;
     private long gameStartTime;
     private long matchEndTime = 0;
     private boolean isGameOver = false;
     private boolean isGameStarted = false;
-
     // --- FRIEND MATCH EXPLOIT PREVENTION ---
     private boolean isFriendMatch = false;
-
     // --- XP CACHE VARIABLES ---
     private int cachedTotalXp = 0;
     private int cachedLevel = 1;
-
     // --- ADVANCED AI BOT VARIABLES ---
     private boolean isBotMatch = false;
     private int botWpm = 0;
     private TypingBot myBot; // Our new AI Engine!
     private int botCharsTypedSoFar = 0; // Tracks bot progress for final scoring
-
     private ValueEventListener opponentListener;
     private ValueEventListener finalScoreListener;
     private ValueEventListener playersListener;
     private ValueEventListener opponentPresenceListener;
     private ValueEventListener gameResultListener;
-
     private Handler disconnectHandler = new Handler(Looper.getMainLooper());
     private Runnable disconnectRunnable;
     private AlertDialog disconnectDialog;
@@ -179,39 +171,38 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     }
 
     private void setupKeyboardShiftBehavior() {
-        KeyboardVisibilityEvent.setEventListener(this, isOpen -> {
-            View rootView = findViewById(android.R.id.content);
-            if (rootView == null || inputCard == null || paragraphCard == null) return;
+        // --- MODERN KEYBOARD OVERLAP FIX (Android 15/16 Safe) ---
+        View rootView = findViewById(android.R.id.content);
+        if (rootView == null) return;
 
-            Rect r = new Rect();
-            rootView.getWindowVisibleDisplayFrame(r);
-            int screenHeight = rootView.getRootView().getHeight();
-            int keypadHeight = screenHeight - r.bottom;
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, windowInsets) -> {
+            // Get the height of the system bars AND the Keyboard (IME)
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars() |
+                            androidx.core.view.WindowInsetsCompat.Type.ime()
+            );
 
-            if (isOpen && keypadHeight > screenHeight * 0.15f) {
-                int availableHeight = screenHeight - keypadHeight;
-                int[] inputLocation = new int[2];
-                inputCard.getLocationOnScreen(inputLocation);
-                int inputBottom = inputLocation[1] + inputCard.getHeight();
-                int overlap = inputBottom - availableHeight;
-                if (overlap < 0) overlap = 0;
+            // Apply padding to the root view. This dynamically "squishes" the layout
+            // so the text input box sits perfectly above the keyboard without translating/overlapping!
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
 
-                inputCard.animate().translationY(-overlap).setDuration(120).start();
-
-                int[] paragraphLocation = new int[2];
-                paragraphCard.getLocationOnScreen(paragraphLocation);
-                int paragraphBottom = paragraphLocation[1] + paragraphCard.getHeight();
-                int currentGap = inputLocation[1] - paragraphBottom;
-                int minGap = dpToPx(8);
-                int extraGapReduction = currentGap - minGap;
-                if (extraGapReduction < 0) extraGapReduction = 0;
-                int paragraphTranslation = -Math.min(overlap, extraGapReduction);
-
-                paragraphCard.animate().translationY(paragraphTranslation).setDuration(120).start();
-            } else {
-                inputCard.animate().translationY(0).setDuration(120).start();
-                paragraphCard.animate().translationY(0).setDuration(120).start();
+            // Trigger auto-scroll so the user doesn't lose their place when the keyboard pops up
+            if (paragraphScrollView != null && inputField != null && inputField.getText() != null) {
+                final int cursorOffset = Math.min(inputField.getText().length(), currentParagraph.length());
+                paragraphScrollView.post(() -> {
+                    Layout layout = wordDisplay.getLayout();
+                    if (layout != null && cursorOffset >= 0 && cursorOffset <= layout.getText().length()) {
+                        int line = layout.getLineForOffset(cursorOffset);
+                        int y = layout.getLineTop(line);
+                        // dpToPx(24) ensures a little breathing room above the cursor
+                        int targetScrollY = y - dpToPx(24);
+                        if (targetScrollY < 0) targetScrollY = 0;
+                        paragraphScrollView.smoothScrollTo(0, targetScrollY);
+                    }
+                });
             }
+
+            return androidx.core.view.WindowInsetsCompat.CONSUMED;
         });
     }
 

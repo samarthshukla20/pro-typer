@@ -144,43 +144,20 @@ public class MediumModeActivity extends AppCompatActivity {
             }
         });
 
-        if (Build.VERSION.SDK_INT >= 35) {
-            getWindow().setDecorFitsSystemWindows(true);
-            final View rootView = findViewById(android.R.id.content);
-            final View wordCard = findViewById(R.id.wordCard);
-            final View textInputLayout = findViewById(R.id.textInputLayout);
+        // --- MODERN KEYBOARD OVERLAP FIX (Android 15/16 Safe) ---
+        View rootView = findViewById(android.R.id.content);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, windowInsets) -> {
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars() |
+                            androidx.core.view.WindowInsetsCompat.Type.ime()
+            );
 
-            rootView.setOnApplyWindowInsetsListener((v, insets) -> {
-                int imeHeight = insets.getInsets(WindowInsets.Type.ime()).bottom;
-                if (imeHeight > 0) {
-                    int availableHeight = rootView.getHeight() - imeHeight;
-                    int[] inputLocation = new int[2];
-                    textInputLayout.getLocationOnScreen(inputLocation);
-                    int inputBottom = inputLocation[1] + textInputLayout.getHeight();
-                    int overlap = inputBottom - availableHeight;
-                    if (overlap < 0) overlap = 0;
+            // Dynamically pad the root view so it shrinks natively above the keyboard.
+            // No manual translations required!
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
 
-                    int[] wordLocation = new int[2];
-                    wordCard.getLocationOnScreen(wordLocation);
-                    int wordBottom = wordLocation[1] + wordCard.getHeight();
-                    int currentGap = inputLocation[1] - wordBottom;
-
-                    int minGap = dpToPx(8);
-                    int extraGapReduction = currentGap - minGap;
-                    if (extraGapReduction < 0) extraGapReduction = 0;
-
-                    int translationForInput = -overlap;
-                    int translationForWord = -Math.min(overlap, extraGapReduction);
-
-                    textInputLayout.animate().translationY(translationForInput).setDuration(100).start();
-                    wordCard.animate().translationY(translationForWord).setDuration(100).start();
-                } else {
-                    textInputLayout.animate().translationY(0).setDuration(100).start();
-                    wordCard.animate().translationY(0).setDuration(100).start();
-                }
-                return insets;
-            });
-        }
+            return androidx.core.view.WindowInsetsCompat.CONSUMED;
+        });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
