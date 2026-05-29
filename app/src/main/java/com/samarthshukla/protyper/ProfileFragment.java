@@ -22,7 +22,7 @@ import com.google.firebase.database.ValueEventListener;
 
 public class ProfileFragment extends Fragment {
 
-    private TextView tvPlayerTitle, tvRankUpHint, tvXpEarned, tvNextRank, tvXpRemaining;
+    private TextView tvPlayerTitle, tvRankUpHint, tvXpEarned, tvNextRank, tvXpRemaining, tvPlayerId;
     private TextView tvRangeKeystroke, tvRangeSprinter, tvRangeVelocity, tvRangeSupersonic, tvRangeLightspeed;
     private android.widget.ImageView ivCurrentBadge;
     private TextView tvProfileTopSpeed, tvProfileAvgSpeed, tvProfileMatches, tvProfileWinRate;
@@ -52,6 +52,7 @@ public class ProfileFragment extends Fragment {
         tvRangeVelocity   = view.findViewById(R.id.tvRangeVelocity);
         tvRangeSupersonic = view.findViewById(R.id.tvRangeSupersonic);
         tvRangeLightspeed = view.findViewById(R.id.tvRangeLightspeed);
+        tvPlayerId = view.findViewById(R.id.tvPlayerId);
 
         // Bind Rank Tier Cards
         cardTierKeystroke  = view.findViewById(R.id.cardTierKeystroke);
@@ -83,6 +84,11 @@ public class ProfileFragment extends Fragment {
         View cardVelocity = view.findViewById(R.id.cardTierVelocity);
         View cardSupersonic = view.findViewById(R.id.cardTierSupersonic);
         View cardLightspeed = view.findViewById(R.id.cardTierLightspeed);
+
+        String userId = XpManager.getGlobalUserId(requireContext());
+        if (tvPlayerId != null) {
+            tvPlayerId.setText(userId);
+        }
 
         cardKeystroke.setOnClickListener(v -> showBadgeDialog(
                 R.drawable.ic_keystroke, "Keystroke", "Levels 1 - 10", android.graphics.Color.parseColor("#64B5F6"),

@@ -63,7 +63,7 @@ public class MultiplayerGameActivity extends AppCompatActivity {
     // --- ADVANCED AI BOT VARIABLES ---
     private boolean isBotMatch = false;
     private int botWpm = 0;
-    private TypingBot myBot; // Our new AI Engine!
+    private TypingBot myBot; //AI Engine
     private int botCharsTypedSoFar = 0; // Tracks bot progress for final scoring
     private ValueEventListener opponentListener;
     private ValueEventListener finalScoreListener;

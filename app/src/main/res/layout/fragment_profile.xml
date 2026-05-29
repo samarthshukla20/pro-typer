@@ -551,20 +551,18 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginTop="32dp"
-            android:layout_marginBottom="80dp">
-
-            <ImageButton
-                android:id="@+id/btnHowToPlay"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:src="@drawable/htp"
-                android:background="@drawable/circle_outline"
-                android:backgroundTint="@color/profile_card_bg"
-                app:tint="@color/pro_blue_primary"
-                android:padding="16dp"
-                android:scaleType="centerInside"
-                android:layout_marginEnd="24dp"
-                android:elevation="0dp"/>
+            android:layout_marginBottom="32dp"> <ImageButton
+            android:id="@+id/btnHowToPlay"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/htp"
+            android:background="@drawable/circle_outline"
+            android:backgroundTint="@color/profile_card_bg"
+            app:tint="@color/pro_blue_primary"
+            android:padding="16dp"
+            android:scaleType="centerInside"
+            android:layout_marginEnd="24dp"
+            android:elevation="0dp"/>
 
             <ImageButton
                 android:id="@+id/btnAbout"
@@ -593,5 +591,30 @@
 
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PLAYER ID : "
+            android:textSize="11sp"
+            android:letterSpacing="0.1"
+            android:textColor="@color/pro_blue_primary"
+            android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvPlayerId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Loading..."
+                android:textSize="13sp"
+                android:textColor="@color/profile_text_sub"
+                android:fontFamily="monospace"
+                android:textIsSelectable="true" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>
