@@ -15,21 +15,27 @@
         android:roundIcon="@drawable/pro_typer_tm"
         android:supportsRtl="true"
         android:theme="@style/Theme.TypingMaster">
+
         <activity
             android:name=".ResultActivity"
             android:exported="false" />
+
         <activity
             android:name=".MultiplayerGameActivity"
             android:exported="false" />
+
         <activity
             android:name=".MultiplayerLobbyActivity"
             android:exported="false" />
+
         <activity
             android:name=".SettingsActivity"
             android:exported="false" />
+
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-6788521747770576~9666327989" />
+
         <!-- SplashActivity (Launch Activity) -->
         <activity
             android:name=".SplashActivity"
@@ -38,32 +44,44 @@
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity" /> <!-- DifficultyActivity -->
+
+        <activity android:name=".MainActivity" />
+
+        <!-- DifficultyActivity -->
         <activity
             android:name=".DifficultyActivity"
-            android:exported="true" /> <!-- EasyActivity -->
+            android:exported="true" />
+
+        <!-- EasyActivity -->
         <activity
             android:name=".EasyModeActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".MediumModeActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".HardModeActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize" /> <!-- TypingActivity -->
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- TypingActivity -->
         <activity
             android:name=".TypingActivity"
             android:exported="true" />
+
         <activity android:name=".HistoryActivity" />
+
         <activity android:name=".HowToPlayActivity" />
+
         <activity android:name=".AboutActivity" />
+
         <activity
             android:name=".ParagraphActivity"
             android:exported="true" />

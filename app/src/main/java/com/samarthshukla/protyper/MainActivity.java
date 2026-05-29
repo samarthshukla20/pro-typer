@@ -96,19 +96,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        //LOAD SAVED THEME BEFORE DRAWING THE SCREEN
-        android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-
-        // Read the saved preference (defaults to false/Light Mode if they've never opened settings)
-        boolean isDarkMode = prefs.getBoolean("isDarkMode", false);
-
-        if (isDarkMode) {
-            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
-        } else {
-            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
-        }
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 

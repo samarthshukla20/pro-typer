@@ -2,6 +2,7 @@ package com.samarthshukla.protyper;
 
 import android.app.Application;
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.ActivityInfo;  // <-- Added import
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -30,8 +31,26 @@ public class AppName extends Application implements Application.ActivityLifecycl
         // Apply dynamic colors
         DynamicColors.applyToActivitiesIfAvailable(this);
 
-        // Set system-wide night mode
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        // --- READ SAVED THEME PREFERENCE ---
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+
+        // 1. Is the app set to follow the system? (True by default for new installs)
+        boolean isSystemDefault = prefs.getBoolean("isSystemDefault", true);
+
+        if (isSystemDefault) {
+            // Tell the app to dynamically follow the phone's system theme.
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+            // Note: We intentionally omit UiModeManager here so the Splash Screen naturally follows the system.
+        } else {
+            // 2. The user has turned off System Default. Respect their explicit Dark Mode choice!
+            boolean isDarkMode = prefs.getBoolean("isDarkMode", false);
+            if (isDarkMode) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            }
+        }
+        // ----------------------------------------
 
         // Initialize the Mobile Ads SDK
         MobileAds.initialize(this);
