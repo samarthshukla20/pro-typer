@@ -85,10 +85,6 @@ public class ProfileFragment extends Fragment {
         View cardSupersonic = view.findViewById(R.id.cardTierSupersonic);
         View cardLightspeed = view.findViewById(R.id.cardTierLightspeed);
 
-        String userId = XpManager.getGlobalUserId(requireContext());
-        if (tvPlayerId != null) {
-            tvPlayerId.setText(userId);
-        }
 
         cardKeystroke.setOnClickListener(v -> showBadgeDialog(
                 R.drawable.ic_keystroke, "Keystroke", "Levels 1 - 10", android.graphics.Color.parseColor("#64B5F6"),
@@ -136,6 +132,16 @@ public class ProfileFragment extends Fragment {
 
     private void loadPlayerDashboard() {
         String userId = XpManager.getGlobalUserId(requireContext());
+
+        // ADD THIS HERE: Ensure the ID always populates!
+        if (tvPlayerId != null) {
+            if (userId == null || userId.isEmpty()) {
+                tvPlayerId.setText("Unknown ID");
+            } else {
+                tvPlayerId.setText(userId);
+            }
+        }
+
         userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
 
         userListener = new ValueEventListener() {
