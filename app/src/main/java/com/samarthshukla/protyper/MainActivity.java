@@ -39,6 +39,10 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.samarthshukla.protyper.BuildConfig;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+// --- NEW: FIREBASE AUTH IMPORTS ---
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 // --- NEW: GOOGLE PLAY IN-APP UPDATE IMPORTS ---
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
@@ -98,6 +102,31 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // ==========================================
+        // FIREBASE SILENT AUTHENTICATION
+        // ==========================================
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+
+        if (currentUser == null) {
+            // They have never opened the app before (or aren't logged in). Log them in silently!
+            mAuth.signInAnonymously().addOnCompleteListener(this, task -> {
+                if (task.isSuccessful() && mAuth.getCurrentUser() != null) {
+                    // Success! They now have a real Firebase UID.
+                    String realFirebaseId = mAuth.getCurrentUser().getUid();
+
+                    // Force SharedPreferences to use THIS real ID instead of the "PLAYER_abcd" fake one
+                    getSharedPreferences("AppPrefs", MODE_PRIVATE)
+                            .edit()
+                            .putString("guest_id", realFirebaseId) // Make sure this key matches XpManager!
+                            .apply();
+                } else {
+                    android.util.Log.e("Auth", "Silent login failed", task.getException());
+                }
+            });
+        }
+        // ==========================================
 
         // --- TRIGGER GOOGLE PLAY UPDATE CHECK INSTANTLY ---
         checkForAppUpdate();
