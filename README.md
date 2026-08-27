@@ -118,41 +118,15 @@ Future updates may include:
 
 ---
 
-## 🤝 Contributing
-
-Contributions, suggestions, and feedback are welcome!
-
-1. Fork the repository.
-2. Create a new branch:
-
-```bash
-git checkout -b feature/your-feature-name
-```
-
-3. Make your changes.
-4. Commit your changes:
-
-```bash
-git commit -m "Add your feature"
-```
-
-5. Push the branch:
-
-```bash
-git push origin feature/your-feature-name
-```
-
-6. Open a Pull Request 🚀
-
----
-
 ## 🐛 Bug Reports & Feature Requests
 
-Found a bug or have an idea for Pro Typer?
+Found a bug, have a feature suggestion, or want to share feedback about Pro Typer?
 
-Feel free to open an **Issue** in this repository.
+Feel free to contact us at:
 
-Your feedback helps make Pro Typer better! 💙
+📧 **samarthshuklaapps.info@gmail.com**
+
+Your feedback helps improve Pro Typer and shape future updates! 💙
 
 ---
 
