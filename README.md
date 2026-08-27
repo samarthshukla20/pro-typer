@@ -8,10 +8,10 @@ Pro Typer combines typing practice with competitive gameplay. Challenge yourself
 
 ### 🎮 Multiple Typing Modes
 
-- ⚡ **Single Word Mode** — Test your typing speed by typing as many words as possible.
-- 📖 **Paragraph Mode** — Improve typing endurance, speed, and accuracy with full paragraphs.
-- ⚔️ **Real-Time Multiplayer** — Compete against other players in live typing battles.
-- 🔒 **Private Rooms** — Create private multiplayer rooms and challenge your friends.
+- ⚡ **Single Word Mode** - Test your typing speed by typing as many words as possible.
+- 📖 **Paragraph Mode** - Improve typing endurance, speed, and accuracy with full paragraphs.
+- ⚔️ **Real-Time Multiplayer** - Compete against other players in live typing battles.
+- 🔒 **Private Rooms** - Create private multiplayer rooms and challenge your friends.
 
 ### 🏆 Progression System
 
@@ -83,17 +83,52 @@ Keep playing, earning XP, and improving your typing skills to reach the highest 
 
 ## 📸 Screenshots
 
-> Screenshots will be added soon!
 
-Example structure:
 
-```md
 <p align="center">
-  <img src="screenshots/home.png" width="220"/>
-  <img src="screenshots/multiplayer.png" width="220"/>
-  <img src="screenshots/profile.png" width="220"/>
+  <img
+    width="600"
+    alt="pro-typer-graphic"
+    src="https://github.com/user-attachments/assets/966600c3-683c-43ba-b353-a560563becc4"
+    />
 </p>
-```
+
+
+<p align="center">
+  <img 
+    src="https://github.com/user-attachments/assets/f265f329-31a0-407d-b288-f8108cef9ea7" 
+    width="180" 
+    alt="Pro Typer Screenshot 2" 
+  />
+  <img 
+    src="https://github.com/user-attachments/assets/46ce6cbb-cdc5-491b-ade8-5d24d4eb0117" 
+    width="180" 
+    alt="Pro Typer Screenshot 2" 
+  />
+  <img 
+    src="https://github.com/user-attachments/assets/393048a9-89d1-4312-9efc-f947707845fa" 
+    width="180" 
+    alt="Pro Typer Screenshot 3" 
+  />
+</p>
+
+<p align="center">
+  <img 
+    src="https://github.com/user-attachments/assets/166a89fa-d9ea-40eb-8dd0-78e88d9f1ac4" 
+    width="180" 
+    alt="Pro Typer Screenshot 4" 
+  />
+  <img 
+    src="https://github.com/user-attachments/assets/285575bf-b46f-4ffb-8428-eec60bf32e4b" 
+    width="180" 
+    alt="Pro Typer Screenshot 5" 
+  />
+  <img 
+    src="https://github.com/user-attachments/assets/abb4cc9e-e531-4ca1-bad0-a5c35c69bfd8" 
+    width="180" 
+    alt="Pro Typer Screenshot 6" 
+  />
+</p>
 
 ---
 
