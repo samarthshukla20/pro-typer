@@ -8,32 +8,32 @@ Pro Typer combines typing practice with competitive gameplay. Challenge yourself
 
 ### 🎮 Multiple Typing Modes
 
-- ⚡ **Single Word Mode** - Test your typing speed by typing as many words as possible.
-- 📖 **Paragraph Mode** - Improve typing endurance, speed, and accuracy with full paragraphs.
-- ⚔️ **Real-Time Multiplayer** - Compete against other players in live typing battles.
-- 🔒 **Private Rooms** - Create private multiplayer rooms and challenge your friends.
+- **Single Word Mode** - Test your typing speed by typing as many words as possible.
+- **Paragraph Mode** - Improve typing endurance, speed, and accuracy with full paragraphs.
+- **Real-Time Multiplayer** - Compete against other players in live typing battles.
+- **Private Rooms** - Create private multiplayer rooms and challenge your friends.
 
 ### 🏆 Progression System
 
-- ⭐ Earn **XP** after completing matches.
-- 📈 Level up as you continue playing.
-- 🥇 Progress through **5 competitive tiers**:
+- Earn **XP** after completing matches.
+- Level up as you continue playing.
+- Progress through **5 competitive tiers**:
 
 ```text
 Keystroke → Sprinter → Velocity → Supersonic → Lightspeed
 ```
 
-- 🎖️ Unlock unique badges and showcase your achievements.
-- 📊 Track your matches, wins, performance, and overall progress.
+- Unlock unique badges and showcase your achievements.
+- Track your matches, wins, performance, and overall progress.
 
 ### 📱 Modern Experience
 
-- 🎨 Modern interface built using **Material Design 3**
-- 🌙 Full **Light & Dark Mode** support
-- 📈 Detailed match history and statistics
-- 🔔 Push notifications
-- 🔄 In-app update support
-- ✨ Smooth animations and interactive gameplay
+- Modern interface built using **Material Design 3**
+- Full **Light & Dark Mode** support
+- Detailed match history and statistics
+- Push notifications
+- In-app update support
+- Smooth animations and interactive gameplay
 
 ---
 
@@ -43,12 +43,12 @@ Pro Typer allows players to compete against each other in real time.
 
 ### Multiplayer Features
 
-- 🔍 Automatic matchmaking
-- 🌐 Real-time player synchronization
-- 👥 Private rooms
-- 📊 Live typing progress
-- 🏆 Instant match results
-- 📈 XP and progression rewards
+- Automatic matchmaking
+- Real-time player synchronization
+- Private rooms
+- Live typing progress
+- Instant match results
+- XP and progression rewards
 
 The multiplayer system is powered by **Firebase Realtime Database**.
 
@@ -144,12 +144,12 @@ Pro Typer is available on Google Play.
 
 Future updates may include:
 
-- ⏱️ Custom typing durations
-- ⌨️ Backspace customization
-- 🔊 Multiple typing sound options
-- 🎯 More typing challenges
-- 🏆 Additional competitive features
-- 📊 Improved statistics and performance tracking
+- Custom typing durations
+- Backspace customization
+- Multiple typing sound options
+- More typing challenges
+- Additional competitive features
+- Improved statistics and performance tracking
 
 ---
 
@@ -181,10 +181,10 @@ Android Developer • Web Developer • AI/ML Student
 
 If you like Pro Typer, consider:
 
-- ⭐ Starring this repository
-- 📲 Downloading the app
-- 📝 Leaving a review on Google Play
-- 🐛 Reporting bugs
-- 💡 Suggesting new features
+- Starring this repository
+- Downloading the app
+- Leaving a review on Google Play
+- Reporting bugs
+- Suggesting new features
 
 Your support helps the project grow! 🚀
