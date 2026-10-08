@@ -69,6 +69,9 @@ public class DifficultyActivity extends AppCompatActivity {
     // Start Activity with Animation
     private void openMode(Class<?> activityClass) {
         Intent intent = new Intent(DifficultyActivity.this, activityClass);
+        int durationSeconds = getIntent().getIntExtra(PracticeSettingsActivity.PREF_TIMER_SECONDS,
+                PracticeSettingsActivity.DEFAULT_TIMER_SECONDS);
+        intent.putExtra(PracticeSettingsActivity.PREF_TIMER_SECONDS, durationSeconds);
         
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
             ActivityOptions options = ActivityOptions.makeCustomAnimation(
