@@ -58,7 +58,7 @@ public class MediumModeActivity extends AppCompatActivity {
     private Random random = new Random();
     private int score = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 7000; // 7 seconds per word
+    private int practiceDurationSeconds = PracticeSettingsActivity.DEFAULT_TIMER_SECONDS;
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private long gameStartTime;
@@ -94,6 +94,12 @@ public class MediumModeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_medium_mode);
+
+        // v2.1: Load the persistent/custom practice duration.
+        SharedPreferences practicePrefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        practiceDurationSeconds = getIntent().getIntExtra(PracticeSettingsActivity.PREF_TIMER_SECONDS,
+                practicePrefs.getInt(PracticeSettingsActivity.PREF_TIMER_SECONDS,
+                        PracticeSettingsActivity.DEFAULT_TIMER_SECONDS));
 
         MobileAds.initialize(this, initializationStatus -> {});
         loadInterstitialAd();
@@ -412,7 +418,7 @@ public class MediumModeActivity extends AppCompatActivity {
 
     private void startTimer() {
         if (timer != null) timer.cancel();
-        timer = new CountDownTimer(TIME_LIMIT, 1000) {
+        timer = new CountDownTimer(practiceDurationSeconds * 1000L, 1000) {
             public void onTick(long millisUntilFinished) {
                 timerText.setText("Time left: " + millisUntilFinished / 1000 + "s");
             }
@@ -433,7 +439,6 @@ public class MediumModeActivity extends AppCompatActivity {
                 soundPool.play(soundIdCorrect, gameVolume, gameVolume, 0, 0, 1);
             }
             generateNewWord();
-            startTimer();
         }
     }
 

@@ -65,7 +65,7 @@ public class ParagraphActivity extends AppCompatActivity {
     private Random random = new Random();
     private int accuracy = 0;
     private CountDownTimer timer;
-    private static final int TIME_LIMIT = 120000; // 120s
+    private int practiceDurationSeconds = PracticeSettingsActivity.DEFAULT_TIMER_SECONDS;
     private List<String> usedWords;
     private InterstitialAd interstitialAd;
     private RewardedAd rewardedAd;
@@ -107,6 +107,12 @@ public class ParagraphActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         setContentView(R.layout.activity_paragraph_mode);
+
+        // v2.1: Load the persistent/custom practice duration.
+        SharedPreferences practicePrefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        practiceDurationSeconds = getIntent().getIntExtra(PracticeSettingsActivity.PREF_TIMER_SECONDS,
+                practicePrefs.getInt(PracticeSettingsActivity.PREF_TIMER_SECONDS,
+                        PracticeSettingsActivity.DEFAULT_TIMER_SECONDS));
 
         MobileAds.initialize(this, initializationStatus -> {});
         loadInterstitialAd();
@@ -437,7 +443,7 @@ public class ParagraphActivity extends AppCompatActivity {
 
     private void startTimer() {
         if (timer != null) timer.cancel();
-        timer = new CountDownTimer(TIME_LIMIT, 1000) {
+        timer = new CountDownTimer(practiceDurationSeconds * 1000L, 1000) {
             public void onTick(long millisUntilFinished) {
                 long secondsRemaining = millisUntilFinished / 1000;
                 timerText.setText("Time left: " + secondsRemaining + "s");
