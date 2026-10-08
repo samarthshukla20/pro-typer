@@ -28,8 +28,8 @@ public class HomeFragment extends Fragment {
         mainActivity.applySquishAnimation(btnParagraphMode);
         mainActivity.applySquishAnimation(btnMultiplayerMode);
 
-        btnSingleWordMode.setOnClickListener(v -> mainActivity.showAdThenStart(DifficultyActivity.class));
-        btnParagraphMode.setOnClickListener(v -> mainActivity.showAdThenStart(ParagraphActivity.class));
+        btnSingleWordMode.setOnClickListener(v -> mainActivity.showAdThenStart(PracticeSettingsActivity.class));
+        btnParagraphMode.setOnClickListener(v -> mainActivity.showAdThenStart(PracticeSettingsActivity.class));
         btnMultiplayerMode.setOnClickListener(v -> mainActivity.showAdThenStart(MultiplayerLobbyActivity.class));
 
         return view;
