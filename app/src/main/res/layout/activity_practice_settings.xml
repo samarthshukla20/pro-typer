@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_main">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="16dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:padding="10dp"
+            android:src="@drawable/back"
+            app:tint="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Practice Settings"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvPracticeMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.65"
+                android:fontFamily="@font/difficulty"
+                android:text="SINGLE WORD"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/profile_card_bg"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/border_unfocused"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/font"
+                        android:text="Duration"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Choose how long your practice session lasts."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <RadioGroup
+                        android:id="@+id/timerGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp">
+
+                        <RadioButton
+                            android:id="@+id/radio15"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:buttonTint="@color/pro_blue_primary"
+                            android:gravity="center_vertical"
+                            android:text="15 sec"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp" />
+
+                        <RadioButton
+                            android:id="@+id/radio30"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:buttonTint="@color/pro_blue_primary"
+                            android:gravity="center_vertical"
+                            android:text="30 sec"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp" />
+
+                        <RadioButton
+                            android:id="@+id/radio60"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:buttonTint="@color/pro_blue_primary"
+                            android:gravity="center_vertical"
+                            android:text="60 sec"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp" />
+
+                        <RadioButton
+                            android:id="@+id/radio120"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:buttonTint="@color/pro_blue_primary"
+                            android:gravity="center_vertical"
+                            android:text="120 sec"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp" />
+
+                        <RadioButton
+                            android:id="@+id/radio300"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:buttonTint="@color/pro_blue_primary"
+                            android:gravity="center_vertical"
+                            android:text="300 sec"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp" />
+                    </RadioGroup>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartPractice"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="@font/difficulty"
+        android:text="START"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        app:backgroundTint="@color/pro_blue_primary"
+        app:cornerRadius="32dp" />
+
+</LinearLayout>
