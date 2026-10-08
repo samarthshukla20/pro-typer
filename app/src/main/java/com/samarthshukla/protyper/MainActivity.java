@@ -572,6 +572,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showAdThenStart(Class<?> activity) {
+        showAdThenStart(activity, null);
+    }
+
+    public void showAdThenStart(Class<?> activity, String practiceMode) {
         if (interstitialAd != null) {
             InterstitialAd adToShow = interstitialAd;
             interstitialAd = null;
@@ -579,20 +583,27 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onAdDismissedFullScreenContent() {
                     loadInterstitialAd();
-                    startActivity(new Intent(MainActivity.this, activity));
+                    startActivity(buildStartIntent(activity, practiceMode));
                 }
                 @Override
                 public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
                     loadInterstitialAd();
-                    startActivity(new Intent(MainActivity.this, activity));
+                    startActivity(buildStartIntent(activity, practiceMode));
                 }
             });
             adToShow.show(MainActivity.this);
         } else {
-            startActivity(new Intent(MainActivity.this, activity));
+            startActivity(buildStartIntent(activity, practiceMode));
         }
     }
 
+    private Intent buildStartIntent(Class<?> activity, String practiceMode) {
+        Intent intent = new Intent(MainActivity.this, activity);
+        if (practiceMode != null) {
+            intent.putExtra(PracticeSettingsActivity.EXTRA_MODE, practiceMode);
+        }
+        return intent;
+    }
     public void showHowToPlayPopup() {
         View popupView = LayoutInflater.from(this).inflate(R.layout.layout_how_to_play_popup, null);
         final androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
