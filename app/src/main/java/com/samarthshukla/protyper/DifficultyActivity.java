@@ -69,20 +69,29 @@ public class DifficultyActivity extends AppCompatActivity {
     // Start Activity with Animation
     private void openMode(Class<?> activityClass) {
         Intent intent = new Intent(DifficultyActivity.this, activityClass);
-        int durationSeconds = getIntent().getIntExtra(PracticeSettingsActivity.PREF_TIMER_SECONDS,
-                PracticeSettingsActivity.DEFAULT_TIMER_SECONDS);
-        intent.putExtra(PracticeSettingsActivity.PREF_TIMER_SECONDS, durationSeconds);
-        int durationSeconds = getIntent().getIntExtra(PracticeSettingsActivity.PREF_TIMER_SECONDS,
-                PracticeSettingsActivity.DEFAULT_TIMER_SECONDS);
-        intent.putExtra(PracticeSettingsActivity.PREF_TIMER_SECONDS, durationSeconds);
-        
+
+        // Get the duration selected in Practice Settings.
+        // If nothing was selected, default to 60 seconds.
+        int selectedDuration = getIntent().getIntExtra(
+                PracticeSettingsActivity.PREF_TIMER_SECONDS,
+                PracticeSettingsActivity.DEFAULT_TIMER_SECONDS
+        );
+
+        intent.putExtra(
+                PracticeSettingsActivity.PREF_TIMER_SECONDS,
+                selectedDuration
+        );
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+
             ActivityOptions options = ActivityOptions.makeCustomAnimation(
                     DifficultyActivity.this,
                     android.R.anim.fade_in,
                     android.R.anim.fade_out
             );
+
             startActivity(intent, options.toBundle());
+
         } else {
             startActivity(intent);
         }

@@ -32,6 +32,23 @@
             </InsightsFilterSettings>
           </value>
         </entry>
+        <entry key="Firebase Crashlytics">
+          <value>
+            <InsightsFilterSettings>
+              <option name="connection">
+                <ConnectionSetting>
+                  <option name="appId" value="com.samarthshukla.protyper" />
+                  <option name="mobileSdkAppId" value="1:301158461087:android:409a6bb4fc48618ce7bcaa" />
+                  <option name="projectId" value="pro-typer-v2" />
+                  <option name="projectNumber" value="301158461087" />
+                </ConnectionSetting>
+              </option>
+              <option name="signal" value="SIGNAL_UNSPECIFIED" />
+              <option name="timeIntervalDays" value="THIRTY_DAYS" />
+              <option name="visibilityType" value="ALL" />
+            </InsightsFilterSettings>
+          </value>
+        </entry>
       </map>
     </option>
   </component>
