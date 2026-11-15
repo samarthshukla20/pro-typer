@@ -17,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,7 +52,7 @@ import android.os.Handler;
 
 public class HardModeActivity extends AppCompatActivity {
     private TextView wordDisplay, timerText, scoreText, tvDateTime;
-    private EditText inputField;
+    private BackspaceAwareEditText inputField;
     private List<String> words = new ArrayList<>();
     private Random random = new Random();
     private int score = 0;
@@ -126,6 +125,17 @@ public class HardModeActivity extends AppCompatActivity {
         timerText   = findViewById(R.id.timerText);
         scoreText   = findViewById(R.id.scoreText);
         inputField  = findViewById(R.id.inputField);
+        boolean backspaceEnabled = getIntent().getBooleanExtra(
+                DifficultyActivity.PREF_BACKSPACE_ENABLED,
+                practicePrefs.getBoolean(
+                        DifficultyActivity.PREF_BACKSPACE_ENABLED, true
+                )
+        );
+
+        if (inputField instanceof BackspaceAwareEditText) {
+            ((BackspaceAwareEditText) inputField)
+                    .setBackspaceEnabled(backspaceEnabled);
+        }
         tvDateTime  = findViewById(R.id.tvDateTime);
         getCurrentDateTime();
 
@@ -395,7 +405,7 @@ public class HardModeActivity extends AppCompatActivity {
         score = 0;
         currentSessionAdXp = 0; // RESET THE BONUS VAULT FOR A NEW GAME
         scoreText.setText("Score: " + score);
-        inputField.setText("");
+        ((BackspaceAwareEditText) inputField).clearText();
         inputField.setEnabled(false);
         usedWords = new ArrayList<>();
         generateNewWord();
@@ -413,7 +423,17 @@ public class HardModeActivity extends AppCompatActivity {
     }
 
     private void startTimer() {
-        if (timer != null) timer.cancel();
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+
+        // A duration of 0 represents "No time limit".
+        if (practiceDurationSeconds <= 0) {
+            timerText.setText("No time limit");
+            return;
+        }
+
         timer = new CountDownTimer(practiceDurationSeconds * 1000L, 1000) {
             public void onTick(long millisUntilFinished) {
                 timerText.setText("Time left: " + millisUntilFinished / 1000 + "s");
@@ -430,7 +450,7 @@ public class HardModeActivity extends AppCompatActivity {
         if (typedWord.equalsIgnoreCase(displayedWord)) {
             score += 1;
             scoreText.setText("Score: " + score);
-            inputField.setText("");
+            inputField.clearText();
             if (soundPool != null && soundIdCorrect != 0) {
                 soundPool.play(soundIdCorrect, gameVolume, gameVolume, 0, 0, 1);
             }
@@ -704,7 +724,7 @@ public class HardModeActivity extends AppCompatActivity {
 
         isGameOver = false;
         inputField.setEnabled(true);
-        inputField.setText("");
+        inputField.clearText();
         inputField.requestFocus();
 
         startTimer();

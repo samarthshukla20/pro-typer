@@ -1,5 +1,6 @@
 package com.samarthshukla.protyper;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,8 +29,23 @@ public class HomeFragment extends Fragment {
         mainActivity.applySquishAnimation(btnParagraphMode);
         mainActivity.applySquishAnimation(btnMultiplayerMode);
 
-        btnSingleWordMode.setOnClickListener(v -> mainActivity.showAdThenStart(PracticeSettingsActivity.class));
-        btnParagraphMode.setOnClickListener(v -> mainActivity.showAdThenStart(PracticeSettingsActivity.class));
+        btnSingleWordMode.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), DifficultyActivity.class);
+            intent.putExtra(
+                    DifficultyActivity.EXTRA_MODE,
+                    DifficultyActivity.MODE_SINGLE_WORD
+            );
+            startActivity(intent);
+        });
+
+        btnParagraphMode.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), DifficultyActivity.class);
+            intent.putExtra(
+                    DifficultyActivity.EXTRA_MODE,
+                    DifficultyActivity.MODE_PARAGRAPH
+            );
+            startActivity(intent);
+        });
         btnMultiplayerMode.setOnClickListener(v -> mainActivity.showAdThenStart(MultiplayerLobbyActivity.class));
 
         return view;

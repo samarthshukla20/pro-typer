@@ -204,7 +204,7 @@
         app:hintTextColor="@color/pro_blue_primary"
         android:textColorHint="#888888">
 
-        <com.google.android.material.textfield.TextInputEditText
+        <com.samarthshukla.protyper.BackspaceAwareEditText
             android:id="@+id/inputField"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

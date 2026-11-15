@@ -140,6 +140,21 @@ public class ParagraphActivity extends AppCompatActivity {
         timerText = findViewById(R.id.timerText);
         scoreText = findViewById(R.id.scoreText);
         inputField = findViewById(R.id.inputField);
+
+
+
+        // Apply the Backspace preference selected on the practice setup screen.
+        boolean backspaceEnabled = getIntent().getBooleanExtra(
+                DifficultyActivity.PREF_BACKSPACE_ENABLED,
+                practicePrefs.getBoolean(DifficultyActivity.PREF_BACKSPACE_ENABLED, true)
+        );
+        if (inputField instanceof BackspaceAwareEditText) {
+            ((BackspaceAwareEditText) inputField).setBackspaceEnabled(backspaceEnabled);
+        } else {
+            Log.w("ParagraphModeActivity",
+                    "inputField is not BackspaceAwareEditText; update activity_paragraph_mode.xml.");
+        }
+
         tvDateTime = findViewById(R.id.tvDateTime);
         paragraphScrollView = findViewById(R.id.paragraphScrollView);
         countdownText = findViewById(R.id.countdownText);
@@ -403,7 +418,7 @@ public class ParagraphActivity extends AppCompatActivity {
         accuracy = 0;
         currentSessionAdXp = 0; // RESET VAULT
         scoreText.setText("Accuracy: " + calculateAccuracy() + "%");
-        inputField.setText("");
+        ((BackspaceAwareEditText) inputField).clearText();
         inputField.setEnabled(false);
         usedWords = new ArrayList<>();
         generateNewWord();
@@ -442,13 +457,30 @@ public class ParagraphActivity extends AppCompatActivity {
     }
 
     private void startTimer() {
-        if (timer != null) timer.cancel();
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+
+        // No time limit selected
+        if (practiceDurationSeconds <= 0) {
+            timerText.setText("No time limit");
+            return;
+        }
+
         timer = new CountDownTimer(practiceDurationSeconds * 1000L, 1000) {
+
+            @Override
             public void onTick(long millisUntilFinished) {
                 long secondsRemaining = millisUntilFinished / 1000;
                 timerText.setText("Time left: " + secondsRemaining + "s");
             }
-            public void onFinish() { gameOver(); }
+
+            @Override
+            public void onFinish() {
+                gameOver();
+            }
+
         }.start();
     }
 
