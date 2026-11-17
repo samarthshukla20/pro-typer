@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,9 +19,6 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.materialswitch.MaterialSwitch;
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 public class DifficultyActivity extends AppCompatActivity {
 
@@ -35,15 +35,27 @@ public class DifficultyActivity extends AppCompatActivity {
     private MaterialButtonToggleGroup difficultyGroup;
     private MaterialButtonToggleGroup durationGroup;
     private MaterialButtonToggleGroup durationGroupLong;
+
     private MaterialSwitch switchBackspace;
+
+    private LinearLayout difficultySection;
+
+    private TextView tvSetupTitle;
+    private TextView tvSetupSubtitle;
+    private TextView tvStrictModeDescription;
 
     private SharedPreferences preferences;
 
     private String practiceMode = MODE_SINGLE_WORD;
+
     private int selectedDuration = DEFAULT_TIMER_SECONDS;
+
+    // true = Backspace enabled
+    // false = Backspace disabled (Strict Mode ON)
     private boolean backspaceEnabled = true;
 
     private AdView bannerAd;
+
     private final Handler bannerRefreshHandler = new Handler();
 
     private final Runnable bannerRefreshRunnable = new Runnable() {
@@ -62,88 +74,159 @@ public class DifficultyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_difficulty);
 
         preferences = getSharedPreferences(
-                PREFS_NAME, Context.MODE_PRIVATE
+                PREFS_NAME,
+                Context.MODE_PRIVATE
         );
 
+        // Receive the selected mode from HomeFragment.
         practiceMode = getIntent().getStringExtra(EXTRA_MODE);
+
         if (practiceMode == null) {
             practiceMode = MODE_SINGLE_WORD;
         }
 
         initializeViews();
-        loadSavedPreferences();
+
         configureMode();
+
+        loadSavedPreferences();
+
         setupDurationSelection();
+
         setupBackspaceSwitch();
+
         setupStartButton();
 
         MobileAds.initialize(this, initializationStatus -> {});
+
         loadBannerAd();
-        bannerRefreshHandler.postDelayed(bannerRefreshRunnable, 30000);
+
+        bannerRefreshHandler.postDelayed(
+                bannerRefreshRunnable,
+                30000
+        );
     }
+
+    // -----------------------------------------
+    // INITIALIZE VIEWS
+    // -----------------------------------------
 
     private void initializeViews() {
+
         difficultyGroup = findViewById(R.id.difficultyGroup);
+
         durationGroup = findViewById(R.id.durationGroup);
+
         durationGroupLong = findViewById(R.id.durationGroupLong);
+
         switchBackspace = findViewById(R.id.switchBackspace);
+
+        difficultySection = findViewById(R.id.difficultySection);
+
+        tvSetupTitle = findViewById(R.id.tvSetupTitle);
+
+        tvSetupSubtitle = findViewById(R.id.tvSetupSubtitle);
+
+        tvStrictModeDescription =
+                findViewById(R.id.tvStrictModeDescription);
     }
 
-    private void loadSavedPreferences() {
-        selectedDuration = preferences.getInt(
-                PREF_TIMER_SECONDS, DEFAULT_TIMER_SECONDS
-        );
-
-        backspaceEnabled = preferences.getBoolean(
-                PREF_BACKSPACE_ENABLED, true
-        );
-
-        selectDuration(selectedDuration);
-        switchBackspace.setChecked(backspaceEnabled);
-    }
+    // -----------------------------------------
+    // MODE CONFIGURATION
+    // -----------------------------------------
 
     private void configureMode() {
-        TextView title = findViewById(R.id.tvSetupTitle);
-        LinearLayout difficultySection = findViewById(R.id.difficultySection);
 
-        if (MODE_PARAGRAPH.equals(practiceMode)) {
-            title.setText("Paragraph");
+        boolean isParagraph =
+                MODE_PARAGRAPH.equals(practiceMode);
+
+        tvSetupTitle.setText("Practice Setup");
+
+        if (isParagraph) {
+
+            tvSetupSubtitle.setText(
+                    "Paragraph Mode · Configure your typing session."
+            );
+
+            // Paragraph mode does not use difficulty selection.
             difficultySection.setVisibility(View.GONE);
+
         } else {
-            title.setText("Single Word");
+
+            tvSetupSubtitle.setText(
+                    "Single Word Mode · Configure your typing session."
+            );
+
             difficultySection.setVisibility(View.VISIBLE);
         }
     }
+
+    // -----------------------------------------
+    // LOAD SAVED PREFERENCES
+    // -----------------------------------------
+
+    private void loadSavedPreferences() {
+
+        selectedDuration = preferences.getInt(
+                PREF_TIMER_SECONDS,
+                DEFAULT_TIMER_SECONDS
+        );
+
+        backspaceEnabled = preferences.getBoolean(
+                PREF_BACKSPACE_ENABLED,
+                true
+        );
+
+        selectDuration(selectedDuration);
+
+        // Strict Mode is the inverse of Backspace enabled.
+        switchBackspace.setChecked(!backspaceEnabled);
+
+        updateStrictModeDescription(!backspaceEnabled);
+    }
+
+    // -----------------------------------------
+    // DURATION SELECTION
+    // -----------------------------------------
 
     private void setupDurationSelection() {
 
         durationGroup.addOnButtonCheckedListener(
                 (group, checkedId, isChecked) -> {
+
                     if (!isChecked) return;
 
                     durationGroupLong.clearChecked();
+
                     selectedDuration = getDurationFromId(checkedId);
                 }
         );
 
         durationGroupLong.addOnButtonCheckedListener(
                 (group, checkedId, isChecked) -> {
+
                     if (!isChecked) return;
 
                     durationGroup.clearChecked();
+
                     selectedDuration = getDurationFromId(checkedId);
                 }
         );
     }
 
     private int getDurationFromId(int id) {
+
         if (id == R.id.btnDuration15) return 15;
+
         if (id == R.id.btnDuration30) return 30;
+
         if (id == R.id.btnDuration60) return 60;
+
         if (id == R.id.btnDuration120) return 120;
+
         if (id == R.id.btnDuration300) return 300;
 
-        // Zero represents no time limit.
+        // Zero represents unlimited duration.
         if (id == R.id.btnDurationUnlimited) return 0;
 
         return DEFAULT_TIMER_SECONDS;
@@ -152,9 +235,11 @@ public class DifficultyActivity extends AppCompatActivity {
     private void selectDuration(int seconds) {
 
         durationGroup.clearChecked();
+
         durationGroupLong.clearChecked();
 
         switch (seconds) {
+
             case 15:
                 durationGroup.check(R.id.btnDuration15);
                 break;
@@ -182,14 +267,36 @@ public class DifficultyActivity extends AppCompatActivity {
         }
     }
 
+    // -----------------------------------------
+    // STRICT MODE
+    // -----------------------------------------
+
     private void setupBackspaceSwitch() {
-        switchBackspace.setOnCheckedChangeListener(
-                (buttonView, isChecked) -> backspaceEnabled = isChecked
+        switchBackspace.setChecked(!backspaceEnabled);
+        updateStrictModeDescription(switchBackspace.isChecked());
+
+        switchBackspace.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            backspaceEnabled = !isChecked;
+            updateStrictModeDescription(isChecked);
+        });
+    }
+
+    private void updateStrictModeDescription(boolean enabled) {
+        tvStrictModeDescription.setText(
+                enabled
+                        ? "ON · Backspace is disabled."
+                        : "OFF · You can correct mistakes."
         );
     }
 
+    // -----------------------------------------
+    // START PRACTICE
+    // -----------------------------------------
+
     private void setupStartButton() {
-        MaterialButton btnStart = findViewById(R.id.btnStartPractice);
+
+        MaterialButton btnStart =
+                findViewById(R.id.btnStartPractice);
 
         btnStart.setOnClickListener(v -> {
 
@@ -202,24 +309,49 @@ public class DifficultyActivity extends AppCompatActivity {
             Intent intent;
 
             if (MODE_PARAGRAPH.equals(practiceMode)) {
+
                 intent = new Intent(
                         DifficultyActivity.this,
                         ParagraphActivity.class
                 );
+
             } else {
-                int checkedDifficulty = difficultyGroup.getCheckedButtonId();
+
+                int checkedDifficulty =
+                        difficultyGroup.getCheckedButtonId();
 
                 if (checkedDifficulty == R.id.btnEasy) {
-                    intent = new Intent(this, EasyModeActivity.class);
+
+                    intent = new Intent(
+                            this,
+                            EasyModeActivity.class
+                    );
+
                 } else if (checkedDifficulty == R.id.btnHard) {
-                    intent = new Intent(this, HardModeActivity.class);
+
+                    intent = new Intent(
+                            this,
+                            HardModeActivity.class
+                    );
+
                 } else {
-                    intent = new Intent(this, MediumModeActivity.class);
+
+                    intent = new Intent(
+                            this,
+                            MediumModeActivity.class
+                    );
                 }
             }
 
-            intent.putExtra(PREF_TIMER_SECONDS, selectedDuration);
-            intent.putExtra(PREF_BACKSPACE_ENABLED, backspaceEnabled);
+            intent.putExtra(
+                    PREF_TIMER_SECONDS,
+                    selectedDuration
+            );
+
+            intent.putExtra(
+                    PREF_BACKSPACE_ENABLED,
+                    backspaceEnabled
+            );
 
             if (android.os.Build.VERSION.SDK_INT >=
                     android.os.Build.VERSION_CODES.JELLY_BEAN) {
@@ -234,12 +366,18 @@ public class DifficultyActivity extends AppCompatActivity {
                 startActivity(intent, options.toBundle());
 
             } else {
+
                 startActivity(intent);
             }
         });
     }
 
+    // -----------------------------------------
+    // ADMOB
+    // -----------------------------------------
+
     private void loadBannerAd() {
+
         bannerAd = findViewById(R.id.bannerAd);
 
         if (bannerAd != null) {
@@ -249,7 +387,10 @@ public class DifficultyActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        bannerRefreshHandler.removeCallbacks(bannerRefreshRunnable);
+
+        bannerRefreshHandler.removeCallbacks(
+                bannerRefreshRunnable
+        );
 
         if (bannerAd != null) {
             bannerAd.destroy();

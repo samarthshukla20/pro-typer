@@ -23,32 +23,37 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="26dp"
+                android:paddingBottom="24dp">
 
+                <!-- Header -->
                 <TextView
                     android:id="@+id/tvSetupTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/font"
-                    android:text="Single Word"
+                    android:text="Practice Setup"
                     android:textColor="@color/text_primary"
                     android:textSize="28sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvSetupSubtitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:text="Customize your next typing session."
+                    android:layout_marginTop="6dp"
+                    android:text="Configure your next typing session."
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
 
-                <!-- Difficulty -->
+                <!-- Difficulty: Single Word only -->
                 <LinearLayout
                     android:id="@+id/difficultySection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="26dp"
+                    android:layout_marginTop="32dp"
                     android:orientation="vertical">
 
                     <TextView
@@ -59,148 +64,216 @@
                         android:textSize="19sp"
                         android:textStyle="bold" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Choose your challenge level."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <!-- Difficulty Selection -->
                     <com.google.android.material.button.MaterialButtonToggleGroup
                         android:id="@+id/difficultyGroup"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         app:singleSelection="true"
                         app:selectionRequired="true"
                         app:checkedButton="@id/btnMedium">
 
+                        <!-- Easy -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnEasy"
                             style="@style/Widget.Material3.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="58dp"
+                            android:layout_height="150dp"
                             android:layout_weight="1"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:padding="6dp"
                             android:text="Easy"
-                            android:textSize="14sp" />
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:icon="@drawable/ic_difficulty_easy"
+                            app:iconGravity="textTop"
+                            app:iconSize="88dp"
+                            app:iconPadding="4dp"
+                            app:iconTint="@null" />
 
+                        <!-- Medium -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnMedium"
                             style="@style/Widget.Material3.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="58dp"
+                            android:layout_height="150dp"
                             android:layout_weight="1"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:padding="6dp"
                             android:text="Medium"
-                            android:textSize="14sp" />
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:icon="@drawable/ic_difficulty_medium"
+                            app:iconGravity="textTop"
+                            app:iconSize="88dp"
+                            app:iconPadding="4dp"
+                            app:iconTint="@null" />
 
+                        <!-- Hard -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnHard"
                             style="@style/Widget.Material3.Button.OutlinedButton"
                             android:layout_width="0dp"
-                            android:layout_height="58dp"
+                            android:layout_height="150dp"
                             android:layout_weight="1"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:padding="6dp"
                             android:text="Hard"
-                            android:textSize="14sp" />
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:icon="@drawable/ic_difficulty_hard"
+                            app:iconGravity="textTop"
+                            app:iconSize="88dp"
+                            app:iconPadding="4dp"
+                            app:iconTint="@null" />
 
                     </com.google.android.material.button.MaterialButtonToggleGroup>
+
                 </LinearLayout>
 
                 <!-- Duration -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="28dp"
-                    android:text="Practice Duration"
-                    android:textColor="@color/text_primary"
-                    android:textSize="19sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Choose how long you want to play."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/durationGroup"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    app:singleSelection="true"
-                    app:selectionRequired="true"
-                    app:checkedButton="@id/btnDuration60">
+                    android:layout_marginTop="32dp"
+                    android:orientation="vertical">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDuration15"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="54dp"
-                        android:layout_weight="1"
-                        android:text="15s"
+
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_timer2"
+                            android:contentDescription="Timer"
+                            android:layout_marginEnd="9dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Practice Duration"
+                            android:textColor="@color/text_primary"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="Choose how long you want to practice."
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDuration30"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="54dp"
-                        android:layout_weight="1"
-                        android:text="30s"
-                        android:textSize="13sp" />
+                    <!-- Short Durations -->
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/durationGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true"
+                        app:checkedButton="@id/btnDuration60">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDuration60"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="54dp"
-                        android:layout_weight="1"
-                        android:text="60s"
-                        android:textSize="13sp" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDuration15"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_weight="1"
+                            android:text="15 sec"
+                            android:textSize="12sp" />
 
-                </com.google.android.material.button.MaterialButtonToggleGroup>
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDuration30"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_weight="1"
+                            android:text="30 sec"
+                            android:textSize="12sp" />
 
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/durationGroupLong"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    app:singleSelection="true"
-                    app:selectionRequired="true"
-                    app:checkedButton="@id/btnDuration300">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDuration60"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_weight="1"
+                            android:text="60 sec"
+                            android:textSize="12sp" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDuration120"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="54dp"
-                        android:layout_weight="1"
-                        android:text="120s"
-                        android:textSize="13sp" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDuration300"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="54dp"
-                        android:layout_weight="1"
-                        android:text="300s"
-                        android:textSize="13sp" />
+                    <!-- Long Durations -->
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/durationGroupLong"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="9dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true"
+                        app:checkedButton="@id/btnDuration300">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDurationUnlimited"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="54dp"
-                        android:layout_weight="1"
-                        android:text="∞"
-                        android:textSize="13sp" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDuration120"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_weight="1"
+                            android:text="120 sec"
+                            android:textSize="12sp" />
 
-                </com.google.android.material.button.MaterialButtonToggleGroup>
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDuration300"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_weight="1"
+                            android:text="300 sec"
+                            android:textSize="12sp" />
 
-                <!-- Backspace preference -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDurationUnlimited"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="56dp"
+                            android:layout_weight="1"
+                            android:text="∞"
+                            android:textSize="11sp" />
+
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                </LinearLayout>
+
+                <!-- Strict Mode -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="26dp"
-                    app:cardBackgroundColor="@color/profile_card_bg"
-                    app:cardCornerRadius="16dp"
+                    android:layout_marginTop="32dp"
+                    app:cardBackgroundColor="@color/bg_main"
+                    app:cardCornerRadius="18dp"
                     app:cardElevation="0dp"
-                    app:strokeColor="@color/profile_stroke"
+                    app:strokeColor="#D8E1EB"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -216,38 +289,66 @@
                             android:layout_weight="1"
                             android:orientation="vertical">
 
-                            <TextView
+
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Allow Backspace"
-                                android:textColor="@color/text_primary"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="21dp"
+                                    android:layout_height="21dp"
+                                    android:src="@drawable/ic_strict_mode"
+                                    android:contentDescription="Strict Mode"
+                                    android:layout_marginEnd="5dp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Strict Mode"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                            </LinearLayout>
+
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:id="@+id/tvStrictModeDescription"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="Allow corrections while typing."
+                                android:layout_marginTop="5dp"
+                                android:text="OFF · You can correct mistakes."
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
 
                         </LinearLayout>
 
+
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchBackspace"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:checked="true"
-                            app:thumbTint="@color/pro_blue_primary" />
+                            android:checked="false"
+                            android:contentDescription="Toggle Strict Mode"
+                            android:minWidth="56dp"
+                            android:minHeight="48dp"
+                            android:showText="false"
+                            android:padding="4dp"
+                            app:thumbTint="@color/strict_switch_thumb"
+                            app:trackTint="@color/strict_switch_track" />
+
 
                     </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
+
         </ScrollView>
 
+        <!-- Start Practice -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStartPractice"
             android:layout_width="match_parent"
@@ -257,11 +358,12 @@
             android:layout_marginBottom="12dp"
             android:text="START PRACTICE"
             android:textColor="@android:color/white"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             app:backgroundTint="@color/pro_blue_primary"
-            app:cornerRadius="30dp" />
+            app:cornerRadius="18dp" />
 
+        <!-- Banner Ad -->
         <com.google.android.gms.ads.AdView
             android:id="@+id/bannerAd"
             android:layout_width="match_parent"
