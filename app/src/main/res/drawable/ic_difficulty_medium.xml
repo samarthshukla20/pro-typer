@@ -1,0 +1,59 @@
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Ground shadow -->
+    <path
+        android:fillColor="#D8D0BD"
+        android:pathData="M31,53 L89,53 Q94,53 96,61 L108,96 Q111,105 101,108 L19,108 Q9,105 12,96 L24,61 Q26,53 31,53Z"/>
+
+    <!-- Main tapered keycap body -->
+    <path
+        android:fillColor="#D8C88E"
+        android:strokeColor="#20394B"
+        android:strokeWidth="2.5"
+        android:strokeLineJoin="round"
+        android:pathData="M34,12 L86,12 Q95,12 98,22 L111,91 Q114,104 101,107 L19,107 Q6,104 9,91 L22,22 Q25,12 34,12Z"/>
+
+    <!-- Left side shading -->
+    <path
+        android:fillColor="#BDAA70"
+        android:pathData="M25,22 L34,15 L22,91 Q20,99 29,102 L19,102 Q9,101 12,91Z"/>
+
+    <!-- Right side shading -->
+    <path
+        android:fillColor="#B8A36A"
+        android:pathData="M86,15 L96,22 L108,91 Q111,101 101,102 L91,102 Q101,99 99,91Z"/>
+
+    <!-- Front bevel -->
+    <path
+        android:fillColor="#E9DDAF"
+        android:pathData="M20,87 Q60,96 100,87 L103,99 Q104,104 97,104 L23,104 Q16,104 17,99Z"/>
+
+    <!-- Top key surface -->
+    <path
+        android:fillColor="#FFF3C9"
+        android:strokeColor="#20394B"
+        android:strokeWidth="2.5"
+        android:strokeLineJoin="round"
+        android:pathData="M34,12 L86,12 Q95,12 98,22 L103,48 Q105,59 94,62 Q60,70 26,62 Q15,59 17,48 L22,22 Q25,12 34,12Z"/>
+
+    <!-- Soft top highlight -->
+    <path
+        android:fillColor="#FFF9E6"
+        android:pathData="M35,16 L85,16 Q92,16 94,24 L98,46 Q100,55 91,58 Q60,65 29,58 Q20,55 22,46 L26,24 Q28,16 35,16Z"/>
+
+    <!-- First lightning bolt -->
+    <path
+        android:fillColor="#20394B"
+        android:pathData="M52,25 L38,40 Q36,43 40,43 L47,43 L40,53 Q38,56 42,55 L58,41 Q61,38 57,38 L51,38 L57,28 Q59,24 52,25Z"/>
+
+    <!-- Second lightning bolt -->
+    <path
+        android:fillColor="#20394B"
+        android:pathData="M79,25 L65,40 Q63,43 67,43 L74,43 L67,53 Q65,56 69,55 L85,41 Q88,38 84,38 L78,38 L84,28 Q86,24 79,25Z"/>
+
+</vector>
