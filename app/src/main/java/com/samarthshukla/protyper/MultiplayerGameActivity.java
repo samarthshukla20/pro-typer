@@ -25,10 +25,12 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -124,6 +126,36 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         gameRef = FirebaseDatabase.getInstance().getReference("game_sessions").child(gameSessionId);
 
         fetchOpponentIdAndParagraph();
+
+        getOnBackPressedDispatcher().addCallback(this,
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+
+                        if (isGameOver) {
+                            finish();
+                            return;
+                        }
+
+                        new MaterialAlertDialogBuilder(MultiplayerGameActivity.this)
+                                .setTitle("Leave Room?")
+                                .setMessage("Are you sure you want to leave the room? This will close the room for the match and the opponent will be declared winner.")
+                                .setPositiveButton("Leave Room", (dialog, which) -> {
+                                    if (timer != null) {
+                                        timer.cancel();
+                                        timer = null;
+                                    }
+
+                                    isGameOver = true;
+                                    finish();
+                                })
+                                .setNegativeButton("Continue Playing", (dialog, which) -> {
+                                    dialog.dismiss();
+                                })
+                                .setCancelable(true)
+                                .show();
+                    }
+                });
     }
 
     // ==========================================
@@ -898,22 +930,6 @@ public class MultiplayerGameActivity extends AppCompatActivity {
         super.onDestroy();
         cancelOpponentDisconnectTimer();
         stopBotSimulation();
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (isGameOver) {
-            super.onBackPressed();
-            return;
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Leave Room");
-        builder.setMessage("Are you sure you want to leave the room? This will close the room for the match and the opponent will be declared winner.");
-        builder.setCancelable(true);
-        builder.setPositiveButton("Leave Room", (dialog, which) -> handlePlayerLeftIntentional());
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-        builder.show();
     }
 
     private void handlePlayerLeftIntentional() {

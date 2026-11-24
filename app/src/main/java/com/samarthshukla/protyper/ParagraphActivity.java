@@ -31,6 +31,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -214,6 +215,37 @@ public class ParagraphActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
         int savedVolume = prefs.getInt("volume", 100); // Default to 100 if they haven't set it
         gameVolume = savedVolume / 100f; // Math: 70 becomes 0.7f
+
+
+        getOnBackPressedDispatcher().addCallback(this,
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+
+                        if (isGameOver) {
+                            finish();
+                            return;
+                        }
+
+                        new MaterialAlertDialogBuilder(ParagraphActivity.this)
+                                .setTitle("Exit Game?")
+                                .setMessage("Do you want to go back to the menu or continue playing?")
+                                .setPositiveButton("Go to Menu", (dialog, which) -> {
+                                    if (timer != null) {
+                                        timer.cancel();
+                                        timer = null;
+                                    }
+
+                                    isGameOver = true;
+                                    finish();
+                                })
+                                .setNegativeButton("Continue Playing", (dialog, which) -> {
+                                    dialog.dismiss();
+                                })
+                                .setCancelable(true)
+                                .show();
+                    }
+                });
 
     }
 
@@ -970,16 +1002,6 @@ public class ParagraphActivity extends AppCompatActivity {
             totalPausedDuration += System.currentTimeMillis() - pauseStartTime;
             showAdThenGameOver();
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Exit Game?")
-                .setMessage("Do you want to go back to the menu or continue playing?")
-                .setPositiveButton("Go to Menu", (dialog, which) -> finish())
-                .setNegativeButton("Continue Playing", (dialog, which) -> dialog.dismiss())
-                .show();
     }
 
     @Override
