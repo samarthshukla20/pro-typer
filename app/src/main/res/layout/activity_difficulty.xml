@@ -1,11 +1,16 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:ads="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_main"
-    tools:context=".DifficultyActivity">
+    android:background="@color/bg_main">
+
+    <com.samarthshukla.protyper.FloatingKeycapsView
+        android:id="@+id/floatingKeycapsView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -73,73 +78,93 @@
                         android:textSize="13sp" />
 
                     <!-- Difficulty Selection -->
-                    <com.google.android.material.button.MaterialButtonToggleGroup
-                        android:id="@+id/difficultyGroup"
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        app:singleSelection="true"
-                        app:selectionRequired="true"
-                        app:checkedButton="@id/btnMedium">
+                        app:cardBackgroundColor="@color/bg_main"
+                        app:cardCornerRadius="60dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="#D8E1EB"
+                        app:strokeWidth="1dp">
 
-                        <!-- Easy -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnEasy"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="150dp"
-                            android:layout_weight="1"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:padding="6dp"
-                            android:text="Easy"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            app:icon="@drawable/ic_difficulty_easy"
-                            app:iconGravity="textTop"
-                            app:iconSize="88dp"
-                            app:iconPadding="4dp"
-                            app:iconTint="@null" />
+                        <com.google.android.material.button.MaterialButtonToggleGroup
+                            android:id="@+id/difficultyGroup"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:singleSelection="true"
+                            app:selectionRequired="true"
+                            app:checkedButton="@id/btnMedium">
 
-                        <!-- Medium -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnMedium"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="150dp"
-                            android:layout_weight="1"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:padding="6dp"
-                            android:text="Medium"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            app:icon="@drawable/ic_difficulty_medium"
-                            app:iconGravity="textTop"
-                            app:iconSize="88dp"
-                            app:iconPadding="4dp"
-                            app:iconTint="@null" />
+                            <!-- Easy -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnEasy"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                app:strokeColor="@color/setup_button_stroke"
+                                app:strokeWidth="1dp"
+                                android:layout_width="0dp"
+                                android:layout_height="150dp"
+                                android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:padding="6dp"
+                                android:text="Easy"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:icon="@drawable/ic_difficulty_easy"
+                                app:iconGravity="textTop"
+                                app:iconSize="88dp"
+                                app:iconPadding="4dp"
+                                app:iconTint="@null" />
 
-                        <!-- Hard -->
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnHard"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="150dp"
-                            android:layout_weight="1"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
-                            android:padding="6dp"
-                            android:text="Hard"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            app:icon="@drawable/ic_difficulty_hard"
-                            app:iconGravity="textTop"
-                            app:iconSize="88dp"
-                            app:iconPadding="4dp"
-                            app:iconTint="@null" />
+                            <!-- Medium -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnMedium"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                app:strokeColor="@color/setup_button_stroke"
+                                app:strokeWidth="1dp"
+                                android:layout_width="0dp"
+                                android:layout_height="150dp"
+                                android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:padding="6dp"
+                                android:text="Medium"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:icon="@drawable/ic_difficulty_medium"
+                                app:iconGravity="textTop"
+                                app:iconSize="88dp"
+                                app:iconPadding="4dp"
+                                app:iconTint="@null" />
 
-                    </com.google.android.material.button.MaterialButtonToggleGroup>
+                            <!-- Hard -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnHard"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                app:strokeColor="@color/setup_button_stroke"
+                                app:strokeWidth="1dp"
+                                android:layout_width="0dp"
+                                android:layout_height="150dp"
+                                android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:padding="6dp"
+                                android:text="Hard"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:icon="@drawable/ic_difficulty_hard"
+                                app:iconGravity="textTop"
+                                app:iconSize="88dp"
+                                app:iconPadding="4dp"
+                                app:iconTint="@null" />
+
+                        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
 
@@ -185,83 +210,121 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
-                    <!-- Short Durations -->
-                    <com.google.android.material.button.MaterialButtonToggleGroup
-                        android:id="@+id/durationGroup"
+                    <!-- One unified duration selector with two rows -->
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
-                        app:singleSelection="true"
-                        app:selectionRequired="true"
-                        app:checkedButton="@id/btnDuration60">
+                        app:cardBackgroundColor="@color/bg_main"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="#D8E1EB"
+                        app:strokeWidth="1dp">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDuration15"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="56dp"
-                            android:layout_weight="1"
-                            android:text="15 sec"
-                            android:textSize="12sp" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="4dp">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDuration30"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="56dp"
-                            android:layout_weight="1"
-                            android:text="30 sec"
-                            android:textSize="12sp" />
+                            <!-- Short Durations -->
+                            <com.google.android.material.button.MaterialButtonToggleGroup
+                                android:id="@+id/durationGroup"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:singleSelection="true"
+                                app:selectionRequired="true"
+                                app:checkedButton="@id/btnDuration60">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDuration60"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="56dp"
-                            android:layout_weight="1"
-                            android:text="60 sec"
-                            android:textSize="12sp" />
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnDuration15"
+                                    app:strokeColor="@color/setup_button_stroke"
+                                    app:strokeWidth="1dp"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="1"
+                                    android:text="15 sec"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="12sp" />
 
-                    </com.google.android.material.button.MaterialButtonToggleGroup>
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnDuration30"
+                                    app:strokeColor="@color/setup_button_stroke"
+                                    app:strokeWidth="1dp"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="1"
+                                    android:text="30 sec"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="12sp" />
 
-                    <!-- Long Durations -->
-                    <com.google.android.material.button.MaterialButtonToggleGroup
-                        android:id="@+id/durationGroupLong"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="9dp"
-                        app:singleSelection="true"
-                        app:selectionRequired="true"
-                        app:checkedButton="@id/btnDuration300">
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnDuration60"
+                                    app:strokeColor="@color/setup_button_stroke"
+                                    app:strokeWidth="1dp"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="1"
+                                    android:text="60 sec"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="12sp" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDuration120"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="56dp"
-                            android:layout_weight="1"
-                            android:text="120 sec"
-                            android:textSize="12sp" />
+                            </com.google.android.material.button.MaterialButtonToggleGroup>
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDuration300"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="56dp"
-                            android:layout_weight="1"
-                            android:text="300 sec"
-                            android:textSize="12sp" />
+                            <!-- Long Durations -->
+                            <com.google.android.material.button.MaterialButtonToggleGroup
+                                android:id="@+id/durationGroupLong"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="9dp"
+                                app:singleSelection="true"
+                                app:selectionRequired="true"
+                                app:checkedButton="@id/btnDuration300">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnDurationUnlimited"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="56dp"
-                            android:layout_weight="1"
-                            android:text="∞"
-                            android:textSize="11sp" />
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnDuration120"
+                                    app:strokeColor="@color/setup_button_stroke"
+                                    app:strokeWidth="1dp"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="1"
+                                    android:text="120 sec"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="12sp" />
 
-                    </com.google.android.material.button.MaterialButtonToggleGroup>
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnDuration300"
+                                    app:strokeColor="@color/setup_button_stroke"
+                                    app:strokeWidth="1dp"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="1"
+                                    android:text="300 sec"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="12sp" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnDurationUnlimited"
+                                    app:strokeColor="@color/setup_button_stroke"
+                                    app:strokeWidth="1dp"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="56dp"
+                                    android:layout_weight="1"
+                                    android:text="∞"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="11sp" />
+
+                            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>
 

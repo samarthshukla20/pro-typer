@@ -3,6 +3,8 @@ package com.samarthshukla.protyper;
 
 import android.app.ActivityOptions;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -87,6 +90,8 @@ public class DifficultyActivity extends AppCompatActivity {
 
         initializeViews();
 
+        applySelectionColors();
+
         configureMode();
 
         loadSavedPreferences();
@@ -129,6 +134,94 @@ public class DifficultyActivity extends AppCompatActivity {
 
         tvStrictModeDescription =
                 findViewById(R.id.tvStrictModeDescription);
+    }
+
+    // -----------------------------------------
+    // SELECTION COLORS
+    // -----------------------------------------
+
+    private void applySelectionColors() {
+
+        int selectedBackground = ContextCompat.getColor(
+                this, R.color.setup_button_selected_bg
+        );
+
+        int selectedStroke = ContextCompat.getColor(
+                this, R.color.setup_button_selected_stroke
+        );
+
+        int selectedText = ContextCompat.getColor(
+                this, R.color.setup_button_selected_text
+        );
+
+        int unselectedBackground = ContextCompat.getColor(
+                this, R.color.bg_main
+        );
+
+        int unselectedText = ContextCompat.getColor(
+                this, R.color.text_primary
+        );
+
+        int unselectedStroke = ContextCompat.getColor(
+                this, R.color.setup_button_stroke
+        );
+
+        MaterialButton[] selectionButtons = {
+                findViewById(R.id.btnEasy),
+                findViewById(R.id.btnMedium),
+                findViewById(R.id.btnHard),
+
+                findViewById(R.id.btnDuration15),
+                findViewById(R.id.btnDuration30),
+                findViewById(R.id.btnDuration60),
+
+                findViewById(R.id.btnDuration120),
+                findViewById(R.id.btnDuration300),
+                findViewById(R.id.btnDurationUnlimited)
+        };
+
+        int[][] states = new int[][] {
+                new int[] { android.R.attr.state_checked },
+                new int[] {}
+        };
+
+        for (MaterialButton button : selectionButtons) {
+
+            if (button == null) continue;
+
+            // Background
+            button.setBackgroundTintList(
+                    new ColorStateList(
+                            states,
+                            new int[] {
+                                    selectedBackground,
+                                    unselectedBackground
+                            }
+                    )
+            );
+
+            // Text
+            button.setTextColor(
+                    new ColorStateList(
+                            states,
+                            new int[] {
+                                    selectedText,
+                                    unselectedText
+                            }
+                    )
+            );
+
+            // Border
+            button.setStrokeColor(
+                    new ColorStateList(
+                            states,
+                            new int[] {
+                                    selectedStroke,
+                                    unselectedStroke
+                            }
+                    )
+            );
+        }
     }
 
     // -----------------------------------------

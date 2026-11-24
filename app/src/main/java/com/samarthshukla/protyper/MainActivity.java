@@ -571,31 +571,90 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
     public void showAdThenStart(Class<?> activity) {
-        showAdThenStart(activity, null);
+        showAdThenStart(activity, null, null);
     }
 
     public void showAdThenStart(Class<?> activity, String practiceMode) {
+        showAdThenStart(
+                activity,
+                practiceMode,
+                PracticeSettingsActivity.EXTRA_MODE
+        );
+    }
+
+    public void showAdThenStart(
+            Class<?> activity,
+            String practiceMode,
+            String modeExtraKey
+    ) {
         if (interstitialAd != null) {
+
             InterstitialAd adToShow = interstitialAd;
             interstitialAd = null;
-            adToShow.setFullScreenContentCallback(new FullScreenContentCallback() {
-                @Override
-                public void onAdDismissedFullScreenContent() {
-                    loadInterstitialAd();
-                    startActivity(buildStartIntent(activity, practiceMode));
-                }
-                @Override
-                public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
-                    loadInterstitialAd();
-                    startActivity(buildStartIntent(activity, practiceMode));
-                }
-            });
+
+            adToShow.setFullScreenContentCallback(
+                    new FullScreenContentCallback() {
+
+                        @Override
+                        public void onAdDismissedFullScreenContent() {
+                            loadInterstitialAd();
+
+                            startActivity(
+                                    buildStartIntent(
+                                            activity,
+                                            practiceMode,
+                                            modeExtraKey
+                                    )
+                            );
+                        }
+
+                        @Override
+                        public void onAdFailedToShowFullScreenContent(
+                                com.google.android.gms.ads.AdError adError
+                        ) {
+                            loadInterstitialAd();
+
+                            startActivity(
+                                    buildStartIntent(
+                                            activity,
+                                            practiceMode,
+                                            modeExtraKey
+                                    )
+                            );
+                        }
+                    }
+            );
+
             adToShow.show(MainActivity.this);
+
         } else {
-            startActivity(buildStartIntent(activity, practiceMode));
+
+            startActivity(
+                    buildStartIntent(
+                            activity,
+                            practiceMode,
+                            modeExtraKey
+                    )
+            );
         }
     }
+
+    private Intent buildStartIntent(
+            Class<?> activity,
+            String practiceMode,
+            String modeExtraKey
+    ) {
+        Intent intent = new Intent(MainActivity.this, activity);
+
+        if (practiceMode != null && modeExtraKey != null) {
+            intent.putExtra(modeExtraKey, practiceMode);
+        }
+
+        return intent;
+    }
+
 
     private Intent buildStartIntent(Class<?> activity, String practiceMode) {
         Intent intent = new Intent(MainActivity.this, activity);

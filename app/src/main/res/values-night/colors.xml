@@ -17,4 +17,12 @@
     <color name="profile_text_main">#FFFFFF</color>
     <color name="profile_text_sub">#A0B2C6</color>
     <color name="profile_stroke">#334155</color>
+
+    <!-- Practice Setup -->
+    <color name="setup_card_stroke">#405364</color>
+    <color name="setup_button_stroke">#405364</color>
+
+    <color name="setup_button_selected_bg">#244B68</color>
+    <color name="setup_button_selected_stroke">#79C4F2</color>
+    <color name="setup_button_selected_text">#FFFFFF</color>
 </resources>

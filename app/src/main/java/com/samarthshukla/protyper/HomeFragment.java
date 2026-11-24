@@ -1,3 +1,4 @@
+
 package com.samarthshukla.protyper;
 
 import android.content.Intent;
@@ -5,48 +6,64 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
 import com.google.android.material.button.MaterialButton;
 
 public class HomeFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        MaterialButton btnSingleWordMode = view.findViewById(R.id.btnSingleWordMode);
-        MaterialButton btnParagraphMode = view.findViewById(R.id.btnParagraphMode);
-        MaterialButton btnMultiplayerMode = view.findViewById(R.id.btnMultiplayerMode);
+        MaterialButton btnSingleWordMode =
+                view.findViewById(R.id.btnSingleWordMode);
 
-        // Talk to our Master Shell (MainActivity) to use its animations and ad systems
+        MaterialButton btnParagraphMode =
+                view.findViewById(R.id.btnParagraphMode);
+
+        MaterialButton btnMultiplayerMode =
+                view.findViewById(R.id.btnMultiplayerMode);
+
         MainActivity mainActivity = (MainActivity) requireActivity();
 
+        // Button animations
         mainActivity.applySquishAnimation(btnSingleWordMode);
         mainActivity.applySquishAnimation(btnParagraphMode);
         mainActivity.applySquishAnimation(btnMultiplayerMode);
 
-        btnSingleWordMode.setOnClickListener(v -> {
-            Intent intent = new Intent(requireContext(), DifficultyActivity.class);
-            intent.putExtra(
-                    DifficultyActivity.EXTRA_MODE,
-                    DifficultyActivity.MODE_SINGLE_WORD
-            );
-            startActivity(intent);
-        });
+        // Single Word Mode
+        btnSingleWordMode.setOnClickListener(v ->
+                mainActivity.showAdThenStart(
+                        DifficultyActivity.class,
+                        DifficultyActivity.MODE_SINGLE_WORD,
+                        DifficultyActivity.EXTRA_MODE
+                )
+        );
 
-        btnParagraphMode.setOnClickListener(v -> {
-            Intent intent = new Intent(requireContext(), DifficultyActivity.class);
-            intent.putExtra(
-                    DifficultyActivity.EXTRA_MODE,
-                    DifficultyActivity.MODE_PARAGRAPH
-            );
-            startActivity(intent);
-        });
-        btnMultiplayerMode.setOnClickListener(v -> mainActivity.showAdThenStart(MultiplayerLobbyActivity.class));
+        // Paragraph Mode
+        btnParagraphMode.setOnClickListener(v ->
+                mainActivity.showAdThenStart(
+                        DifficultyActivity.class,
+                        DifficultyActivity.MODE_PARAGRAPH,
+                        DifficultyActivity.EXTRA_MODE
+                )
+        );
+
+        // Multiplayer Mode
+        btnMultiplayerMode.setOnClickListener(v ->
+                mainActivity.showAdThenStart(
+                        MultiplayerLobbyActivity.class
+                )
+        );
 
         return view;
     }
